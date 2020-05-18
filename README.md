@@ -6,11 +6,11 @@ FFAStrans is workflow and transcoding system based on the principles of connecti
 
 
 User Interface
-  Intuitive graphical interface for creating complex workflows
-  Easily set up host farms for distributed node processing
-  Run as service in complex farms or as a single standalone application
-  Monitor jobs using inbuilt application or through http
-  Restart finished or failed jobs from start or from node of failure
+	-Intuitive graphical interface for creating complex workflows
+	-Easily set up host farms for distributed node processing
+	-Run as service in complex farms or as a single standalone application
+	-Monitor jobs using inbuilt application or through http
+	-Restart finished or failed jobs from start or from node of failure
 Workflow
   Use as a generic file flow system
   Advanced decision making and variables nodes to dynamically adapt your file flow
