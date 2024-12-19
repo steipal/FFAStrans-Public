@@ -10,7 +10,7 @@
 ###                       v0.4.0d      by Dogway    - 03 Sep  2011                           ###
 ###                       v3.1.2d      by Dogway    - 21 Jul  2015                           ###
 ###                       v3.1.2.111s  by A.SONY.   - 09 Feb  2021                           ###
-###                       v4.5.0d      by Dogway    - 12 Jul  2023                           ###
+###                       v4.6.0d      by Dogway    - 30 Mar  2024                           ###
 ###                                                                                          ###
 ###                                                                                          ###
 ### Main:                                                                                    ###
@@ -52,12 +52,13 @@
 ###              LSFplus/SharpenersPack (for Contrasharp or LFR)
 ###              GradePack              (for Str=0.1 to 1.0 ~ex_retinex()~ or show)
 ###              ScenesPack             (for Str=0.1 to 1.0 ~ex_retinex()~ if '_SceneRange' frameprops exist)
+###              TransformsPack         (for subpixel=4, interlaced=true, prefilter=7 or prefilter=8)
 ###              MasksPack              (for show)
 ###              RgTools                (for Contrasharp
 ###                                      or  prefilter=0~3)
 ###              DFTTest                (for prefilter=5)
 ###              KNLMeansCL             (for prefilter=6)
-###              DGDecNV                (for prefilter=7)
+###              DGDecNV v254 or higher (for prefilter=7)
 ###              BM3D                   (for prefilter=8)
 ###                 TransformsPack      (for prefilter=7 or prefilter=8)
 ###              neo_tmedian            (for mode="medianT")  (crashes for interlaced clips, even when set '_FieldBased' to 0 and AssumeFrameBased() )
@@ -536,25 +537,25 @@ function SMDegrain (clip input   , int "tr"      , int "thSAD"    , int  "thSADC
         global fVec5         = VarExist("fVec5") ? fVec5 : nop()
         global fVec6         = VarExist("fVec6") ? fVec6 : nop()
         """) : Eval("""
-        global bVec1         =           vmulti.SelectEvery (tr2,  0)
-        global bVec2         =           vmulti.SelectEvery (tr2,  2)
-        global bVec3         =           vmulti.SelectEvery (tr2,  4)
-        global bVec4         =           vmulti.SelectEvery (tr2,  6)
-        global bVec5         = tr == 5 ? vmulti.SelectEvery (tr2,  8) : nop()
-        global bVec6         = tr == 6 ? vmulti.SelectEvery (tr2, 10) : nop()
-        global bVec7         = tr == 7 ? vmulti.SelectEvery (tr2, 12) : nop()
-        global bVec8         = tr == 8 ? vmulti.SelectEvery (tr2, 14) : nop()
-        global bVec9         = tr == 9 ? vmulti.SelectEvery (tr2, 16) : nop()
+        global bVec1         =          vmulti.SelectEvery (tr2,  0)
+        global bVec2         =          vmulti.SelectEvery (tr2,  2)
+        global bVec3         =          vmulti.SelectEvery (tr2,  4)
+        global bVec4         =          vmulti.SelectEvery (tr2,  6)
+        global bVec5         = tr > 4 ? vmulti.SelectEvery (tr2,  8) : nop()
+        global bVec6         = tr > 5 ? vmulti.SelectEvery (tr2, 10) : nop()
+        global bVec7         = tr > 6 ? vmulti.SelectEvery (tr2, 12) : nop()
+        global bVec8         = tr > 7 ? vmulti.SelectEvery (tr2, 14) : nop()
+        global bVec9         = tr > 8 ? vmulti.SelectEvery (tr2, 16) : nop()
 
-        global fVec1         =           vmulti.SelectEvery (tr2,  1)
-        global fVec2         =           vmulti.SelectEvery (tr2,  3)
-        global fVec3         =           vmulti.SelectEvery (tr2,  5)
-        global fVec4         =           vmulti.SelectEvery (tr2,  7)
-        global fVec5         = tr == 5 ? vmulti.SelectEvery (tr2,  9) : nop()
-        global fVec6         = tr == 6 ? vmulti.SelectEvery (tr2, 11) : nop()
-        global fVec7         = tr == 7 ? vmulti.SelectEvery (tr2, 13) : nop()
-        global fVec8         = tr == 8 ? vmulti.SelectEvery (tr2, 15) : nop()
-        global fVec9         = tr == 9 ? vmulti.SelectEvery (tr2, 17) : nop()
+        global fVec1         =          vmulti.SelectEvery (tr2,  1)
+        global fVec2         =          vmulti.SelectEvery (tr2,  3)
+        global fVec3         =          vmulti.SelectEvery (tr2,  5)
+        global fVec4         =          vmulti.SelectEvery (tr2,  7)
+        global fVec5         = tr > 4 ? vmulti.SelectEvery (tr2,  9) : nop()
+        global fVec6         = tr > 5 ? vmulti.SelectEvery (tr2, 11) : nop()
+        global fVec7         = tr > 6 ? vmulti.SelectEvery (tr2, 13) : nop()
+        global fVec8         = tr > 7 ? vmulti.SelectEvery (tr2, 15) : nop()
+        global fVec9         = tr > 8 ? vmulti.SelectEvery (tr2, 17) : nop()
         global srchSuper     = super_render
         global vmulti        = vmulti
         global Rtr           = tr
@@ -655,7 +656,7 @@ function SMDegrain (clip input   , int "tr"      , int "thSAD"    , int  "thSADC
         varn = "\n\n\n\n\n"
         sp   = !GlobalR && str==1.0 ? "  " : ""
 
-        Subtitle("SMDegrain Mod v4.5.0",text_color=red||blue||yellow?Color:$7f7f7f,halo_color=$000000,font="VERDANA",size=s*2,x=w1,y=h/round(25/dbl))
+        Subtitle("SMDegrain Mod v4.6.0",text_color=red||blue||yellow?Color:$7f7f7f,halo_color=$000000,font="VERDANA",size=s*2,x=w1,y=h/round(25/dbl))
 
         Subtitle("BASIC"   ,lsp=lsp,text_color=$ffffff,font="COURIER NEW",size=s,x=w1,y=ys)
         Subtitle(            "\n\ntr           = " + string(round(tr/dbl))                                                                   + \
@@ -824,7 +825,7 @@ function ex_sbr(clip c, int "r", int "Y", int "UV") {
     ex_lutxyz(c, RG12D, RG12DS, "y z - A@ y "+bi32m+" B@ * 0 < x A abs B abs < A B ? x swap - ?", Y=Y31, UV=UV31, fulls=fs) }
 
 
-
+# BUG, when input and output is PC range, 'lo' and 'hi' won't work
 ## Dither_Luma_Rebuild()  by cretindesalpes (02-01-2012)
 ##  https://forum.doom9.org/showthread.php?p=1548318
 ##  Converts luma (and chroma) to PC levels, and optionally allows tweaking for pumping up the darks. (for the clip to be fed to motion search only)
@@ -878,10 +879,11 @@ function ex_Luma_Rebuild (clip src, float "s0", float "c", int "lo", int "hi", i
     l  = 1 - k
     d  = 1 + c
     f  = d * c
+    lh = (lod || hid ) && ((lop != (!tv ? 0 :  16)) || (hip != (!tv ? 255 : 235)))
     t  = tv  ? "ymin - 0 max ymax ymin - /" : ""
-    t  = lod || hid ? tv ? bi==32 ? Format("{mn} 255 / - 0 max {div1} {div2} * / ")               : \
-                                    Format("range_max * {mn} {mul} * - 0 max {div1} {div2} * / ") : \
-                                    Format("{lob} - 0 max {div1} / ")                             : t
+    t  = lh ? tv ? bi==32 ? Format("{mn} 255 / - 0 max {div1} {div2} * / ")               : \
+                            Format("range_max * {mn} {mul} * - 0 max {div1} {div2} * / ") : \
+                            Format("{lob} - 0 max {div1} / ")                             : t
     o  = tvo ? " ymax ymin - * ymin +"      : ""
     e  = Format("f32 {k} {d} {f} x "+t+" A@ {c} + / - * A {l} * +") + (!tvo && !bi32 && !rgb ? " range_max *" : tvo ? o : "")
     ec = tv==tvo ? "" : !tvo ? "x cmin - range_max cmax cmin - / *" : "x cmax cmin - range_max / * cmin +"
@@ -891,7 +893,7 @@ function ex_Luma_Rebuild (clip src, float "s0", float "c", int "lo", int "hi", i
         ConvertBits(bit, dither=-1, fulls=!tvo)
         tv!=tvo ? propSet("_ColorRange", !tvo ? 0 : 1) : last
     } else {
-        ConvertBits(src, bit, dither=-1, fulls=!tv, fulld=!tvo)  # dither=-1 because ex_Luma_Rebuild() typically used for prefiltering
+        ConvertBits(src, bit, dither= lh ? 1 : -1, fulls=!tv, fulld=!tvo)  # dither=-1 because ex_Luma_Rebuild() typically used for prefiltering
     }
     propNumElements("_SceneStats") > 0 ? propDelete("_SceneStats") : last
 
@@ -1136,9 +1138,9 @@ function ex_BM3D(clip a, float "sigma", int "radius", string "preset", bool "OPP
     bi   = BitsPerComponent(a)
     pID  = color_propGet   (a)
 
-    s    = Default(sigma,      3)  # Denoising strength
-    md   = Default(preset, "Low")  # Fast, Low, Normal, High, Noisy
-    OPP  = Default(OPP,      rgb)  # RGB clips hard-coded to OPP=true
+    s    = Default(sigma,      3)         # Denoising strength
+    md   = LCase(Default(preset, "Low"))  # Fast, Low, Normal, High, Noisy
+    OPP  = Default(OPP,      rgb)         # RGB clips hard-coded to OPP=true
     UV   = Default(UV,    rgb ? 3 : 1)
     tv   = Default(tv_range, pID[6])
     gid  = Default(gpuid,      0)
@@ -1146,11 +1148,11 @@ function ex_BM3D(clip a, float "sigma", int "radius", string "preset", bool "OPP
     pri  = pID[2]
     mat  = pri+(tv?":l":":f")
 
-    pr   = md == "Fast"   ? 0 : \
-           md == "Low"    ? 1 : \
-           md == "Normal" ? 2 : \
-           md == "High"   ? 3 : \
-           md == "Noisy"  ? 4 : \
+    pr   = md == "fast"   ? 0 : \
+           md == "low"    ? 1 : \
+           md == "normal" ? 2 : \
+           md == "high"   ? 3 : \
+           md == "noisy"  ? 4 : \
            Assert(false, "ex_BM3D: Wrong 'preset' mode")
 
     #                                         fast      lc          np            high           vn
@@ -1197,13 +1199,13 @@ function ex_BM3D(clip a, float "sigma", int "radius", string "preset", bool "OPP
 ##    clip,
 ##    float str=0.10 (0.00 to 1.00),
 ##    [float strc=0.05 (0.00 to 1.00)],
-##    float "bl"=0.00 (0.00 to 1.00),
-##    [float "blc"=0.00 (0.00 to 1.00)],
-##    int "searchw"=9 (5 to 9 by 2),
+##    int "md"=0 (0 to 3),
+##    string "qual"="good" ("good"/ "better"/ "best"),
+##    float "tthr"=0.75 (0.00 to 1.00),
 ##    int "UV"=1 (1 to 3)
 ##    )
 ##
-function ex_DGDenoise(clip a, float "str", float "strc", float "blend", float "blendc", int "searchw", float "LFR", bool "DCT", int "UV") {
+function ex_DGDenoise(clip a, float "str", float "strc", int "mode", string "qual", float "tthr", float "LFR", bool "DCT", int "UV") {
 
     w   = width (a)
     h   = height(a)
@@ -1215,9 +1217,9 @@ function ex_DGDenoise(clip a, float "str", float "strc", float "blend", float "b
 
     str  = Default(str,      0.10)
     strc = Default(strc,   str/2.)
-    bl   = Default(blend,       0)
-    blc  = Default(blendc,      0)
-    srch = Default(searchw,  min(9,max(5,round(w/1.51>h?0.375*w+1.8:0.667*h+1.8))))
+    qual = Default(qual,   "good") # search window size. "good" is 9 pixels, can't go lower.
+    md   = Default(mode,        1) # 1: spatial 2: temporal 3: spatial+temporal
+    tthr = Default(tthr,     0.75) # temporal motion threshold
     LFR  = Default(LFR,         0)
     DCT  = Default(DCT,      true)
     UV   = Default(UV,rgb ? 3 : 1)
@@ -1231,7 +1233,7 @@ function ex_DGDenoise(clip a, float "str", float "strc", float "blend", float "b
     bi>8 && bi!= 16 ? ConvertBits(16, fulls=!tv, fulld=!tv)                                                 : last
     al = last
 
-    DGDenoise(str,strc,bl,blc,srch)
+    DGDenoise(md,str,strc,qual,tthr)
 
     LFR > 0 ? ex_LFR(al,LFR,DCT,UV=UV) : last
     ConvertBits(bi, dither=bi==32?-1:1, fulls=!tv, fulld=!tv)
