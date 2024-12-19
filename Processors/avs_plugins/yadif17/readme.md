@@ -64,7 +64,7 @@
 		 3 = Use SSE4.1 + SSSE3 + SSE2 + SSE routine if possible. When SSE4.1 can't be used, fallback to 2.
 		 4 = Use SSE4.1 + SSSE3 + SSE2 + AVX routine if possible. When AVX can't be used, fallback to 3.
 		 5 = Use AVX2 + AVX routine if possible. When AVX2 can't be used, fallback to 4. (default)
-         
+
 ### Building:
 
 #### Windows
@@ -120,26 +120,29 @@ sudo make install
 
 	0.2.0 (20160815)
 		Add Avisynth+MT's planar RGB and 10/12/14bits formats support.
-		
+
 	0.2.1 (20200513)
 		Use internal CPU check.
 		Removed /arch:AVX2 requirement for AVX2 code.
-		
+
 	0.2.2 (20200514)
 		Copy frame properties when available.
-        
+
     0.2.3 (20200523)
         Fixed high bit-depth output.
         Fixed crash for mode=2/3 when opt>0.
-        
+
     0.2.4 (20200526)
         Allow clips with alpha plane.
-        
+
     0.2.5 (20200612)
         Fixed crashing when opt=4 and the bit depth is not 32-bit.
-        
+
     0.2.6 (20200630)
         Changed the opt value for AVX2 + AVX routine.
-        
+
     0.2.7 (20210207)
         Set frame property _FieldBased to 0.
+
+    0.2.8 (20230722)
+        Throw error if YUV420 height is not mod4.
