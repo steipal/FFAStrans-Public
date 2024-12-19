@@ -1,0 +1,237 @@
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+<p>This discovery page<br />
+<a href="http://127.0.0.1:port/path">http://127.0.0.1:port/path</a></p>
+
+<p>Basic job/history monitor<br />
+<a href="http://127.0.0.1:port/monitor">http://127.0.0.1:port/monitor</a></p>
+
+<p>About info<br />
+<a href="http://127.0.0.1:port/path/about">http://127.0.0.1:port/path/about</a></p>
+<hr />
+<p><b>#Title:</b> Workflow(s) list<br />
+<b>#Description:</b> Get short list all available workflow(s)<br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/workflows">http://127.0.0.1:port/path/workflows/&lt;wf_id&gt;</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b> Workflow statuses<br />
+<b>#Description:</b> Get list all workflow statuses<br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/workflows/status">http://127.0.0.1:port/path/workflows/status</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b> User variables in a workflow<br />
+<b>#Description:</b> Get a list of user variables found in a workflow.<br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/workflows/&lt;wf_id&gt;/user_variables">http://127.0.0.1:port/path/workflows/&lt;wf_id&gt;/user_variables</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b> User variables and statics<br />
+<b>#Description:</b> Get a list of available user variables and statics in current FFAStrans database. <i>Note that both <b>/variables</b> and <b>/user_variables</b> notation URLs are supported.</i><br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/user_variables">http://127.0.0.1:port/path/user_variables</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b> Job(s) status<br />
+<b>#Description:</b> Get the status of currently running job(s).<br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/jobs">http://127.0.0.1:port/path/jobs/&lt;job_id&gt;</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b> History log<br />
+<b>#Description:</b> Retrieve the history log of the items processed and their outcome. If start and count is omitted, the 250 first lines are served.<br /><br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/history">http://127.0.0.1:port/path/history/?start=0&count=250</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b> Job processing log<br />
+<b>#Description:</b> Retrieve job log if available. Start and count GET params to define the line numbers you want to retrieve. By default the first 300 logs are sent but can be altered using the "start" and "count" keys. If count is zero (0) all available job logs from "start" are returned.<br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/joblog/&lt;job_id&gt/">http://127.0.0.1:port/path/joblog/&lt;job_id&gt;/?start=0&count=300</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b> Job variables<br />
+<b>#Description:</b> Retrieve available user variables on finished job. Defining "vars" and a pipe separated list of user variables will retrieve the end values for those variables. E.g: &quot;http://127.0.0.1:port/path/jobvars/&lt;job_id&gt;/?vars=s_my_var|i_my_value&quot; will return the end value(s) for s_my_var and i_my_value. No options will retrieve all available variables.<br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/jobvars/&lt;job_id&gt/">http://127.0.0.1:port/path/jobvars/&lt;job_id&gt;</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b>&nbsp;Presets<br />
+<b>#Description:</b> Get the list of available presets.<br />
+<b>#Method:</b> GET<br />
+<b>#URI:</b><a href="http://127.0.0.1:port/path/presets">http://127.0.0.1:port/path/presets</a></p>
+
+<p><b>#Response:</b>&nbsp;200&nbsp;OK<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON</p>
+
+<hr />
+<p><b>#Title:</b> Import workflow<br />
+<b>#Description:</b> Import a FFAStrans exported workflow to a FFAStrans installation.<br />
+<b>#Method:</b> POST<br />
+<b>#Content-Type:</b>application/json<br />
+<b>#URI:</b>&nbsp;<a href="http://127.0.0.1:port/path/workflows">http://127.0.0.1:port/path/workflows</a><br />
+<b>#Body:</b>JSON<br />
+</p>
+
+<p><br />
+<b>#Response:</b>&nbsp;202 Accepted<br />
+</p>
+
+<hr />
+<p><b>#Title:</b> Import preset<br />
+<b>#Description:</b> Import a FFAStrans exported preset to a FFAStrans installation.<br />
+<b>#Method:</b> POST<br />
+<b>#Content-Type:</b>application/json<br />
+<b>#URI:</b>&nbsp;<a href="http://127.0.0.1:port/path/presets">http://127.0.0.1:port/path/presets</a><br />
+<b>#Body:</b>JSON<br />
+</p>
+
+<p><br />
+<b>#Response:</b>&nbsp;202 Accepted<br />
+</p>
+
+<hr />
+<p><b>#Title:</b> Import user variable<br />
+<b>#Description:</b> Import a FFAStrans exported user variable to a FFAStrans installation. <i>Note that both <b>/variables</b> and <b>/user_variables</b> notation URLs are supported.</i><br />
+<b>#Method:</b> POST<br />
+<b>#Content-Type:</b>application/json<br />
+<b>#URI:</b>&nbsp;<a href="http://127.0.0.1:port/path/user_variables">http://127.0.0.1:port/path/user_variables</a><br />
+<b>#Body:</b>JSON<br />
+</p>
+
+<p><br />
+<b>#Response:</b>&nbsp;202 Accepted<br />
+</p>
+
+<hr />
+<p><b>#Title:</b> Submit job<br />
+<b>#Description:</b> Submit a file to a workflow. &quot;start_proc&quot; is optional but lets you choose a spesific node to submit the file to. The &quot;Variables&quot; are optional but lets you inject data to the specified variables used by the workflow. Available user variables are obtained from /workflows/&lt;workflow id&gt;/user_variables.<br />
+<b>#Method:</b> POST<br />
+<b>#Content-Type:</b>application/json<br />
+<b>#URI:</b>&nbsp;<a href="http://127.0.0.1:port/path/jobs">http://127.0.0.1:port/path/jobs/&lt;job_id&gt;</a><br />
+<b>#Body:</b>JSON<br />
+{</p>
+
+<p style="padding-left: 30px;">&quot;wf_id&quot;: &quot;&lt;workflow id&gt;&quot;,<br />
+&quot;inputfile&quot;: &quot;&lt;full path to file&gt;&quot;,<br />
+&quot;start_proc&quot;: &quot;&lt;processor node id&gt;&quot;,<br />
+&quot;priority&quot;: &quot;integer 0-5&quot;,<br />
+&quot;variables&quot;: [</p>
+
+<p style="padding-left: 60px;">{<br />
+&quot;name&quot;: &quot;&lt;s_string&gt;&quot;,<br />
+&quot;data&quot;: &quot;&lt;string&gt;&quot;<br />
+}, {<br />
+&quot;name&quot;: &quot;&lt;i_string&gt;&quot;,<br />
+&quot;data&quot;: &lt;integer&gt;<br />
+}, {<br />
+&quot;name&quot;: &quot;&lt;f_string&gt;&quot;,<br />
+&quot;data&quot;: &lt;number&gt;<br />
+}</p>
+
+<p style="padding-left: 30px;">]</p>
+
+<p>}</p>
+
+<p><br />
+<b>#Response:</b>&nbsp;202 Accepted<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#Body:</b>JSON<br />
+{</p>
+
+<p style="padding-left: 30px;">&quot;uri&quot;: &quot;&lt;url to the job&gt;&quot;,<br />
+&quot;job_id&quot;: &quot;&lt;identifier for the job&gt;&quot;</p>
+
+<p>}</p>
+
+<hr />
+<p><b>#Title:</b>&nbsp;Change workflow state<br />
+<b>#Description:</b>&nbsp;Change the state of workflow(s): "start", "stop", "enable" or "disable".<br />
+<b>#Method:</b> PUT<br />
+<b>#Content-Type:</b>application/json<br />
+<b>#URI:</b>&nbsp;<a href="http://127.0.0.1:port/path/workflows">http://127.0.0.1:port/path/workflows/&lt;wf_id&gt;</a><br />
+<b>#Body:</b>JSON<br />
+{</p>
+
+<p style="padding-left: 30px;">&quot;action&quot;: &quot;&lt;state&gt;&quot;</p>
+
+<p>}</p>
+
+<p></p>
+
+<p><b>#Response:</b>&nbsp;202 Accepted</p>
+
+<hr />
+<p><b>#Title:</b>&nbsp;Update workflow<br />
+<b>#Description:</b>&nbsp;Updates an existing workflow from a previous exported workflow. If the workflow does not exist the http error 406 (Not Acceptable) will be returned.<br />
+<b>#Method:</b> PUT<br />
+<b>#Content-Type:</b>application/json; charset=utf-8<br />
+<b>#URI:</b>&nbsp;<a href="http://127.0.0.1:port/path/workflows">http://127.0.0.1:port/path/workflows</a><br />
+<b>#Body:</b>JSON<br />
+&nbsp;</p>
+
+<p><b>#Response:</b>&nbsp;200 OK</p>
+
+<hr />
+<p><b>#Title:</b> Abort job<br />
+<b>#Description:</b> Abort a job<br />
+<b>#Method:</b> DELETE<br />
+<b>#URI:</b>&nbsp;<a href="http://127.0.0.1:port/path/jobs">http://127.0.0.1:port/path/jobs/&lt;job_id&gt;</a><br />
+&nbsp;</p>
+
+<p><b>#Response:</b>&nbsp;202 Accepted<br />
+
+<hr />
+<p><b>#Title:</b>&nbsp;Pause, resume and abort sub jobs<br />
+<b>#Description:</b> Set the sub job to pause, resume or queue to abort. Allowed states:&nbsp;"pause", "resume" or "abort". "split_id" defines what instance/sub/branch/split id of the job you want to pause/resume/abort. The same method can be used on finished jobs to either "retry" or "retry_fail" (retry at failed node).<br />
+<b>#Method:</b> PUT<br />
+<b>#Content-Type:</b>application/json<br />
+<b>#URI:</b>&nbsp;<a href="http://127.0.0.1:port/path/jobs">http://127.0.0.1:port/path</a><a href="http://127.0.0.1:port/path/jobs">/jobs/&lt;job_id&gt;</a><br />
+<b>#Body:</b>JSON<br />
+{</p>
+
+<p style="padding-left: 30px;">&quot;action&quot;: &quot;&lt;state&gt;&quot;,<br />
+&quot;split_id&quot;: &quot;&lt;split identifier&gt;&quot;</p>
+</p>}</p>
+<p></p>
+
+<p><b>#Response:</b>&nbsp;202 Accepted</p>
+</body>
+</html>

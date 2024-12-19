@@ -1,0 +1,101 @@
+**********************************************************************************
+*************************Multi-threading information******************************
+**********************************************************************************
+
+CPU example case : 4 cores with hyper-threading.
+
+If you leave all the multi-threading parameters to their default value,
+it's set to be "optimal" when you're not using prefetch or if you are under standard avisynth,
+all the logical CPU will be used.
+If you put SetAffinity to true it will allocate the threads on the CPU contiguously.
+Physical CPU 1 will have threads (0,1), ... physical CPU 4 will have threads (6,7),
+allowing optimal cache use. Make test to see what's best for you.
+
+Now, if you are using prefetch on your script, things are different ! 
+If you're using it with the max number of CPUs (8 in our exemple case),
+you still can make tests, but i would strongly advise to disable the internal multi-threading
+by using threads=1. In this case, there is no threadpool created, and all the other multi-threading
+related filter parameters have no effect, even prefetch.
+If you're using prefetch on your script, with less than your CPU number,
+you may want to try to mix the external and internal mutli-threading,
+setting the internal multi-threading to a lower number of threads,
+and setting the prefetch parameter of the filter.
+This parameter will set the number of internal threadpool created,
+the best is to match the prefetch script value. If you don't set it (leave it to 1)
+or set a lower value than prefetch on your script, you'll have several instances (or GetFrame)
+created, but they'll not be running efficiently, because each instance (or GetFrame)
+will spend time waiting for a threadpool to be avaible, if not enough were created.
+Unfortunately, as things are now, i have no way of knowing the prefetch value used in the avisynth script
+at the time i need the information, this is why you have to use the prefetch parameter in the filter.
+
+In our CPU exemple case, you can have things like :
+============================================
+filter(...,threads=1)
+prefetch(8)
+============================================
+or
+============================================
+filter(...,threads=2,prefetch=4)
+prefetch(4)
+============================================
+or
+============================================
+filter(...,threads=4,prefetch=2)
+prefetch(2)
+============================================
+or even
+============================================
+filter(...,threads=3,prefetch=4)
+prefetch(4)
+============================================
+if you want to boost and go a little over your total CPU number.
+
+Also, if your prefetch is not higher than your number of physical cores, you can try to put
+SetAffinity to true, but in that case, you have to set MaxPhysCore to false.
+The threads of each pool will be set on CPUs by steps.
+
+For exemple, in our case :
+=====================================================================
+filter(...,threads=2,prefetch=4,SetAffinity=true,MaxPhysCore=false)
+prefetch(4)
+=====================================================================
+Will create 4 pool of 2 threads, with the following :
+pool[0] : threads(0 -> 1) on CPU 1.
+pool[1] : threads(0 -> 1) on CPU 2.
+pool[2] : threads(0 -> 1) on CPU 3.
+pool[3] : threads(0 -> 1) on CPU 4.
+=====================================================================
+filter(...,threads=4,prefetch=2,SetAffinity=true,MaxPhysCore=false)
+prefetch(2)
+=====================================================================
+Will create 2 pool of 4 threads, with the following :
+pool[0] : threads(0 -> 1) on CPU 1.
+pool[0] : threads(2 -> 3) on CPU 2.
+pool[1] : threads(0 -> 1) on CPU 3.
+pool[1] : threads(2 -> 3) on CPU 4.
+
+
+=====================================================================
+NEGATIVE PREFETCH
+-----------------
+The possibility to put negative prefecth to tune the prefetch parameter to
+optimal value has been added. The filter will throw an error if the number
+is not high enough to avoid waiting when requesting internal threadpool.
+For this to work properly, you have to put negative prefetch on ALL the
+filters of your script, and also ALL instances of the same filter.
+
+Exemple :
+filter(...,threads=2,prefetch=-2)
+prefetch(2)
+
+You'll see an error.
+
+But with :
+filter(...,threads=2,prefetch=-3)
+prefetch(2)
+
+You'll see no error, so the optimal is :
+filter(...,threads=2,prefetch=3)
+prefetch(2)
+
+Once you've tune, put back a positive value.

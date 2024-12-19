@@ -1,0 +1,225 @@
+
+Documentation fragments
+=======================
+
+from 
+http://web.archive.org/web/20130615165406/http://doom10.org/index.php?topic=2185.0
+
+removegrain modes:
+
+-1= bypass (output=0) faster than mode=0 (copy)
+
+0 = copy
+
+1 = medianblur. Same as Undot, but faster. (single dots)
+2 = medianblur. Round up to the second closest minimum luma value in a 3x3 window matrix, if this second lowest value is lower than X pixel value, then leave unchanged. (1x2 spots)
+3 = medianblur. Sames as mode 2 but rounded up to third  minimum value (but artifact risky). (3pixel-clusters)
+4 = medianblur. Sames as mode 2 but rounded up to fourth minimum value (but artifact risky). (up to 2x2-pixel-clusters)
+
+5 = medianblur. Edge sensitive. Only line pairs are used. Strong  edge protection.
+6 = medianblur. Edge sensitive. Only line pairs are used. Fairly  edge protection.
+7 = medianblur. Edge sensitive. Only line pairs are used. Mild    edge protection.
+8 = medianblur. Edge sensitive. Only line pairs are used. Faint   edge protection.
+9 = medianblur. Edge sensitive. Only line pairs are used. Barely  edge protection. Practically a spatial variant of trbarry's ST Median filter.
+
+10 = Minimal sharpening. Replaces center pixel by its nearest neighbour. "Very poor denoise sharpener"
+
+11 = Blur. 3x3 kernel convolution blur. Better than its counterpart internal Blur(1) (and faster)
+12 = Blur. Same as 11 but fastest and only <= 1% less precise (still better than Blur(1))
+
+13 = Smart bob (for interlaced content). Interpolates the top field.    Similar to Trbarry's weird bob (Tomsmocomp).
+14 = Smart bob (for interlaced content). Interpolates the bottom field. Similar to Trbarry's weird bob (Tomsmocomp).
+15 = Smart bob (for interlaced content). Same as mode 13 but more quality and slightly slower.
+16 = Smart bob (for interlaced content). Same as mode 14 but more quality and slightly slower.
+
+17 = medianblur. Same as mode 4 but better edge protection (similar to near artifact free mode 2). Probably best mode of all.
+18 = medianblur. Same as mode 9 but better edge protection (Same as what mode 17 was to mode 4, but in this case to mode 9, and far less denoising than mode 17)
+
+19 = Blur.         Average of its 8 neighbours.
+20 = Blur. Uniform average of its 8 neighbours. Better than 19 but slower. Very similar to blur(1.58) but faster.
+
+21 = medianblur. Clipping is done with respect to averages of neighbours. Best for cartoons.
+22 = medianblur. Same as mode 21 but much faster (fastest mode of all)
+
+23 = Dehalo. Fixes small (as one pixel wide) haloes.
+24 = Dehalo. Same as 23 but considerably more conservative and slightly slower. Preferred.
+
+25 = Minimal sharpening.
+
+26 = medianblur. Based off mode 17, but preserves corners, but not thin lines.
+27 = medianblur. Same as mode 26 but preserves thin lines.
+
+
+Recommended modes: 12,20(Gaussian Blur) 17,22 (Median Blur)
+
+Ranking:
+Denoising/Compression: 4,17,9,8,3,7,6,2,5,1
+Artifact free:         1,5,2,18,6,7,8,17,3,4,9
+
+"As far as compression (Denoising) is concerned, my benchmarks so far give the following mode ranking: 4,17,9,8,3,7,6,2,5,1, but modes 4 and 17 really stand out.
+As far as artifacts are concerned, we have unfortunately almost the reverse mode ranking: 1,5,2,18,6,7,8,17,3,4,9. Modes= 1,5,2 are the risk free modes,
+the modes 18,6,7,8,17 show low to moderate artifact risk (usually some softness) and modes 3,4,9 have severe problems with thin lines. Mode 9 has
+less artifacts than mode 4, but when they occur  they look a lot more ugly. Mode 17 is my clear personal favorite.
+As far as compression is concerned it is fairly close to the leader, mode 4, and I have only seen some softness but hardly any visable artifacts."
+
+
+mode    sharp edges     corners   thin lines  line ends  thin curves  compression
+1       10            10          10            10          10          1
+2       10            10          10            4           10          2
+3       10            9           3             1           3           5
+4       10            3           1             0           1           8
+5       10            10          10            9           9           2
+6       10            6           9             4           3           3
+7       10            6           9             4           3           3
+8       10            5           8             3           3           4
+9       10            3           4             1           2           5
+10      10            10          10            10          10          1
+11      1             1           2             1           2           9
+12      1             1           2             1           2           9
+17      10            2           8             2           4           7
+18      10            6           9             6           5           2
+19      1             1           1             0           1           10
+20      1             1           1             0           1           8
+21      6             2           8             4           4           5
+22      6             2           8             4           4           5
+23      6             5           6             4           6           4
+24      7             6           7             5           7           3
+25      10            10          10            10          10          -1
+
+
+Todo: modes 25-30
+=================
+These modes exist in a later version of the old RemoveGrain package.
+They were not ported originally, and since no C code exists, the assembly code has to be reverse engineered first.
+Which is extremely painful task.
+Edit (April, 2020): finally mode 25-28 were reverse engineered. Mode 26-28 were implemented in "Repair" as well (they are similar to mode 17)
+Mode 29 and 30 RIP at the moment
+
+Naming hint from the original code (ifdefs were controlled the plugin behaviour):
+Sharpen was not implemented
+MODIFYPLUGIN option means "Repair"
+the rest is RemoveGrain
+
+'''
+#ifdef  SHARPEN
+static void (*cleaning_methods[MAXMODE + 1])(BYTE *dp, int dpitch, const BYTE *sp, int spitch, int hblocks, int remainder, int incpitch, int height, int strength)
+= { copy_plane, SSE_RemoveGrain1, SSE_RemoveGrain2, SSE_RemoveGrain3, SSE_RemoveGrain4, SSE_Repair15, SSE_Repair16, SSE_Repair17, SSE_Repair18a, diag9, copy_plane
+, copy_plane, copy_plane, copy_plane, copy_plane, copy_plane, SmartRG, SSE_Repair18, copy_plane, copy_plane, copy_plane
+, SmartAvgRGs, SmartAvgRGf
+};
+#else
+static void (*cleaning_methods[MAXMODE + 1])(BYTE *dp, int dpitch, const BYTE *sp, int spitch, int hblocks, int remainder, int incpitch, int height)
+#ifdef  MODIFYPLUGIN (Repair)
+= { do_nothing, SSE_RemoveGrain1, SSE_RemoveGrain2, SSE_RemoveGrain3, SSE_RemoveGrain4, diag5, diag6, diag7, diag8, diag9
+, SSE_RemoveGrain10, SSE_RemoveGrain1, SSE_Repair12, SSE_Repair13, SSE_Repair14, SSE_Repair15, SSE_Repair16, SmartRG, SSE_Repair18
+, New_Repair1, New_Repair2, New_Repair3, New_Repair1b, New_Repair2b, New_Repair3b};
+#elif   defined(BLUR)
+= { copy_plane, SSE_RemoveGrain1, SSE_RemoveGrain2, SSE_RemoveGrain3, SSE_RemoveGrain4, copy_plane, copy_plane, copy_plane, copy_plane, diag9, copy_plane
+, copy_plane, copy_plane, copy_plane, copy_plane, copy_plane, copy_plane, copy_plane, copy_plane, copy_plane, copy_plane
+, SmartAvgRGs, SmartAvgRGf
+};
+#else (RemoveGrain)
+= { copy_plane, SSE_RemoveGrain1, SSE_RemoveGrain2, SSE_RemoveGrain3, SSE_RemoveGrain4, diag5, diag6, diag7, diag8, diag9
+, SSE_RemoveGrain10, SSE_RemoveGrain11, SSE_RemoveGrain12, bob_top, bob_bottom, smartbob_top, smartbob_bottom, SmartRG, SSE_Repair18, SSE_RemoveGrain19, SSE_RemoveGrain20
+, SmartAvgRGs, SmartAvgRGf, SSE_RemoveGrain23, SSE_RemoveGrain24, nondestructivesharpen, SmartRGC, SmartRGCL, SmartRGCL2, SmartRG18, SoftRG18};
+#endif
+'''
+
+So the new modes which does not exist in RgTool 0.92-
+25 - nondestructivesharpen
+26 - SmartRGC
+27 - SmartRGCL
+28 - SmartRGCL2
+29 - SmartRG18
+30 - SoftRG18
+
+Visual Studio 2019 16.0 Build
+=============================
+Do not use Cmake, use existing .sln solution file
+
+LLVM Clang 8.0 Build
+====================
+Do not use Cmake for building makefile, use existing .sln solution file.
+
+  - Install LLVM 8.0 (latest as of March 29, 2019: http://releases.llvm.org/download.html, Windows pre-built libraries)
+  - Install Clang Power Tools & LLVM Compiler Toolchain
+    - https://marketplace.visualstudio.com/items?itemName=caphyon.ClangPowerTools
+    - https://marketplace.visualstudio.com/items?itemName=LLVMExtensions.llvm-toolchain
+  - (When using CMakeGUI) After Configure/Specify generator for this project, type LLVM for "Optional Toolset to use (-T option)"
+  - Knows issues: 
+    - Generating assembler output is broken on 32 bits
+
+GCC 8.3 Build
+=============
+  - Howto: MSYS2/GCC: for windows based build environment see step-by-step instructions: 
+    https://github.com/orlp/dev-on-windows/wiki/Installing-GCC--&-MSYS2
+  - CMake: choose generator "MinGW Makefiles" from CMakeGUI or 
+      del CMakeCache.txt
+      "c:\Program Files\CMake\bin\cmake.exe" -G "MinGW Makefiles" .
+    then build with
+      mingw32-make install 
+      (e.g. c:\msys64\mingw64\bin\mingw32-make.exe install)
+  - todo: fix target directory
+
+Clang 8.0 warning!
+==================
+Don't use Clang 8.0 until they release the patch made on April 14, 2019
+Due to a bug related to _mm_avg_epu8 and its family, the code is several times slower than in Microsoft VS 2019 16.0.
+
+// Bad codegen example. MSVC is 3x faster
+// https://godbolt.org/z/xyGcIE
+
+//-------------------
+template<bool aligned>
+#if defined(GCC) || defined(CLANG)
+__attribute__((__target__("fma,avx2")))
+#endif
+RG_FORCEINLINE __m256i rg_mode15_and16_avx2_demo(const Byte* pSrc, int srcPitch) {
+  LOAD_SQUARE_AVX2_UA(pSrc, srcPitch, aligned);
+    // debug
+  auto avg12 = _mm256_avg_epu8(a1, a2);
+  auto avg123 = _mm256_avg_epu8(avg12, a3);
+  return avg123;
+}
+
+/*
+LLVM trunk (9.0) - Good
+        vmovdqu ymm0, ymmword ptr [rdi - 1]
+        vpavgb  ymm0, ymm0, ymmword ptr [rdi]
+        vpavgb  ymm0, ymm0, ymmword ptr [rdi + 1]
+*/
+/*
+LLVM 8.0 - Wrong
+        vpmovzxbw       ymm0, xmmword ptr [rdi + 15] # ymm0 = mem[0],zero,mem[1],zero,mem[2],zero,mem[3],zero,mem[4],zero,mem[5],zero,mem[6],zero,mem[7],zero,mem[8],zero,mem[9],zero,mem[10],zero,mem[11],zero,mem[12],zero,mem[13],zero,mem[14],zero,mem[15],zero
+        vpmovzxbw       ymm1, xmmword ptr [rdi - 1] # ymm1 = mem[0],zero,mem[1],zero,mem[2],zero,mem[3],zero,mem[4],zero,mem[5],zero,mem[6],zero,mem[7],zero,mem[8],zero,mem[9],zero,mem[10],zero,mem[11],zero,mem[12],zero,mem[13],zero,mem[14],zero,mem[15],zero
+        vpmovzxbw       ymm2, xmmword ptr [rdi + 16] # ymm2 = mem[0],zero,mem[1],zero,mem[2],zero,mem[3],zero,mem[4],zero,mem[5],zero,mem[6],zero,mem[7],zero,mem[8],zero,mem[9],zero,mem[10],zero,mem[11],zero,mem[12],zero,mem[13],zero,mem[14],zero,mem[15],zero
+        vpaddw  ymm0, ymm0, ymm2
+        vpmovzxbw       ymm2, xmmword ptr [rdi] # ymm2 = mem[0],zero,mem[1],zero,mem[2],zero,mem[3],zero,mem[4],zero,mem[5],zero,mem[6],zero,mem[7],zero,mem[8],zero,mem[9],zero,mem[10],zero,mem[11],zero,mem[12],zero,mem[13],zero,mem[14],zero,mem[15],zero
+        vpmovzxbw       ymm3, xmmword ptr [rdi + 17] # ymm3 = mem[0],zero,mem[1],zero,mem[2],zero,mem[3],zero,mem[4],zero,mem[5],zero,mem[6],zero,mem[7],zero,mem[8],zero,mem[9],zero,mem[10],zero,mem[11],zero,mem[12],zero,mem[13],zero,mem[14],zero,mem[15],zero
+        vpmovzxbw       ymm4, xmmword ptr [rdi + 1] # ymm4 = mem[0],zero,mem[1],zero,mem[2],zero,mem[3],zero,mem[4],zero,mem[5],zero,mem[6],zero,mem[7],zero,mem[8],zero,mem[9],zero,mem[10],zero,mem[11],zero,mem[12],zero,mem[13],zero,mem[14],zero,mem[15],zero
+        vpaddw  ymm1, ymm1, ymm2
+        vpcmpeqd        ymm2, ymm2, ymm2
+        vpsubw  ymm0, ymm0, ymm2
+        vpsubw  ymm1, ymm1, ymm2
+        vpsrlw  ymm1, ymm1, 1
+        vpsrlw  ymm0, ymm0, 1
+        vpbroadcastw    ymm5, word ptr [rip + .LCPI0_0] # ymm5 = [255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255]
+        vpand   ymm0, ymm0, ymm5
+        vpaddw  ymm0, ymm3, ymm0
+        vpand   ymm1, ymm1, ymm5
+        vpaddw  ymm1, ymm4, ymm1
+        vpsubw  ymm0, ymm0, ymm2
+        vpsubw  ymm1, ymm1, ymm2
+        vpsrlw  ymm1, ymm1, 1
+        vpsrlw  ymm0, ymm0, 1
+        vmovdqa ymm2, ymmword ptr [rip + .LCPI0_1] # ymm2 = [255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255]
+        vpand   ymm0, ymm0, ymm2
+        vextracti128    xmm3, ymm0, 1
+        vpackuswb       xmm0, xmm0, xmm3
+        vpand   ymm1, ymm1, ymm2
+        vextracti128    xmm2, ymm1, 1
+        vpackuswb       xmm1, xmm1, xmm2
+        vinserti128     ymm0, ymm1, xmm0, 1
+
+*/
+

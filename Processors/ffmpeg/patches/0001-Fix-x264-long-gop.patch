@@ -1,0 +1,24 @@
+From 16b6c9cc63719ce150ef5dda098d59ddf325bf87 Mon Sep 17 00:00:00 2001
+From: steipal <steipal@gmail.com>
+Date: Sun, 26 Dec 2021 11:12:25 +0100
+Subject: [PATCH] Fix x264 long gop
+
+---
+ libavformat/mxfenc.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/libavformat/mxfenc.c b/libavformat/mxfenc.c
+index 1cdfc07382..9ebd29343c 100644
+--- a/libavformat/mxfenc.c
++++ b/libavformat/mxfenc.c
+@@ -2292,6 +2292,7 @@ static int mxf_parse_h264_frame(AVFormatContext *s, AVStream *st,
+             case 1:
+                 e->flags |= 0x30; // B Picture
+                 e->flags |= 0x03; // non-referenced B Picture
++				sc->temporal_reordering = -1;
+                 break;
+             }
+             buf = buf_end;
+-- 
+2.34.1.windows.1
+

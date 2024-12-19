@@ -1,0 +1,90 @@
+<html><div style=font-family:Calibri>
+<p>With this filter you can apply matrices of linear transformation with 16bit planar precision to convert color curves.</p>
+<p></p>
+
+<p><b><u>Transformation</u></b></p>
+<p style=margin-top:-15>Selects the transformation that needs to be applied; currently, only those conversions are supported:
+<br>
+From "Linear_BT601_NTSC" to "Linear_BT709"
+<br>
+From "Linear_BT601_PAL" to "Linear_BT709"
+<br>
+From "Linear_BT709" to "Linear_BT601_NTSC"
+<br>
+From "Linear_BT709" to "Linear_BT601_PAL"
+<br>
+From "Linear_BT709" to "BT2020_HLG"
+<br>
+From "Linear_BT709" to "BT2100_PQ"
+<br>
+From "Linear_BT709" to "DCI_XYZ"
+<br>
+From "Linear_BT709" to "ZLog"
+<br>
+From "BT2100_PQ" to "Linear_BT2020"
+<br>
+From "BT2100_PQ" to "Linear_BT709"
+<br>
+From "BT2100_PQ" to "BT2020_HLG"
+<br>
+From "CLog3" to "Linear_BT709"
+<br>
+From "CLog3" to "BT2020_HLG"
+<br>
+From "CLog3" to "BT2100_PQ"
+<br>
+From "SLog2" to "Linear_BT709"
+<br>
+From "SLog3" to "Linear_BT709"
+<br>
+From "BT2020_HLG" to "Linear_BT709"
+<br>
+From "BT2020_HLG" to "BT2100_PQ"
+<br>
+From "DCI_XYZ" to "Linear_BT709"
+<br>
+From "LogC" to "Linear_BT709"
+<br>
+From "VLog" to "Linear_BT709"</p>
+<p></p>
+<br>
+<br>
+<p><b><u>Interpolation</u></b></p>
+<p style=margin-top:-15>Selects the interpolation method that is gonna be used:
+<br>
+- Trilinear
+<br>
+- Tetrahedral
+<br>
+<br>
+Trilinear interpolation is used by default only for historical reasons as when this was developed it only had one interpolation method, namely trilinear.
+<br>
+Although this was far from ideal as it can produce ripples, plenty of people used it (as they were using this function),
+<br>
+therefore when tetrahedral was introduced it was agreed to leave trilinear as default to allow people to still obtain the same results when upgrading.
+<br>
+However, in practice, tetrahedral should always be used and it's the suggested method.
+<br>
+<br>
+<p><b><u>Info about this filter</u></b></p>
+A Linear Transformation is essentially a matrix that maps all points of a certain space to another,
+<br>
+which includes of course points belonging to a certain curve to other in order to get a different curve.
+<br>
+Of course, a linear transformation can be used in encoding to map some values to some other values
+<br>
+and therefore have conversions from curves like PQ to HLG and so on.
+<br>
+The transformation is performed with 16bit precision, which means that if your input source is lower,
+<br>
+let's say, 8bit planar yv12, it will be brought to 16bit planar RGB internally,
+<br>
+the linear transformation will be applied with 16bit planar precision
+<br>
+and then the result will be brought down to 8bit planar yv12.
+<br>
+Planar RGB 16bit is strongly suggested as your source as it's gonna be faster,
+<br>
+in fact 4:2:0, 4:2:2, 4:4:4 planar up to 16bit will be converted back and forth internally.
+<br>
+</div></html>

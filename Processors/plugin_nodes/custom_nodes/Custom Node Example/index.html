@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<meta http-equiv="X-UA-Compatible" content="IE=11" /> 
+<head>
+
+<link rel="stylesheet" type="text/css" href="style.css">     
+<script>
+
+window.onerror = function(msg, url, line, col, error) {
+   //as we do not run in a browser, we need to catch javascript errors without using F12 devtools
+   //this will catch and alert all js errors on this page
+   var extra = !col ? '' : '\ncolumn: ' + col;
+   extra += !error ? '' : '\nerror: ' + error;
+   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+   var suppressErrorAlert = true;
+   return suppressErrorAlert;
+};
+
+function checkIE11 () {
+  return !!window.MSInputMethodContext && !!document.documentMode;
+}
+
+function ffas_init(base64_displayname,base64_node_json_config){    
+/*
+    this function is called from ffastrans when your body is loaded. You cannot force this from your code!
+    you can use this as a replacement for $document.ready or body.onload
+    arguments: current displayname in workflow canvas and plugin version from node.json
+*/
+	if (checkIE11() == false){
+		alert ("Only IE11 supported, you have: " + window.navigator.userAgent)
+	}
+    var _displayname = atob(base64_displayname);
+    document.getElementById("title").innerHTML = "Processor Displayname: <b>"+ _displayname + "</b>";
+    var _nodejson = JSON.parse(atob(base64_node_json_config));
+    document.getElementById("version").innerHTML = "Version: " + _nodejson.version ;
+
+}
+
+function ffas_load_preset(base64_string){
+    /*
+        this is called by ffastrans when values from preset should be displayed on this page. You cannot force this from your code!
+        the object you get here is the same that you returned in the save function
+        IT IS MANDATORY to display values from preset on your userinterface
+    */
+   
+    try{
+        //convert value from ffastrans to json object (base64 decode!)
+        var obj = JSON.parse(atob(base64_string));
+        if(!obj.hasOwnProperty('inputs') ){
+            check_valid_variable_name()
+            return; //nothing to restore
+        }
+        //loop through inputs array, locate dom elements by id and set value
+        for (i=0;i<obj["inputs"].length;i++){
+            var in_id = obj["inputs"][i]["id"];
+            var in_value = obj["inputs"][i]["value"];
+            document.getElementById(in_id).value = in_value; 
+        }    
+        //loop through outputs array ...
+        for (i=0;i<obj["outputs"].length;i++){
+            var out_id = obj["outputs"][i]["id"];
+            var out_value = obj["outputs"][i]["value"];
+            document.getElementById(out_id).value = out_value; 
+        }                
+    }catch(e){
+        return;
+    }    
+}
+
+function ffas_save_preset(){
+    /*
+        this is called by ffastrans when a user hits the preset save button. You cannot force this from your code! 
+        IT IS MANDATORY to collect all values that can be saved and return them as base64 string here (use btoa function to encode to base64)
+        tipp: simple html forms can be saved and restored using body.innerHTML
+    */
+    //the object to hand over to ffastrans must look like this {"inputs":[{"id":"html_element_id","value":"html_value"}],"outputs":[{"id":"html_element_id","value":"html_value","content":"default_value"}]}
+    var to_save = {"inputs":[],"outputs":[]};
+    
+    var testin = document.getElementById("testinput");
+    to_save["inputs"].push({"id":testin.id,"value":testin.value});
+
+    var testout = document.getElementById("testoutput");
+    to_save["outputs"].push({"id":testout.id, "value":testout.value, "data":""});//for outputs, "value" can only be a variable like %s_source% and data is set by processor
+    
+    var testout2 = document.getElementById("testoutput2");
+    to_save["outputs"].push({"id":testout2.id, "value":testout2.value, "data":""});//for outputs, "value" can only be a variable like %s_source% and data is set by processor
+    
+    var successmsg = document.getElementById("successmsg");
+    to_save["inputs"].push({"id":successmsg.id,"value":successmsg.value});
+    
+    var errormsg = document.getElementById("errormsg");
+    to_save["inputs"].push({"id":errormsg.id,"value":errormsg.value});
+    
+    var s_source = document.getElementById("s_source");
+    to_save["inputs"].push({"id":s_source.id,"value":s_source.value});
+    
+    var endbranch = document.getElementById("endbranch");
+    to_save["inputs"].push({"id":endbranch.id,"value":endbranch.value});
+    return(btoa(JSON.stringify(to_save)))
+}
+
+function ffas_file_selected(what,element_id){
+    /* when using special input named "open_filebrowser", we must define this function to retrieve the selected value */
+    document.getElementById(atob(element_id)).value = atob(what);
+}
+
+function ffas_folder_selected(what,element_id){
+    /* when using special input named "open_folderbrowser", we must define this function to retrieve the selected value */
+    document.getElementById(atob(element_id)).value = atob(what);
+}
+
+function check_valid_variable_name(dom_element){
+    /* this non mandatory function just checks if we have a valid variable on processor output textboxes*/
+    var content = dom_element.value;
+    dom_element.style.color = "red";
+    if ((content.match(/%/g))){
+        if ((content.match(/%/g)).length == 2){
+            dom_element.style.color = "";
+        }
+    }
+}
+
+</script>
+</head>
+<body>
+<div id="title"></div>
+<div id="version"></div>
+    <p style="color:#777777">Example Input</p>
+    <span class="ffas-label-left" >Testinput: </span><input class="ffas-text-input" id="testinput" placeholder="This value is passed to processor" ></input> <input width="2px" type="submit" value="<" name="open_vars" data-parent="testinput" /><!--The input name open_vars is mandatory, ffastrans is watching all click events and checks if element had this name -->
+    <br/><span class="ffas-label-left" >Test FolderBrowser: </span><input class="ffas-text-input" id="testfolderbrowser" placeholder="Example Open a Folderbrowser" ></input> <input width="10px" type="submit" value="..." name="open_folderbrowser" data-parent="testfolderbrowser" /><!--The input name open_folderbrowser is mandatory, ffastrans is watching all click events and checks if element had this name -->
+    <br/><span class="ffas-label-left" >Test FileBrowser: </span><input class="ffas-text-input" id="testfilebrowser" placeholder="Example Open a Filebrowser" ></input> <input width="10px" type="submit" value="..." name="open_filebrowser" data-parent="testfilebrowser" /><!--The input name open_filebrowser is mandatory, ffastrans is watching all click events and checks if element had this name -->
+    
+    <p style="color:#777777">Example Outputs</p>
+	<span class="ffas-label-left">Testoutput</span><input class="ffas-text-input" id="testoutput" placeholder="Variable Name for Processor output" oninput="check_valid_variable_name(this)" style></input><input width="2px" type="submit" value="<" name="open_vars" data-parent="testoutput" data-user_vars_only="true"/>
+	<br/><span class="ffas-label-left">Testoutput2</span><input class="ffas-text-input" id="testoutput2" value="" oninput="check_valid_variable_name(this)" ></input><input width="2px" type="submit" value="<" name="open_vars" data-parent="testoutput2" data-user_vars_only="true"/>
+	<p style="color:#777777">Example Special Variables</p>
+    <span class="ffas-label-left" >Set s_source: </span><input class="ffas-text-input" id="s_source" placeholder="s_source will be set to this value" ></input> <!--The input name open_vars is mandatory, ffastrans is watching all click events and checks if element had name open_vars -->
+    <br/><span class="ffas-label-left" >Set Success Msg: </span><input class="ffas-text-input" id="successmsg" placeholder="Job Monitor will display this message" ></input> <!--The input name open_vars is mandatory, ffastrans is watching all click events and checks if element had name open_vars -->
+    <br/><span class="ffas-label-left" >Set Error Msg: </span><input class="ffas-text-input" id="errormsg" placeholder="Branch Ends with Error, Monitor displays this" ></input> <!--The input name open_vars is mandatory, ffastrans is watching all click events and checks if element had name open_vars -->
+    <br/><span class="ffas-label-left" >Set End Branch: </span><input class="ffas-text-input" id="endbranch" placeholder="If set to 'True', branch will End with success here" ></input> <!--The input name open_vars is mandatory, ffastrans is watching all click events and checks if element had name open_vars -->
+</body>

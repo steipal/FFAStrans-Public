@@ -1,0 +1,10 @@
+This package contains DLLs built with different C++ compilers.
+
+MSVC (Visual C++) builds require only Intel SSE2 (but of course code is optimized up to AVX2).
+Other builds (Intel, Clang) require SSE4.2 capable processor as a minimum.
+
+Which one to choose?
+
+When in doubt, use MSVC.
+The others are provided for your convenience, test them and use the quickest one for your special use case and environment.
+

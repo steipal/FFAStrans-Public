@@ -1,0 +1,63 @@
+﻿<html><div style=font-family:Calibri>
+<p>This node will extract and output audio only files in different formats. Depending on the selected layout, each stream will be routed to separate files.</p>
+<p></p>
+
+<p><b><u>Format</u></b></p>
+<p style=margin-top:-15>Sets the audio format and codec. &quot;Uncompressed&quot; and &quot;Lossless&quot; gives no quality loss. The latter is lossless compressed.</p>
+<p></p>
+
+<p><b><u>Bit depth</u></b></p>
+<p style=margin-top:-15>Sets the audio bit depth. This will vary depending on selected audio format/codec.</p>
+<p></p>
+
+<p><b><u>Bitrate (kb/s)</u></b></p>
+<p style=margin-top:-15>Sets the bitrate of the audio. This will be enabled/disabled depending on selected audio format/codec.</p>
+<p></p>
+
+<p><b><u>Sample rate</u></b></p>
+<p style=margin-top:-15>Sets the sample rate of the audio. This will vary depending on selected audio format/codec.</p>
+<p></p>
+
+<p><b><u>Discrete tracks</u></b></p>
+<p style=margin-top:-15>Sets the number of audio tracks (streams)of the output file. One track can have one ore more channels.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Source channels as tracks</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This setting will distribute all source audio channels into discrete mono channels.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Same as source</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This settings will make FFAStrans try and create the exact same layout as the original media.</p>
+<p></p>
+
+<p><b><u>Total channels</u></b></p>
+<p style=margin-top:-15>Sets the total amount of channels the output file holds. The channels are evenly distributed among the available discrete tracks defined. Regardless of the original layout, all audio channels are mapped to separate audio sources. Based on this, FFAStrans will map these sources to match selected audio configuration. If the audio source has fewer channels than the output then the rest will be filled with silent audio.</p>
+<p></p>
+
+<p>If you select &quot;Custom channel mapping&quot; in the &quot;Total channels&quot; drop-down, FFAStrans will enable setting custom mapping per audio track:</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><u>Set custom mapping</u></b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This will open a separate window displaying all discrete track selected in the &quot;Discrete tracks&quot; drop-down.</p>
+<p style='margin-left:36pt'>For usage and how to configure press the &quot;?&quot; button in the &quot;Custom audio mapping&quot; window.</p>
+<p></p>
+
+<p><b><u>Wrapper</u></b></p>
+<p style=margin-top:-15>Sets the wrapper of the output file. This will vary depending on selected audio format/codec.</p>
+<p></p>
+
+<p><b><u>Use RF654</u></b></p>
+<p style=margin-top:-15>Support file(s) bigger than 4 GB.</p>
+<p></p>
+
+<p><b><u>Skip naming convention on single ouput file</u></b></p>
+<p style=margin-top:-15>This option will disregard the&quot;File naming&quot; when output files (per stream) is fewer than two, thus making the output file name equal to the original (excluding extension).</p>
+<p></p>
+
+<p><b><u>Add leading zero(s) on output files &gt; 9</u></b></p>
+<p style=margin-top:-15>When selected, this option will make FFAStrans add leading zeros when the number of output files (per stream) exceeds 9. So 1, 2, 3 becomes 01, 02, 03, up to 10.</p>
+<p></p>
+
+<p><b><u>Conform volume</u></b></p>
+<p style=margin-top:-15>Use this to conform volume level to specified level. For this to work you <b>MUST</b> have a variable table from a previous analyze in the &quot;Loudness&quot;-node. You can also use this option to normalize audio by using the peak levels from &quot;Loudness&quot;-node. Maximum level is 0 dB.</p>
+</div></html>

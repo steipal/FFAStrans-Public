@@ -1,0 +1,494 @@
+raw2bmx, bmx v1.3.1, Nov 12 2024 07:42:50 (scm v1.3-1-g07c61443)
+Create MXF files from raw essence files
+
+Usage: raw2bmx.exe <<Options>> [<<Input Options>> <Input>]+
+Options (* means option is required):
+  -h | --help             Show usage and exit
+  -v | --version          Print version info
+  -l <file>               Log filename. Default log to stderr/stdout
+ --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1
+  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, as10, wave, imf. Default is op1a
+                          Note that an 'op1a' or 'as11op1a' output file type could be signalled as other operational patterns if there is a Timed Text track
+* -o <name>               as02: <name> is a bundle name
+                          as11op1a/as11d10/op1a/d10/rdd9/as10/wave: <name> is a filename or filename pattern (see Notes at the end)
+                          avid: <name> is a filename prefix
+  --ess-type-names <names>  A comma separated list of 4 names for video, audio, data or mixed essence types
+                            The names can be used to replace {type} in output filename patterns
+                            The default names are: video,audio,data,mixed
+  --prod-info <cname>
+              <pname>
+              <ver>
+              <verstr>
+              <uid>
+                          Set the product info in the MXF Identification set
+                          <cname> is a string and is the Company Name property
+                          <pname> is a string and is the Product Name property
+                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property. Set to '0.0.0.0.0' to omit it
+                          <verstr> is a string and is the Version String property
+                          <uid> is a UUID (see Notes at the end) and is the Product UID property
+  --create-date <tstamp>  Set the creation date in the MXF Identification set. Default is 'now'
+  -f <rate>               Set the frame rate, overriding any frame rate parsed from the essence data
+                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)
+  --dflt-rate <rate>      Set the default frame rate which is used when no rate is provided by the essence data. Without this option the default is 25
+                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)
+  -y <hh:mm:sscff>        Start timecode. Default 00:00:00:00
+                          The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame
+  --clip <name>           Set the clip name
+  --dur <frame>           Set the duration in frames in frame rate units. Default is minimum input duration
+  --rt <factor>           Wrap at realtime rate x <factor>, where <factor> is a floating point value
+                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster
+  --avcihead <format> <file> <offset>
+                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does not have it
+                          <format> is a comma separated list of one or more of the following integer values:
+                               0: AVC-Intra 100 1080i50
+                               1: AVC-Intra 100 1080i59.94
+                               2: AVC-Intra 100 1080p25
+                               3: AVC-Intra 100 1080p29.97
+                               4: AVC-Intra 100 720p25
+                               5: AVC-Intra 100 720p50
+                               6: AVC-Intra 100 720p29.97
+                               7: AVC-Intra 100 720p59.94
+                               8: AVC-Intra 50 1080i50
+                               9: AVC-Intra 50 1080i29.97
+                              10: AVC-Intra 50 1080p25
+                              11: AVC-Intra 50 1080p29.97
+                              12: AVC-Intra 50 720p25
+                              13: AVC-Intra 50 720p50
+                              14: AVC-Intra 50 720p29.97
+                              15: AVC-Intra 50 720p59.94
+                              16: AVC-Intra 100 1080p50
+                              17: AVC-Intra 100 1080p59.94
+                              18: AVC-Intra 50 1080p50
+                              19: AVC-Intra 50 1080p59.94
+                              20: AVC-Intra 50 1080p23.98
+                              21: AVC-Intra 50 720p23.98
+                              22: AVC-Intra 100 1080p23.98
+                              23: AVC-Intra 100 720p23.98
+                              24: AVC-Intra 200 1080i50
+                              25: AVC-Intra 200 1080i59.94
+                              26: AVC-Intra 200 1080p25
+                              27: AVC-Intra 200 1080p29.97
+                              28: AVC-Intra 200 1080p23.98
+                              29: AVC-Intra 200 720p25
+                              30: AVC-Intra 200 720p50
+                              31: AVC-Intra 200 720p29.97
+                              32: AVC-Intra 200 720p59.94
+                              33: AVC-Intra 200 720p23.98
+                              34: AVC-Intra 200 1080p50
+                              35: AVC-Intra 200 1080p59.94
+                          or set <format> to 'all' for all formats listed above
+                          The 512 bytes are extracted from <file> starting at <offset> bytes
+                          and incrementing 512 bytes for each format in the list
+  --ps-avcihead           Panasonic AVC-Intra sequence header data for Panasonic-compatible files that don't include the header data
+                          These formats are supported:
+                              AVC-Intra 100 1080i50, AVC-Intra 100 1080p25, AVC-Intra 100 720p25, AVC-Intra 100 720p50,
+                              AVC-Intra 50 1080i50, AVC-Intra 50 1080p25, AVC-Intra 50 720p25, AVC-Intra 50 720p50
+  --track-map <expr>      Map input audio channels to output tracks
+                          The default is 'mono', except if --clip-wrap option is set for op1a it is 'singlemca'
+                          See below for details of the <expr> format
+  --dump-track-map        Dump the output audio track map to stderr.
+                          The dumps consists of a list output tracks, where each output track channel
+                          is shown as '<output track channel> <- <input channel>
+  --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards
+
+  as11op1a/as11d10/as11rdd9/op1a/rdd9/d10:
+    --head-fill <bytes>     Reserve minimum <bytes> at the end of the header metadata using a KLV Fill
+                            Add a 'K' suffix for kibibytes and 'M' for mibibytes
+
+  as02:
+    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'
+    --mic-file              Calculate checksum for entire essence component file. Default is essence only
+    --shim-name <name>      Set ShimName element value in shim.xml file to <name>. Default is 'Sample File'
+    --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is 'http://bbc.co.uk/rd/as02/default-shim.txt'
+    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is 'Default AS-02 shim'
+
+  as02/as11op1a/op1a/rdd9/as10:
+    --part <interval>       Video essence partition interval in frames, or (floating point) seconds with 's' suffix. Default single partition
+
+  as11op1a/as11d10:
+    --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'
+    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'
+    --seg <name>                   Parse and set segmentation data from text file <name>
+    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>
+                                   The <id> is one of the following:
+                                       as11-x1 : AMWA AS-11 X1, delivery of finished UHD programs to Digital Production Partnership (DPP) broadcasters
+                                       as11-x2 : AMWA AS-11 X2, delivery of finished HD AVC Intra programs to a broadcaster or publisher
+                                       as11-x3 : AMWA AS-11 X3, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher
+                                       as11-x4 : AMWA AS-11 X4, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher
+                                       as11-x5 : AMWA AS-11 X5, delivery of finished UHD TV Commericals and Promotions to UK Digital Production Partnership (DPP) broadcasters
+                                       as11-x6 : AMWA AS-11 X6, delivery of finished HD TV Commercials and Promotions to UK Digital Production Partnership (DPP) broadcasters
+                                       as11-x7 : AMWA AS-11 X7, delivery of finished SD D10 programs to a broadcaster or publisher
+                                       as11-x8 : AMWA AS-11 X8, delivery of finished HD (MPEG-2) programs to North American Broadcasters Association (NABA) broadcasters
+                                       as11-x9 : AMWA AS-11 X9, delivery of finished HD TV Programmes (AVC) to North American Broadcasters Association (NABA) broadcasters
+
+  as11op1a/op1a/rdd9/as10:
+    --out-start <offset>    Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP
+    --out-end <offset>      Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP
+
+  as11op1a/as11d10/op1a/d10/rdd9/as10:
+    --seq-off <value>       Sound sample sequence offset. Default 0 for as11d10/d10 and not set (0) for as11op1a/op1a
+
+  as11op1a/op1a/rdd9/as10:
+    --single-pass           Write file in a single pass
+                            The header and body partitions will be incomplete
+    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)
+
+  op1a:
+    --no-tc-track           Don't create a timecode track in either the material or file source package
+    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support
+                            separate partitions for header metadata, index tables, essence container data and footer
+    --body-part             Create separate body partitions for essence data
+                            and don't create separate body partitions for index table segments
+    --clip-wrap             Use clip wrapping for a single sound track
+    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0
+    --aes-3                 Use AES-3 audio mapping
+    --kag-size-512          Set KAG size to 512, instead of 1
+    --primary-package       Set the header metadata set primary package property to the top-level file source package
+    --index-follows         The index partition follows the essence partition, even when it is CBE essence
+    --st379-2               Add ContainerConstraintsSubDescriptor to signal compliance with ST 379-2, MXF Constrained Generic Container
+                            The sub-descriptor will be added anyway if there is RDD 36 video present
+
+  op1a/rdd9/d10:
+    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.
+                            The <id> is one of the following:
+                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',
+                                * a UUID, formatted as a 'urn:uuid:...'or as 32 hexadecimal characters using a '.' or '-' seperator,
+                                * 'as11', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.04010000
+                            A default BMX scheme identifier is used if this option is not provided
+    --xml-lang <tag>        Set the RFC 5646 language tag associated with the the following --embed-xml option.
+                            Defaults to the xml:lang attribute in the root element or empty string if not present
+    --embed-xml <filename>  Embed the XML from <filename> using the approach specified in SMPTE RP 2057
+                            If the XML size is less than 64KB and uses UTF-8 or UTF-16 encoding (declared in
+                            the XML prolog) then the XML data is included in the header metadata. Otherwise
+                            a Generic Stream partition is used to hold the XML data.
+
+  op1a/rdd9:
+    --ard-zdf-hdf           Use the ARD ZDF HDF profile
+    --repeat-index          Repeat the index table segments in the footer partition
+
+  as11d10/d10:
+    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit
+    --d10-invalid <flags>   Indicate using a string of 8 '0' or '1' which sound channels should be flagged invalid. The lsb is the rightmost digit
+
+  as10:
+    --shim-name <name>      Shim name for AS10 (used for setting 'ShimName' metadata and setting video/sound parameters' checks)
+                            list of known shims: HIGH_HD_2014, CNN_HD_2012, NRK_HD_2012, JVC_HD_35_VBR_2012, JVC_HD_25_CBR_2012
+    --dm-file as10 <name>   Parse and set descriptive framework properties from text file <name>
+                            N.B. 'ShimName' is the only mandatary property of AS10 metadata set
+    --dm as10 <name> <value>    Set descriptive framework property
+    --pass-dm               Copy descriptive metadata from the input file. The metadata can be overidden by other options
+    --mpeg-checks [<name>]  Enable AS-10 compliancy checks. The file <name> is optional and contains expected descriptor values
+    --loose-checks          Don't stop processing on detected compliancy violations
+    --print-checks          Print default values of mpeg descriptors and report on descriptors either found in mpeg headers or copied from mxf headers
+    --max-same-warnings <value>  Max same violations warnings logged, default 3
+
+  as11op1a/as11d10/op1a/d10/rdd9/as10:
+    --mp-uid <umid>         Set the Material Package UID. Autogenerated by default
+    --fp-uid <umid>         Set the File Package UID. Autogenerated by default
+
+  avid:
+    --project <name>        Set the Avid project name
+    --tape <name>           Source tape name
+    --import <name>         Source import name. <name> is one of the following:
+                              - a file URL starting with 'file://'
+                              - an absolute Windows (starts with '[A-Z]:') or *nix (starts with '/') filename
+                              - a relative filename, which will be converted to an absolute filename
+    --aux <hh:mm:sscff>     Set up to 5 auxiliary start timecodes. Multiple timecodes are separated by commas e.g. --aux 15:02:15:23,09:37:08:10
+                            The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame
+    --comment <string>      Add 'Comments' user comment to the MaterialPackage
+    --desc <string>         Add 'Descript' user comment to the MaterialPackage
+    --tag <name> <value>    Add <name> user comment to the MaterialPackage. Option can be used multiple times
+    --locator <position> <comment> <color>
+                            Add locator at <position> (in frame rate units) with <comment> and <color>
+                            <position> format is o?hh:mm:sscff, where the optional 'o' indicates it is an offset
+    --umid-type <type>      Set the UMID type that is generated for the Package UID properties.
+                            The default <type> is 'aafsdk'.
+                            The <type> is one of the following:
+                              uuid       : UUID generation method
+                              aafsdk     : same method as implemented in the AAF SDK
+                                           This type is required to be compatible with some older Avid product versions
+                                           Note: this is not guaranteed to create a unique UMID when used in multiple processes
+                              old-aafsdk : same method as implemented in revision 1.47 of AAF/ref-impl/src/impl/AAFUtils.c in the AAF SDK
+                                           Note: this is not guaranteed to create a unique UMID when used in multiple processes
+    --mp-uid <umid>         Set the Material Package UID. Autogenerated by default
+    --mp-created <tstamp>   Set the Material Package creation date. Default is 'now'
+    --psp-uid <umid>        Set the tape/import Source Package UID. Autogenerated by default
+    --psp-created <tstamp>  Set the tape/import Source Package creation date. Default is 'now'
+    --allow-no-avci-head    Allow inputs with no AVCI header (512 bytes, sequence and picture parameter sets)
+    --avid-gf               Use the Avid growing file flavour
+    --avid-gf-dur <dur>     Set the duration which should be shown whilst the file is growing
+                            Avid will show 'Capture in Progress' when this option is used
+
+  op1a/avid:
+    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present
+
+  wave:
+    --orig <name>                      Set originator in the output Wave bext chunk. Default 'bmx'
+    --wave-chunk-data <file> <id>      Add a chunk to the output Wave file that has chunk data (not including id and size) from <file> and chunk <id>
+                                       This chunk will override any non-builtin and <chna> chunk originating from the input Wave files
+    --chna-audio-ids <file>            Add a <chna> chunk to the output Wave file which is defined in the text <file>
+                                       This chunk will override any <chna> chunk originating from the input Wave files
+
+  as02/op1a/as11op1a:
+    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks
+
+  op1a/as11op1a/rdd9:
+    --audio-layout <label>  Set the Wave essence descriptor channel assignment label which identifies the audio layout mode in operation
+                            The <label> is one of the following:
+                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',
+                                * 'as11-mode-0', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02010000,
+                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,
+                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000
+                                * 'imf', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.04010000
+                                * 'adm', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.05010000
+    --track-mca-labels <scheme> <file>  Insert audio labels defined in <file>. The 'as11' <scheme> will add an override and otherwise <scheme> is ignored
+                                        The format of <file> is described in bmx/docs/mca_labels_format.md
+                                        All tag symbols registered in the bmx code are available for use
+                                        The 'as11' <scheme> will change the label associated with the 'chVIN' tag symbol to use the 'Visually Impaired Narrative' tag name, i.e. without a '-'
+
+
+Input Options (must precede the input to which it applies):
+  -a <n:d>                Image aspect ratio. Default parsed from essence or 16:9
+  --bsar                  Set image aspect ratio in video bitstream. Currently supports D-10 essence types only
+  --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default not set
+  -c <depth>              Component depth for uncompressed/DV100/RDD-36 video. Either 8 or 10. Default parsed, 8 for uncompressed/DV100 and 10 for RDD-36
+  --height <value>        Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)
+  --signal-std  <value>   Set the video signal standard. The <value> is one of the following:
+                              'none', 'bt601', 'bt1358', 'st347', 'st274', 'st296', 'st349', 'st428'
+  --frame-layout <value>  Set the video frame layout. The <value> is one of the following:
+                              'fullframe', 'separatefield', 'singlefield', 'mixedfield', 'segmentedframe'
+  --field-dom <value>     Set which field is first in temporal order. The <value> is 1 or 2
+  --video-line-map <value>  Override or set the video line map. The <value> is 2 line numbers separated by a comma
+  --transfer-ch <value>   Set the transfer characteristic label
+                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:
+                              'bt470', 'bt709', 'st240', 'st274', 'bt1361', 'linear', 'dcdm',
+                              'iec61966', 'bt2020', 'st2084', 'hlg'
+  --coding-eq <value>     Set the coding equations label
+                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:
+                              'bt601', 'bt709', 'st240', 'ycgco', 'gbr', 'bt2020'
+  --color-prim <value>    Set the color primaries label
+                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:
+                              'st170', 'bt470', 'bt709', 'bt2020', 'dcdm', 'p3'
+  --color-siting <value>  Set the color siting. The <value> is one of the following:
+                              'cositing', 'horizmp', '3tap', 'quincunx', 'bt601', 'linealt', 'vertmp', 'unknown'
+                              (Note that 'bt601' is deprecated in SMPTE ST 377-1. Use 'cositing' instead)
+  --black-level <value>   Set the CDCI black reference level
+  --white-level <value>   Set the CDCI white reference level
+  --color-range <value>   Set the CDCI color range
+  --comp-max-ref <value>  Set the RGBA component maximum reference level
+  --comp-min-ref <value>  Set the RGBA component minimum reference level
+  --scan-dir <value>      Set the RGBA scanning direction
+  --display-primaries <value>    Set the mastering display primaries.
+                                 The <value> is an array of 6 unsigned integers separated by a ','.
+  --display-white-point <value>  Set the mastering display white point chromaticity.
+                                 The <value> is an array of 2 unsigned integers separated by a ','.
+  --display-max-luma <value>     Set the mastering display maximum luminance.
+  --display-min-luma <value>     Set the mastering display minimum luminance.
+  --rdd36-opaque          Treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property
+  --active-width          Set the Active Width of the active area rectangle
+  --active-height         Set the Active Height of the active area rectangle
+  --active-x-offset       Set the Active X Offset of the active area rectangle
+  --active-y-offset       Set the Active Y Offset of the active area rectangle
+  --display-f2-offset     Set the default Display F2 Offset if none is extracted from the essence
+  --center-cut-4-3        Add the Alternative Center Cut 4:3
+  --center-cut-14-9       Add the Alternative Center Cut 14:9
+  -s <bps>                Audio sampling rate numerator for raw pcm. Default 48000
+  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16
+  --audio-chan <count>    Audio channel count for raw pcm. Default 1
+  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set
+  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set
+  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set
+  --ref-image-edit-rate <rate>     Override or set the Reference Image Edit Rate
+                                   The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)
+  --ref-audio-align-level <value>  Override or set the Reference Audio Alignment Level
+  --anc-const <size>      Set the constant ANC data frame <size>
+  --vbi-const <size>      Set the constant VBI data frame <size>
+  --off <bytes>           Skip <bytes> at the start of the next input/track's file
+  --maxlen <bytes>        Maximum number of essence data bytes to read from next input/track's file
+  --klv <key>             Essence data is read from the KLV data in the next input/track's file
+                          <key> should have one of the following values:
+                            - 's', which means the first 16 bytes, at file position 0 or --off byte offset, are taken to be the Key
+                            - optional '0x' followed by 8 hexadecimal characters which represents the 4-byte track number part of a generic container essence Key
+                            - 32 hexadecimal characters representing a 16-byte Key
+  --fill-pattern-gaps     Fill gaps in a numbered sequence pattern of raw files by repeating the contents of the file at the start of a gap
+  --track-num <num>       Set the output track number. Default track number equals last track number of same picture/sound type + 1
+                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1
+  --avci-guess <i/p>      Guess interlaced ('i') or progressive ('p') AVC-Intra when using the --avci option with 1080p25/i50 or 1080p30/i60
+                          The default guess uses the H.264 frame_mbs_only_flag field
+  --fixed-size            Set to indicate that the d10 frames have a fixed size and therefore do not need to be parsed after the first frame
+  --vc2-mode <mode>       Set the mode that determines how the VC-2 data is wrapped
+                          <mode> is one of the following integer values:
+                            0: Passthrough input, but add a sequence header if not present, remove duplicate/redundant sequence headers
+                               and fix any incorrect parse info offsets and picture numbers
+                            1: (default) Same as 0, but remove auxiliary and padding data units and complete the sequence in each frame
+  --wave-chunks <ids>                List of non-builtin WAVE chunk IDs to transfer across from the input
+                                     The <ids> is a comma separated list of chunk IDs. Spaces are automatically appended to IDs if they are less than 4 letters
+                                     The built-in WAVE chunk IDs are: <JUNK>, <ds64>, <fmt >, <fact>, <bext>, <data>, <chna>
+  --adm-wave-chunk <id>[,<label>]*   Identifies a non-builtin ADM WAVE chunk to transfer across from the input
+                                     ADM Soundfield Groups can be reference this chunk
+                                     A comma separated list of profile and level labels can be provided as well. A <label> can be:
+                                       * a SMPTE UL, formatted as a 'urn:smpte:ul:...',
+                                       * 'adm_itu2076', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020211.01010000
+  --no-chna-chunk                    Don't transfer the ADM <chna> chunk from the input
+
+  as02:
+    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP
+    --trk-out-end <offset>     Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP
+
+
+Inputs:
+  --dv <name>             Raw DV video input file
+  --iecdv25 <name>        Raw IEC DV25 video input file
+  --dvbased25 <name>      Raw DV-Based DV25 video input file
+  --dv50 <name>           Raw DV50 video input file
+  --dv100_1080i <name>    Raw DV100 1080i video input file
+  --dv100_1080p <name>    Raw DV100 1080p video input file
+  --dv100_720p <name>     Raw DV100 720p video input file
+  --d10 <name>            Raw D10 video input file
+  --d10_30 <name>         Raw D10 30Mbps video input file
+  --d10_40 <name>         Raw D10 40Mbps video input file
+  --d10_50 <name>         Raw D10 50Mbps video input file
+  --avci <name>           Raw AVC-Intra video input file. See also --avci-guess option
+  --avci200_1080i <name>  Raw AVC-Intra 200 1080i video input file
+  --avci200_1080p <name>  Raw AVC-Intra 200 1080p video input file
+  --avci200_720p <name>   Raw AVC-Intra 200 720p video input file
+  --avci100_1080i <name>  Raw AVC-Intra 100 1080i video input file
+  --avci100_1080p <name>  Raw AVC-Intra 100 1080p video input file
+  --avci100_720p <name>   Raw AVC-Intra 100 720p video input file
+  --avci50_1080i <name>   Raw AVC-Intra 50 1080i video input file
+  --avci50_1080p <name>   Raw AVC-Intra 50 1080p video input file
+  --avci50_720p <name>    Raw AVC-Intra 50 720p video input file
+  --avc <name>                 Raw AVC video input file
+  --avc_baseline <name>        Raw AVC Baseline profile video input file
+  --avc_constr_baseline <name> Raw AVC Constrained Baseline profile video input file
+  --avc_main <name>            Raw AVC Main profile video input file
+  --avc_extended <name>        Raw AVC Extended profile video input file
+  --avc_high <name>            Raw AVC High profile video input file
+  --avc_high_10 <name>         Raw AVC High 10 profile video input file
+  --avc_high_422 <name>        Raw AVC High 422 profile video input file
+  --avc_high_444 <name>        Raw AVC High 444 profile video input file
+  --avc_high_10_intra <name>   Raw AVC High 10 Intra profile video input file
+  --avc_high_422_intra <name>  Raw AVC High 422 Intra profile video input file
+  --avc_high_444_intra <name>  Raw AVC High 444 Intra profile video input file
+  --avc_cavlc_444 <name>       Raw AVC CAVLC 444 profile video input file
+  --unc <name>            Raw uncompressed SD UYVY 422 video input file
+  --unc_1080i <name>      Raw uncompressed HD 1080i UYVY 422 video input file
+  --unc_1080p <name>      Raw uncompressed HD 1080p UYVY 422 video input file
+  --unc_720p <name>       Raw uncompressed HD 720p UYVY 422 video input file
+  --unc_3840 <name>       Raw uncompressed UHD 3840x2160 UYVY 422 video input file
+  --avid_alpha <name>               Raw Avid alpha component SD video input file
+  --avid_alpha_1080i <name>         Raw Avid alpha component HD 1080i video input file
+  --avid_alpha_1080p <name>         Raw Avid alpha component HD 1080p video input file
+  --avid_alpha_720p <name>          Raw Avid alpha component HD 720p video input file
+  --mpeg2lg <name>                  Raw MPEG-2 Long GOP video input file
+  --mpeg2lg_422p_ml_576i <name>     Raw MPEG-2 Long GOP 422P@ML 576i video input file
+  --mpeg2lg_mp_ml_576i <name>       Raw MPEG-2 Long GOP MP@ML 576i video input file
+  --mpeg2lg_422p_hl_1080i <name>    Raw MPEG-2 Long GOP 422P@HL 1080i video input file
+  --mpeg2lg_422p_hl_1080p <name>    Raw MPEG-2 Long GOP 422P@HL 1080p video input file
+  --mpeg2lg_422p_hl_720p <name>     Raw MPEG-2 Long GOP 422P@HL 720p video input file
+  --mpeg2lg_mp_hl_1920_1080i <name> Raw MPEG-2 Long GOP MP@HL 1920x1080i video input file
+  --mpeg2lg_mp_hl_1920_1080p <name> Raw MPEG-2 Long GOP MP@HL 1920x1080p video input file
+  --mpeg2lg_mp_hl_1440_1080i <name> Raw MPEG-2 Long GOP MP@HL 1440x1080i video input file
+  --mpeg2lg_mp_hl_1440_1080p <name> Raw MPEG-2 Long GOP MP@HL 1440x1080p video input file
+  --mpeg2lg_mp_hl_720p <name>       Raw MPEG-2 Long GOP MP@HL 720p video input file
+  --mpeg2lg_mp_h14_1080i <name>     Raw MPEG-2 Long GOP MP@H14 1080i video input file
+  --mpeg2lg_mp_h14_1080p <name>     Raw MPEG-2 Long GOP MP@H14 1080p video input file
+  --mjpeg21 <name>        Raw Avid MJPEG 2:1 video input file
+  --mjpeg31 <name>        Raw Avid MJPEG 3:1 video input file
+  --mjpeg101 <name>       Raw Avid MJPEG 10:1 video input file
+  --mjpeg201 <name>       Raw Avid MJPEG 20:1 video input file
+  --mjpeg41m <name>       Raw Avid MJPEG 4:1m video input file
+  --mjpeg101m <name>      Raw Avid MJPEG 10:1m video input file
+  --mjpeg151s <name>      Raw Avid MJPEG 15:1s video input file
+  --rdd36_422_proxy <name>   Raw SMPTE RDD-36 (ProRes) 4:2:2 Proxy profile input file
+  --rdd36_422_lt <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 LT profile input file
+  --rdd36_422 <name>         Raw SMPTE RDD-36 (ProRes) 4:2:2 profile input file
+  --rdd36_422_hq <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 HQ profile input file
+  --rdd36_4444 <name>        Raw SMPTE RDD-36 (ProRes) 4:4:4:4 profile input file
+  --rdd36_4444_xq <name>     Raw SMPTE RDD-36 (ProRes) 4:4:4:4 XQ profile input file
+  --j2c_cdci <name|file pattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor
+                                If a '%' is in the value then it is assumed to be a <file pattern> for a sequence of files, each containing a single frame
+                                See Notes below for a detailed description of <file pattern>
+  --j2c_rgba <name|file pattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. RGB) described by a MXF RGBA descriptor
+                                If a '%' is in the value then it is assumed to be a <file pattern> for a sequence of files, each containing a single frame
+                                See Notes below for a detailed description of <file pattern>
+  --jxs_cdci <name|file pattern>  Raw JPEG XS codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor
+                                If a '%' is in the value then it is assumed to be a <file pattern> for a sequence of files, each containing a single frame
+                                See Notes below for a detailed description of <file pattern>
+  --jxs_rgba <name|file pattern>  Raw JPEG XS codestream representing components (e.g. RGB) described by a MXF RGBA descriptor
+                                If a '%' is in the value then it is assumed to be a <file pattern> for a sequence of files, each containing a single frame
+                                See Notes below for a detailed description of <file pattern>
+  --vc2 <name>            Raw VC2 input file
+  --vc3 <name>            Raw VC3/DNxHD input file
+  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file
+  --vc3_1080p_1237 <name> Raw VC3/DNxHD 1920x1080p 145/120/115 Mbps input file
+  --vc3_1080p_1238 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps input file
+  --vc3_1080i_1241 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps 10bit input file
+  --vc3_1080i_1242 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file
+  --vc3_1080i_1243 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps input file
+  --vc3_1080i_1244 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file
+  --vc3_720p_1250 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps 10bit input file
+  --vc3_720p_1251 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file
+  --vc3_720p_1252 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file
+  --vc3_1080p_1253 <name> Raw VC3/DNxHD 1920x1080p 45/36 Mbps input file
+  --vc3_720p_1258 <name>  Raw VC3/DNxHD 1280x720p 45 Mbps input file
+  --vc3_1080p_1259 <name> Raw VC3/DNxHD 1920x1080p 85 Mbps input file
+  --vc3_1080i_1260 <name> Raw VC3/DNxHD 1920x1080i 85 Mbps input file
+  --pcm <name>            Raw PCM audio input file
+  --wave <name>           Wave PCM audio input file
+  --anc <name>            Raw ST 436 Ancillary data. Requires the --anc-const option or frame wrapped in KLV and the --klv option
+  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Requires the --vbi-const option or frame wrapped in KLV and the --klv option
+  --tt <manifest>         Manifest file containing Timed Text metadata
+
+
+Notes:
+ - filename pattern: Clip types producing a single output file may use a filename pattern with variables that get substituted
+                     Pattern variables start with a '{' and end with a '}'. E.g. 'output_{type}_{fp_uuid}.mxf'
+                     The following variables are available:
+                       - {type}: Is replaced with the name for video, audio, data or mixed essence types
+                                 See the --ess-type-names option for the default names and use the option to change them
+                       - {mp_uuid}: The UUID material number in a material package UMID
+                                    The clip writers will by default generate UMIDs with UUID material numbers
+                       - {mp_umid}: The material package UMID
+                       - {fp_uuid}: The UUID material number in a file source package UMID
+                                    The clip writers will by default generate UMIDs with UUID material numbers
+                       - {fp_umid}: The file source package UMID
+                     At least one letter in a variable name can also be in uppercase, which will result in
+                     the corresponding substituted value being in uppercase.
+ - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored
+ - <uuid> format is 32 hexadecimal characters and any '.' and '-' characters are ignored
+ - <tstamp> format is YYYY-MM-DDThh:mm:ss:qm where qm is in units of 1/250th second
+ - <file pattern>: Each file name must include an integer frame number in the sequence.
+                 <file pattern> is a file path that must contain a single '%d' where the frame number appears in the name.
+                 <file pattern> must not contain any other '%' characters.
+                 If --fill-pattern-gaps option is used then gaps in frame numbers are filled by repeating the previous frame.
+                 Example: 'inputs/frame_%d.j2c' for input files `inputs/frame_00001.j2c' etc..
+
+ The track mapping <expr> format is one of the following:
+     'mono'     : each input audio channel is mapped to a single-channel output track
+     'stereo'   : input audio channels are paired to stereo-channel output tracks
+                  A silence channel is added to the last output track if the channel count is odd
+     'singlemca': all input audio channels are mapped to a single multi-channel output track
+     <pattern>  : a pattern defining how input channels map to output track channels - see below
+
+ The track mapping <pattern> specifies how input audio channels are mapped to output track channels
+ A <pattern> consists of a list of <group>s separated by a ';'.
+ A <group> starts with an optional 'm', followed by a list of <element> separated by a ','.
+   An 'm' indicates that each channel in the <group> is mapped to separate single-channel output track.
+   If an 'm' is not present then the channels are mapped to a single output track.
+ A <element> is either a <channel>, <range>, <silence> or <remainder>.
+ A <channel> is an input channel number starting from 0.
+   The input channel number is the number derived from the input track order reported by mxf2raw for the
+   input files in the same order and including any --disable input options. Each channel in a track
+   contributes 1 to the overall channel number.
+ A <range> is 2 <channel>s separated by a '-' and includes all channels starting with the first number
+   and ending with the last number.
+ A <silence> is 's' followed by a <count> and results in <count> silence channels added to the output track.
+ A <remainder> is 'x', and results in all remaining channels being added to the output track.
+
+Here are some <pattern> examples:
+    'mx'     : equivalent to 'mono'
+    '0,1;x'  : the first 2 channels mapped to a stereo output track and all remaining channels mapped
+               to a single multi-channel track
+    '2-7;0,1': 6 channel output track followed by a 2 channel output track
+    '0,1,s2' : 2 input channels plus 2 silence channels mapped to a single output track

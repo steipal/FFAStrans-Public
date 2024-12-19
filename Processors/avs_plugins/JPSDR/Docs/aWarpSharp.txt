@@ -1,0 +1,176 @@
+aWarpSharp package 2016.06.23 - a WarpSharpening filter for Avisynth+ and AviSynth 2.6
+
+  Based on awarpsharp2-2015.12.30 build (cretindesalpes mod)
+    http://ldesoras.free.fr/src/avs/awarpsharp2-2015.12.30.zip
+
+  with the help of 2012.03.28 x64 build
+    http://www.dropbox.com/s/5s6xht0xu80otbz/aWarpSharp_20120328_x64.zip?dl=1
+
+  Usage:
+    http://avisynth.nl/index.php/AWarpSharp2
+
+  Addition by pinterf on 20160623: 
+  - AviSynth 2.6 interface, Avisynth+ header
+  - working x64 version
+  - minor cleanup
+
+  awarpsharp2-2015.12.30 build:
+
+  Modified from the Firesledge's 2015.01.29 modification of 2012.03.28 version
+  and modified again.
+
+  This filter implements the same WarpSharpening algorithm as aWarpSharp by MarcFD,
+  but with several bugfixes and optimizations. In addition to complete algorithm
+  filter aWarpSharp2 parts of algorithm are also available as aSobel, aBlur, aWarp.
+
+  Requires planar YUV and at least MMXExt capable CPU, optimized for Nehalem, blur
+  will be more precise around frame borders if SSSE3 is available.
+
+Syntax:
+  aWarpSharp2(int "thresh", int "blur", int "type", int "depth", int "chroma", int "depthC", string "cplace",
+  int "blurV", int "depthV", int "depthVC", int "blurC", int "blurVC", int "threshC",
+  int "threads",bool "logicalCores", bool "MaxPhysCore", bool "SetAffinity",bool "sleep",
+  int "prefetch", int "ThreadLevel")
+  aSobel(int "thresh", int "chroma", int "threshC",
+  int "threads",bool "logicalCores", bool "MaxPhysCore", bool "SetAffinity",bool "sleep",
+  int "prefetch", int "ThreadLevel")
+  aBlur(int "blur", int "type", int "chroma",int "blurV", int "blurC", int "blurVC",
+  int "threads",bool "logicalCores", bool "MaxPhysCore", bool "SetAffinity",bool "sleep",
+  int "prefetch", int "ThreadLevel")
+  aWarp(edge_mask_clip, int "depth", int "chroma", int "depthC", string "cplace", int "depthV", int "depthVC",
+  int "threads",bool "logicalCores", bool "MaxPhysCore", bool "SetAffinity",bool "sleep",
+  int "prefetch", int "ThreadLevel")
+  aWarp4(edge_mask_clip, int "depth", int "chroma", int "depthC", string "cplace", int "depthV", int "depthVC",
+  int "threads",bool "logicalCores", bool "MaxPhysCore", bool "SetAffinity",bool "sleep",
+  int "prefetch", int "ThreadLevel")
+
+  aWarpSharp2() is the same as aWarp(aSobel().aBlur()) but a bit faster.
+
+  aWarp4 is special version of last step that uses 4x larger source clip than edge
+  mask. This is useful for improving subpixel interpolation quality of final step.
+  Upsampled clip should be top-left aligned, correct usage examples:
+    aWarp4(Spline36Resize(width*4, height*4, 0.375, 0.375), aSobel().aBlur(), depth=3)
+    aWarp4(nnedi3_rpow2(rfactor=2).nnedi3_rpow2(rfactor=2), aSobel().aBlur(), depth=2)
+
+  It's good idea to do anti-aliasing and temporal filtering over edge mask before
+  passing it to warp stage if you want more stable results.
+
+  thresh: 0..255, default 128
+    Saturation limit for edge detection. Reduce for less aggressive sharpening.
+  threshC: default thresh. Set the limit for edge detection on chroma planes.
+
+  blur: 0..100, default 2 for type 0, 3 for type 1
+    Number of blur passes over edge mask. Less passes increase sharpening effect,
+    but can produce major artifacts with high depth and thresh. You can use values
+    higher than 100, but probably won't see any difference.
+  blurV: Default blur. If blurV is different from blur, horizontal process will be
+    done only on blur passes, and vertical process will be done only on blurV passes.
+  blurC : Number of blur passes for the chroma, default (blur+1)/2 passes.
+  blurVC: Default blurC. If blurVC is different from blurC, horizontal process will be
+    done only on blurC passes, and vertical process will be done only on blurVC passes.
+
+  type: 0..1, default 0 for aWarpSharp2, 1 for aBlur
+    Type of blur:
+      0 - radius 6 blur
+      1 - radius 2 blur, requires around 8x more passes than type 0 for the same
+          effect (will be just 2.5x slower), but produce better quality
+
+  depth: -128..127, default 16 for aWarpSharp2, 3 for aWarp and aWarp4
+    Strength of the final warping. Negative values result in warping in opposite
+    direction.
+  depthV: default depth. depth set the warping strength for horizontal, and depthV
+    set de warping strenght for vertical.
+
+
+  chroma: 0..6
+    Processing mode for chroma planes (U and V):
+      0 - fill with zeroes
+      1 - don't care, default for aSobel and aBlur
+      2 - copy, don't care on aWarp4.
+      3 - process
+      4 - guide by luma - aWarpSharp, aWarp and aWarp4 only, default for them
+      5 - same as 3, but don't process luma, luma not cared on aWarp4.
+      6 - same as 4, but don't process luma, luma not cared on aWarp4.
+    Copy on aWarp4 make no sense, as source size is 4*output size. It's up to the user to use
+    whatever resampling mode he wants to create the "not cared" missing planes.
+
+  depthC: -128..127, default depth/2 for non-4:4:4 colorspaces, depth for YV24.
+    Strength of the final warping of chroma planes. Negative values result in 
+    warping in opposite direction.
+  depthVC: default depthC. depthC set the warping strength for horizontal, and depthVC
+    set de warping strenght for vertical.
+
+  cplace: "MPEG1" (default) or "MPEG2". Indicates the chroma sample location
+    for chroma modes 4 and 6 in YV12 and YV16 colorspaces.
+
+   threads -
+      Controls how many threads will be used for processing. If set to 0, threads will
+      be set equal to the number of detected logical or physical cores,according logicalCores parameter.
+
+      Default:  0  (int)
+
+   logicalCores -
+      If threads is set to 0, it will specify if the number of threads will be the number
+      of logical CPU (true) or the number of physical cores (false). If your processor doesn't
+      have hyper-threading or threads<>0, this parameter has no effect.
+
+      Default: true (bool)
+
+   MaxPhysCore -
+      If true, the threads repartition will use the maximum of physical cores possible. If your
+      processor doesn't have hyper-threading or the SetAffinity parameter is set to false,
+      this parameter has no effect.
+
+      Default: true (bool)
+
+   SetAffinity -
+      If this parameter is set to true, the pool of threads will set each thread to a specific core,
+      according MaxPhysCore parameter. If set to false, it's leaved to the OS.
+      If prefecth>number of physical cores, it's automaticaly set to false.
+
+      Default: false (bool)
+
+  sleep -
+      If this parameter is set to true, once the filter has finished one frame, the threads of the
+      threadpool will be suspended (instead of still running but waiting an event), and resume when
+      the next frame will be processed. If set to false, the threads of the threadpool are always
+      running and waiting for a start event even between frames.
+
+      Default: false (bool)
+
+  prefetch - (added negative trim feature)
+      This parameter will allow to create more than one threadpool, to avoid mutual resources acces
+      if "prefetch" is used in the avs script.
+      0 : Will set automaticaly to the prefetch value use in the script. Well... that's what i wanted
+          to do, but for now it's not possible for me to get this information when i need it, so, for
+          now, 0 will result in 1. For now, if you're using "prefetch" in your script, put the same
+          value on this parameter.
+
+      Default: 0
+
+  ThreadLevel -
+      This parameter will set the priority level of the threads created for the processing (internal
+      multithreading). No effect if threads=1.
+      1 : Idle level.
+      2 : Lowest level.
+      3 : Below level.
+      4 : Normal level.
+      5 : Above level.
+      6 : Highest level.
+      7 : Time critical level (WARNING !!! use this level at your own risk)
+
+      Default : 6
+
+
+Original aWarpSharp compatibility:
+  Mapping from original aWarpSharp parameters:
+    thresh = thresh*256
+    blur   = blurlevel
+    depth  = depth*blurlevel/2
+    chroma = 0->2, 1->4, 2->3
+
+  This version is able to do the conversion automatically when called as aWarpSharp,
+  but errors in case of out of bounds values will be displayed in new terms.
+
+
+Copyright (C) 2003 MarcFD, 2012 Skakov Pavel, 2015 _08, Firesledge, 2016 pinterf

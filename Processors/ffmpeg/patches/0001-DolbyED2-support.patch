@@ -1,0 +1,38 @@
+From b7962b316450e37ad39c3f7f7180f9833d076021 Mon Sep 17 00:00:00 2001
+From: Nicolas Gaullier <nicolas.gaullier@cji.paris>
+Date: Fri, 16 Sep 2022 15:01:07 +0200
+Subject: [PATCH] DolbyED2 support
+
+---
+ libavformat/s337m.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/libavformat/s337m.c b/libavformat/s337m.c
+index 6fecfeffae..805f41ed38 100644
+--- a/libavformat/s337m.c
++++ b/libavformat/s337m.c
+@@ -60,6 +60,12 @@ static int s337m_get_offset_and_codec(void *avc,
+         *codec = AV_CODEC_ID_DOLBY_E;
+ 
+     switch (data_size / word_bits) {
++    case 3713:
++    case 3712:
++    case 3664: // DolbyE D2
++        *offset = 1920;
++        break;
++
+     case 3648:
+         *offset = 1920;
+         break;
+@@ -74,7 +80,7 @@ static int s337m_get_offset_and_codec(void *avc,
+         break;
+     default:
+         if (avc)
+-            avpriv_report_missing_feature(avc, "Dolby E data size %d in SMPTE 337M", data_size);
++            avpriv_report_missing_feature(avc, "Dolby E data size %d word_bits %d in SMPTE 337M", data_size, word_bits);
+         return AVERROR_PATCHWELCOME;
+     }
+ 
+-- 
+2.37.2.windows.2
+

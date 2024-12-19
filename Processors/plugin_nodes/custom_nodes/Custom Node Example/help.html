@@ -1,0 +1,42 @@
+<style>
+html *
+{
+  font-family: Calibri;
+  font-size: 14px;
+}
+</style>
+<body>
+<b>Example Plugin Processor for developers</b><br/>
+This Processor is designed to show off the integration between FFAStrans and a plugin processor node. All available features how a plugin processor can interact with 
+FFAStrans is available for testing here. Checkout the documentation on detailed informations about developing custom processors<br/>
+<br/><b>Testinput</b>
+<br/>How to pass values from FFAStrans to the plugin processor  
+<br/>Note that the corresponding open_vars input does not limit the shown variables to "user_vars" only
+<br/><br/><b>Test FolderBrowser</b>
+<br/>How to open a FolderBrowser from Javascript allowing to choose folders from the local machine (and UNC shares of course)
+<br/><br/><b>Test FileBrowser</b>
+<br/>How to open a FileBrowser, similar to FolderBrowser
+<br/><br/><b>Testoutput</b>
+<br/>How to pass an existing user_variable to the Processor in order to allow the processor to set some value in the chosen variables
+<br/>It is the responsibility of the processor script/binary to populate some values to the chosen variables
+<br/>Note: it makes only sense to select a valid, single variable here. The javascript Code of the GUI index.html must ensure this.
+<br/>The demo script processor.ps1 will set a predefined value to the chosen variable: "This testoutput value was calculated and set by processor"
+<br/><br/><b>Testoutput2</b>
+<br/>Same as Testoutput
+
+<br/><br/><b>Set s_source</b>
+<br/>Special functionality: If the processor script does set some value to the inbuilt variable "s_source", the rest of the workflow can work with it.
+<br/>Note that s_source is typically used by all processors in order to automatically determine which source file to work with.
+<br/>So if your processor generates a new File which the rest of the workflow shall work with, it must set s_source
+
+<br/><br/><b>Set Success Msg</b>
+<br/>Special functionality: If the processor script does set a value to the inbuilt variable "s_success", the job Monitor will display this as Message. 
+
+<br/><br/><b>Set Error Msg</b>
+<br/>Special functionality: If the processor sets the inbuilt variable s_job_error_msg, the current Branch of the worfklow will end in error or go on execing the connected nodes that are set to be executed on error.
+
+<br/><br/><b>Set End Branch</b>
+<br/>Special functionality: If the processor sets the inbuilt variable s_end_branch, the current Branch will end with success immediately 
+
+<br/>
+</body>

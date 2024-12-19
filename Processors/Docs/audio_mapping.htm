@@ -1,0 +1,12 @@
+﻿<html><div style=font-family:Calibri>
+<p>FFAStrans supports sophisticated audio channel mapping from the source to the output.</p>
+<p></p>
+
+<p><b><u>Track/stream &lt;no. &gt;</u></b></p>
+<p style=margin-top:-15>The number of discrete tracks dependent on the&quot;Discrete tracks&quot; settings. So if you have selected 2 discrete tracks, you can map what ever source channels you like to those tracks. If you specify source channel(s) that does not exist, it will be replaced by a silent channel. The notation for channels mapping is either integer numbers or variables separated with a comma (,) but pipe (|) and semicolon (;) is also supported as separators. The number of channels specified in the strings will determine the number of channels per discrete track.</p>
+<p>Example: </p>
+<p>Specifying &quot;1,2,3,4&quot; in an input field will give 4 channels in one track, starting from the 1'st channel found to the 4'th.</p>
+<p>As stated, variables are also supported, either as separate channel representation or a complete set of channels.</p>
+<p>E.g. if %s_channels% = 3,4,5</p>
+<p>Specifying &quot;%s_channels%,2,1&quot; in an input field translates to input channels &quot;3,4,5,2,1&quot;. This would give 5 channels on one track.</p>
+</div></html>

@@ -1,0 +1,35 @@
+﻿<html><div style=font-family:Calibri>
+<p>This node will analyze the current loudness based on the EBU-128R specification.</p>
+<p></p>
+
+<p><b><u>Discrete tracks</u></b></p>
+<p style=margin-top:-15>Sets the number of audio tracks/streams to be analyzed. One track can be analyzed with one or more channels.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Source channels as tracks</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This setting will analyze all source audio channels as discrete mono channels.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Same as source</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This setting will make FFAStrans audio layout of thevoriginal media.</p>
+<p></p>
+
+<p><b><u>Total channels</u></b></p>
+<p style=margin-top:-15>Sets the total amount of channels to analyze. The channels are evenly distributed among the available discrete tracks defined. Regardless of the original layout, all audio channels are mapped to separate audio sources. Based on this, FFAStrans will map these sources to match selected audio configuration.. If the audio source has fewer channels than defined then the rest will be filled with silent audio.</p>
+<p></p>
+
+<p>If you select &quot;Custom channel mapping&quot; in the &quot;Total channels&quot; drop-down, FFAStrans will enable setting custom mapping per audio track:</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><u>Set custom mapping</u></b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This will open a separate window displaying all discrete track selected in the &quot;Discrete tracks&quot; drop-down.</p>
+<p style='margin-left:36pt'>For usage and how to configure press the &quot;?&quot; button in the &quot;Custom audio mapping&quot; window.</p>
+<p></p>
+
+<p><b><u>Loop channel analysis</u></b></p>
+<p style=margin-top:-15>If the selected &quot;Channels to analyze&quot; has lower channel count than the total of the input media, the analyzer will start again. E.g. : you have selected 2 (stereo) for analyzing, and the source media has 5 channels in total, FFAStans will analyze channel 1+2and 3+4 as two separate stereo pairs. The last channel is analyzed as is coupled with a silent channels to accommodate the last missing channel (2 x 3).</p>
+<p></p>
+
+<p><b><u>Set level(s) to</u></b></p>
+<p style=margin-top:-15>Select the variable on which the current levels are stored. Only string variables are viable. The levels detected is stored as a JSON compatible array. The variable can then later be used in the encoders to apply loudness normalization.</p>
+</div></html>

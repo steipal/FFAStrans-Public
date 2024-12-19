@@ -1,0 +1,22 @@
+﻿<html><div style=font-family:Calibri>
+<p>This monitor looks for GoPro material and concatenates spanned clips.</p>
+<p>Set folder that will be monitored. May be local or UNC. Supports variables and drag'n drop. The monitor looks for GoPro file structure so the setting should point to the root folder.</p>
+<p></p>
+
+<p><b><u>Create folder</u></b></p>
+<p style=margin-top:-15>If this is checked, FFAStrans will automatically create, if it does not exist, the folder specified under«Folder».</p>
+<p><b><u>Check for growing files</u></b></p>
+<p style=margin-top:-15>This option will make FFAStrans wait to see if incoming files are still growing. The speed of the cycle is defined by the <b><i>sleep timer</i></b> setting in the workflow properties.</p>
+<p></p>
+
+<p><b><u>Forget missing files</u></b></p>
+<p style=margin-top:-15>With this option enabled, FFAStrans will synchronize the files history to the actual files. This enables you to remove an already processed file, wait a sleep cycle, and add the same file back again and it will be picked up.</p>
+<p></p>
+
+<p><b><u>Rebuild history</u></b></p>
+<p style=margin-top:-15>This button make FFAStans register files already present in the monitored folder. Use this if you want to skip existing files prior to starting the workflow.</p>
+<p></p>
+
+<p><b><u>Clear history</u></b></p>
+<p style=margin-top:-15>This does the opposite of &quot;Rebuild cache&quot;. Any files registered by the monitor will be unregistered, and thus FFAStrans will start processing the files once again. This is equivalent as &quot;starting from scratch&quot;.</p>
+</div></html>

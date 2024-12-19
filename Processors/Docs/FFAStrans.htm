@@ -1,0 +1,313 @@
+﻿<html><div style=font-family:Calibri>
+<p>Welcome to the FFAStrans Workflow Manager. From here you can configure FFAStrans and create workflows.</p>
+<p></p>
+
+<p><b><u>Main menu</u></b></p>
+<p style=margin-top:-15></p>
+<p><b><u>File</u></b></p>
+<p style='margin-left:36pt;margin-top:-15pt'><b>Import workflow(s)</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Imports valid workflows packs (. json) into FFAStrans. It also supports importing legacy (. xml) files.</p>
+<p style='margin-left:36pt'><b>Export workflow(s)</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Exports the selected workflow as an .ini file. If a folder i selected, all the workflows within that folder are exported.</p>
+<p style='margin-left:36pt'><b>Export all workflows</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Exports all the workflows in FFAStrans.</p>
+<p style='margin-left:36pt'><b>Shut down FFAStrans farm</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Shuts down and exits all instances of FFAStrans in the farm. In order to give some farm protection you need admin credential to perform this operation.</p>
+<p style='margin-left:36pt'><b>Exit FFAStrans</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Exits the local instance of the FFAStrans Workflow Manager. Note that this will not stop a running FFAStans service.</p>
+<p></p>
+
+</p>
+<p><b><u>Workflows</u></b></p>
+<p style='margin-left:36pt;margin-top:-15pt'><b>Search all workflows...</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Opens a free text search window. Also works with Ctrl+F</p>
+<p style='margin-left:36pt;margin-top:-15pt'><b>Start all enabled workflows</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Starts all enabled workflows..</p>
+<p style='margin-left:36pt;margin-top:-15pt'><b>Stop all running workflows</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Stops all running workflows.</p>
+<p style='margin-left:36pt;margin-top:-15pt'><b>Enable all disabled workflows</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Enables all disabled workflows.</p>
+<p style='margin-left:36pt;margin-top:-15pt'><b>Disable all enabled workflows</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Disables all enabled workflows.</p>
+<p></p>
+
+</p>
+<p><b><u>Options</u></b></p>
+<p style='margin-left:36pt'><b>Show status monitor</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Opens the FFAStrans monitor where you can monitor and abort jobs being executed by workflows. If the FFAStrans folder is on a shared path, the monitor can be opened by any computer with access to the shared path. The status monitor can also be run without starting the main GUI by running FFAStrans.exe with "-monitor" as argument.</p>
+<p style='margin-left:36pt'><b>Configuration</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Opens the global configuration for FFAStrans.</p>
+<p style='margin-left:36pt'><b>User variables</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Opens the user variables windows to manage user variables and statics.</p>
+<p style='margin-left:36pt'><b>Clear all job work cache</b></p>
+<p style='margin-left:72pt;margin-top:-15pt'>Clear all cache files from work folders. NOT available in passive mode!</i></p>
+<p style='margin-left:72pt;margin-top:-15pt'><i><u><b>Warning: Make sure NO jobs are running when performing this operation.</b></u></i></p>
+<p></p>
+
+<p><b><u>Workflows window</u></b></p>
+<p style=margin-top:-15></p>
+<p>The pane title will always show the name &quot;Workflows&quot; and the name of the environment if set in the main configuration. Right clicking this title gives you the option to collapse or expand folder views.</p>
+<p></p>
+
+<p>If you right click you mouse on top of a workflow you will get the following context menu:</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Start:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Start the selected workflow. If a folder is selected, FFAStrans will start all workflows in that folder.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Stop:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Stop selected workflow. If a folder is selected, FFAStrans will stop all workflows in that folder.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Enable:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This enables disabled workflow. If a folder is selected, FFAStrans will enable all disabled workflows in that folder.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Disable:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This disables the workflow. Disabled workflows can not be started unless they are enabled. If a folder is selected, FFAStrans will disable all enabled workflows in that folder. Disabled workflows does not accept submitted jobs, neither manually nor through the API.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Submit file(s):</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This allows you to submit one or multiple files directly to the workflow. This will work whether the workflow has started or not.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Submit file from input:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Opens a simple input window where you can manually insert a complete path to a file for submitting. Note that for the "YouTube decoder" processor a complete URL is also supported.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Reset:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Resets all of the workflows caches. Note that this will also reset all of the workflows monitors and thus make them reprocess all the files monitored.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>New folder:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Creates a new folder. You can not create a folder within a folder.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>New workflow:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Creates a new workflow with default name 'untitled'.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Rename:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Rename the selected workflow or folder</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Delete:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Deletes the selected workflow or folder.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Duplicate:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Creates a copy of the selected workflow.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Move to workflow:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Enables you to move the workflow to a different folder or tor oot. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Archive. . .:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Retrieve archived versions of the workflow. Note that you can always return to the latest. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Properties:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Opens the properties and configuration of the workflow.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Copy ID to clipboard:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Copies the unique workflow ID to the clipboard.</p>
+<p></p>
+
+<p><b><u>Workflow editor</u></b></p>
+<p style='margin-left:36pt;margin-top:-15pt'></p>
+<p>The pane title will always show the name of the workflow. Right clicking this title gives you the option to show parent workflow and description if set. Double clicking the title pane opens up the description field for the workflow.</p>
+<p></p>
+
+<p>If you right click you mouse inside the editor you will get the following menu:</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Insert processor:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Chose the processors of your desire on which you build your workflow.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Insert workflow:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Adds a node to represent another workflow. This option enables forwarding a job to another workflow which then will act as if it's a part of the parent workflow.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Auto arrange:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This will arrange your processor nodes in a tidy fashion with left-right orientation.</p>
+<p style=margin-left:36pt
+><i><b>Note: The algorithm might give some strange result on more complex workflows.</b></i></p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Enable snapping:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This enables snapping of nodes to the grid. This works even if the grid does not show.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Show grid:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Shows the grid on which processor nodes snap.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Search nodes...:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Opens a free text search window. The node matching the search criteria will be highlighted as if selected.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Select all:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Selects all the processor nodes for copying.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Select none:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>De-selects all the processor nodes.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Copy processor(s):</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Copies the selected nodes into node clip board</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Paste processor(s):</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Copies the selected nodes from node clip board. The processors will be placed at the bottom of you workflow.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Delete processor(s):</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Deletes the processor. You can also press del when the processor is selected.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><b>Save workflow:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>If you make a modification to your workflow this option will be enabled. Note that there are two kinds of modifications you can do to a workflow. If you change settings of a node then the pane editor title will light up red and show an asterisk (<b>*)</b> next to the workflow name.</p>
+<p></p>
+
+<p style=margin-left:36pt
+><i>Note that if you simply move or rearrange the processor nodes, you can still save the workflow, but there will be no asterisk (*) next to the workflow name in the editor pane title and it will not light up red.</i></p>
+<p></p>
+
+<p><b><u>Processor nodes</u></b></p>
+<p></p>
+
+<p><b>General configuration: (Double click in the node)</b></p>
+<p style='margin-left:36pt'><b>Name:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>The default or custom name of the node.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Node ID:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>The unique identifier of the node.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Description:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Custom discription of the node. This is used defined and has no default.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Job processing slots:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Defines how many slots the node will occupy. E.g. one might want to set encoder nodes to occupy more slots than lighter nodes in order to prevent overload.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Hosts group:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Sets what hosts group the node can run on. This will make sure that the node only runs on the hosts defined in the group. Defining groups is done in the man general FFAStrans configuration.</p>
+<p></p>
+
+<p><b>Main nodes window: (Rightclick)</b></p>
+<p style='margin-left:36pt'><b>Submit file(s). . .</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Chose the processors of your desire on which you build your workflow.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Submit file from input. . .</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Opens a simple input window where you can manually insert a complete path to a file for submitting.</p>
+<p></p>
+
+</p>
+<p style='margin-left:36pt'><b>Copy processor:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Copies the selected node into node clip board</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Delete processor:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Deletes the selected node from workflow</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Bypass processor:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Disables the selected node and thus preventing it from running.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Connect to selected:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Connects the output of the current node to all selected nodes.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Change processor to. . . :</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Lets you choose a new processor node to replace the current. It will keep all connections but you will loose settings from the previous processor node.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Copy ID to clipboard:</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Copies the unique node ID for the selected workflow to the clipboard.</p>
+<p></p>
+
+<p><b>Node input connector: (Right click)</b></p>
+<p style='margin-left:36pt'><b>Execute on success</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Executes the processor if the previous completed with success.</p>
+<p></p>
+
+</p>
+<p style='margin-left:36pt'><b>Execute on error</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Executes the processor if the previous completed with an error message.</p>
+<p></p>
+
+</p>
+<p style='margin-left:36pt'><b>Execute on both</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Executes the processor regardless of the previous processor completed state.</p>
+<p></p>
+
+<p><b>Node output main connector: (Left click + drag)</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>In order to connect processor you must click mouse on the output-connector of a processor and drag the cursor to the destination processor.</p>
+<p><b>Node output sub connector: (Left click + drag + SHIFT)</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This method will create a sub connection (brown) to a processor. Sub connectors will be executed before main connectors (black).</p>
+<p></p>
+
+<p>To open and configure a processor just click on the processor title name on the processor node.</p>
+<p></p>
+<p><b>Short cut keys and mouse operation:</b></p>
+<p style='margin-left:36pt'><b>SHIFT + Left click (hold)</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Enables multi node selection.</p>
+<p></p>
+
+</p>
+<p style='margin-left:36pt'><b>ALT + Left click (hold)</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Enables lasso for selecting multiple nodes.</p>
+<p></p>
+
+</p>
+<p style='margin-left:36pt'><b>CTRL + Left click (hold)</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Enables deleting both nodes and connections.</p>
+<p></p>
+
+<p><b><u>About &quot;Passive mode&quot;</u></b></p>
+<p style=margin-top:-15></p>
+<p>If you execute the FFAStrans. exe binary with the &quot;-passive&quot; argument, the FFAStrans manager will start as normal but the computer from which you started it will NOT act as a working host. This is ideal if you just want to manage a FFAStrans environment from another computer on the network.</p>
+<p>In passive mode the the &quot;Workflow&quot; title pane will have a pear-ish color and the title will display &quot;FFAStrans&nbsp; Workflow Manager (-PASSIVE MODE-)&quot;.</p>
+<p></p>
+
+<p>-</p>
+<p>GkaJJyPorsTM5C41zi0zIFNClcsB6xJr8bK2Ay60w2ORpBPMsQ</p>
+</div></html>

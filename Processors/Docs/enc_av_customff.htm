@@ -1,0 +1,36 @@
+﻿<html><div style=font-family:Calibri>
+<p>This encoder enables you to make your own custom FFMpeg based encoder. You can also save your setting for later use. This way you can write you own extensive set of encoders. Please consult the FFMpeg documentation on how to use FFMpeg's options.</p>
+<p></p>
+
+<p><i>Note: If you are using this encoder in conjunction with the &quot;A/V Media&quot; decoder you might need to add a &quot;Channel Mapper&quot; filter since &quot;A/V Media&quot; decoder allows outputting more audio channels than the specified audio codec.</i></p>
+<p></p>
+
+<p><b><u>Audio codec</u></b></p>
+<p style=margin-top:-15>The FFMpeg audio codec to use. E.g. pcm_s16le or aac.</p>
+<p></p>
+
+<p><b><u>Audio bitrate</u></b></p>
+<p style=margin-top:-15>This is the audio bitrate to encode. Note that when using uncompressed codec, the audio bitrate is discarded.</p>
+<p></p>
+
+<p><b><u>Video codec</u></b></p>
+<p style=margin-top:-15>The FFMpeg video codec to use: E.g. “mpeg2video” or “dvvideo”.</p>
+<p></p>
+
+<p><b><u>Audio bitrate</u></b></p>
+<p style=margin-top:-15>This is the video bitrate to encode.</p>
+<p></p>
+
+<p><b><u>FFmpeg options</u></b></p>
+<p style=margin-top:-15>This is where all other ffmpeg options are inserted like, filters, special encoding options, mapping, etc. Linefeed (enter) will be treated as space character on execution.</p>
+<p></p>
+
+<p><b><u>Extension</u></b></p>
+<p style=margin-top:-15>Sets the extension for the output file. If left blank you must specify you own output file in the&quot;Options&quot; with an &quot;-y &lt;output. ext&gt;&quot;.  <i>Example: </i></p>
+<p></p>
+
+<p><i>                Options = '-c:v mpeg4 -<b>y &quot;D:\Out\my_output. mov</b>&quot;'</i></p>
+<p></p>
+
+<p><i>Note: If &quot;nul&quot;, &quot;null&quot; or no extension is specified, the encoder will output to null, and thus no file will be written. Useful for benchmarking.</i></p>
+</div></html>

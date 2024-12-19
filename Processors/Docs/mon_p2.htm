@@ -1,0 +1,33 @@
+﻿<html><div style=font-family:Calibri>
+<p><b><u>Folder</u></b></p>
+<p style=margin-top:-15>Set folder that will be monitored. May be local or UNC. Supports variables and drag'n drop. The monitor looks for a Panasonic P2 file structure so the setting should point to the root folder of PP2. The monitor also supports clips spanned over several disk and will automatically search for these in the same monitors folder. If they cannot be located it will try to searching local removable drives.</p>
+<p><i>The latter excludes farming unless the drives has been shared and mapped on all members of the transcoding farm.</i></p>
+<p></p>
+
+<p><b><u>Create folder</u></b></p>
+<p style=margin-top:-15>If this is checked, FFAStrans will automatically create, if it does not exist, the folder specified under «Folder».</p>
+<p></p>
+
+<p><b><u>Cobine all clips into one</u></b></p>
+<p style=margin-top:-15>Combines all available clips into one continuous clip.</p>
+<p></p>
+
+<p><b><u>Forget missing files</u></b></p>
+<p style=margin-top:-15>With this option enabled, FFAStrans will synchronize the files history to the actual files. This enables you to remove an already processed file, wait a sleep cycle, and add the same file back again and it will be picked up.</p>
+<p></p>
+
+<p><b><u>Mux all clips essence to</u></b></p>
+<p style=margin-top:-15>Sets the media wrapper for the output files.</p>
+<p></p>
+
+<p><b><u>Read clip XML to variable</u></b></p>
+<p style=margin-top:-15>Select a variable to store the P2 sidecar XML information as is.</p>
+<p></p>
+
+<p><b><u>Rebuild cache</u></b></p>
+<p style=margin-top:-15>This button make FFAStrans register files already present in the monitored FTP. Use this if you want to skip existing files prior to starting the workflow.</p>
+<p></p>
+
+<p><b><u>Clear cache</u></b></p>
+<p style=margin-top:-15>This does the opposite of &quot;Rebuild cache&quot;. Any files registered by the monitor will be unregistered, and thus FFAStrans will start processing the files once again. This is equivalent as &quot;starting from scratch&quot;.</p>
+</div></html>

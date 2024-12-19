@@ -1,0 +1,233 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+<title>Quicktime Import/Export plugin for Avisynth</title>
+</head>
+<body>
+<h2>QTInput / QTOutput</h2>
+
+<p>Plugin for <a href="http://www.avisynth.org/">AviSynth 2.5</a><br>
+Version 0.1.4 - May 28, 2011<br>
+by Josh Harris<br>
+</p>
+<h3>About</h3>
+This filter can read and write quicktime files, using an existing installation of Quicktime. If you have Quicktime 6 installed, the filter only supports video. If you have Quicktime 7, video and audio are supported for input.  The filter currently only supports creating movs with video. Audio support is planned for a future version.<br>
+<br>
+It should be able to open almost any file that you can open with the quicktime player: movs, mp4 (h264 with b-frames skips the first frame or two and is extremely slow), raw dv, reference movs, etc.<br>
+<br>
+
+
+<h3>Requirements:</h3>
+<p>Quicktime 6 for video only<br>
+Quicktime 7 for audio and video</p>
+
+
+<h3>Usage - Read</h3>
+<p>QTInput("FileName.mov", color = 2, quality = 100, audio = 0, mode = 0, raw = "yuyv", info = 0, dither = 0, vfw = "", gamma = -1, vfrFPS = 0)<br>
+QTInput("FileName.mov")</p>
+
+<h4>Parameters:<br></h4>
+<b>file</b> - input filename<br>
+<b>color</b> - output colorspace (default = 2)<br>
+&nbsp;&nbsp;&nbsp; 0 = RGB24<br>
+&nbsp;&nbsp;&nbsp; 1 = RGB32<br>
+&nbsp;&nbsp;&nbsp; 2 = YUY2<br>
+<b>quality</b> - decompression quality (default = 100)<br>
+&nbsp;&nbsp;&nbsp; There are really only two values for this setting:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 = normal<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; > 0 = High quality<br>
+&nbsp;&nbsp;&nbsp; This parameter does not have an effect on all codecs but there is a noticeable drop in quality for some of them (dvc) if it is set to 0. It is recommended that you leave this value at it's default value of > 0.<br>
+<b>audio</b> - audio input (default = 0)<br>
+&nbsp;&nbsp;&nbsp; 0 = audio disabled.<br>
+&nbsp;&nbsp;&nbsp; 1 = audio enabled - all channels/tracks down mixed either to 1 stereo or 1 mono channel.<br>
+&nbsp;&nbsp;&nbsp; 2 = audio enabled - all channels/tracks output as separate AviSynth channels (be carefull with this one...a lot of programs cannot play back multi channel audio).<br>
+&nbsp;&nbsp;&nbsp; This is only valid if you have Quicktime 7.  Audio is completely disabled for Quicktime 6.<br>
+<b>mode</b> - Decode mode (default = 0)<br>
+&nbsp;&nbsp;&nbsp; 0 = Uses Quicktime SDK function MoviesTask to decode video.<br>
+&nbsp;&nbsp;&nbsp; 1 = If source file is one of several YUV formats (listed below), this mode returns raw data.<br>
+&nbsp;&nbsp;&nbsp; 2 = Uses Quicktime SDK function DecompressSequence to decode video.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Should probably not be used for mpeg4 (h263, h264, etc.), try mode=0 or mode=3 instead<br>
+&nbsp;&nbsp;&nbsp; 3 = Uses Quicktime SDK function ICMDecompress to decode video.<br>
+&nbsp;&nbsp;&nbsp; 4 = Uses Video for windows codec.<br>
+<b>raw</b> - raw input colorspace (default = "yuyv")<br>
+&nbsp;&nbsp;&nbsp; If mode = 1, this sets the input file colorspace method.  Choices are:<br>
+&nbsp;&nbsp;&nbsp; uyvy (2vuy), yuyv (yuy2), yvyu, vyuy, yuv2 or v210 (10bit uyvy), rgb, argb.<br>
+<b>info</b> - Overlays codec info on the video (default = 0)<br>
+&nbsp;&nbsp;&nbsp; 0 = info feature is turned off.<br>
+&nbsp;&nbsp;&nbsp; 1 = info feature is turned on.<br>
+<b>dither</b> - raw 10bit to 8bit dither mode (default = 0)<br>
+&nbsp;&nbsp;&nbsp; 0 = off<br>
+&nbsp;&nbsp;&nbsp; 1 = Uses the 2 least significant bits as a fraction for rounding the 10bit value to the nearest 8bit value.<br>
+&nbsp;&nbsp;&nbsp; Currently this really isn't a dither mode, but is in place for a future dither mode option.<br>
+&nbsp;&nbsp;&nbsp; This only has an effect when mode=1, raw="v210."<br>
+<b>vfw</b> - If mode = 4, force QTInput to use this VFW codec (FOURRCC code)<br>
+&nbsp;&nbsp;&nbsp; This can be left blank and QTInput will attempt to find the correct codec based on the FOURCC embedded in the movie<br>
+<b>gamma</b> - EXPERIMENTAL: it is recomended not to use this...(default = -1, off) If mode = 0, 2 or 3 adjust the decoded gamma to this value<br>
+&nbsp;&nbsp;&nbsp; Values less than or equal to zero do not apply any gamma correction<br>
+&nbsp;&nbsp;&nbsp; Does not seem to work with all codecs<br>
+<b>vfrFPS</b> - EXPERIMENTAL: it is recomended not to use this...(default = -, off)<br>
+&nbsp;&nbsp;&nbsp; If the video is variable frame rate, this tries to force it to use the desired fps by duplicating frames<br>
+&nbsp;&nbsp;&nbsp; The math for this is wrong:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; My test movie is 29.97 (captured in VFR mode).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; It opens in Quicktime player with a duration of 24:22.76 and fps of 14.14.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; It opens in QTInput with vfrFPS = 0 (turned off) with a duration of 24:22.73 and fps of 20.538, 30041 frames<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; but the VFR frames are not duplicated and the movie plays incorrectly.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; It opens in QTInput with vfrFPS = 29.97 with a duration of 24:22.73 and fps of 33.368, 48808 frames<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; the VFR frames are duplicated but they are not 100%.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; By experimentation, I was able to find that setting vfrFPS = 33.675, QTInput opens it with a duration of 24:22.74 and fps of 29.97, 43839 frames<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; the VFR frames are duplicated and seem mostly correct.<br>
+
+
+<h3>Usage - Write</h3>
+<p>QTOutput("FileName.mov", format = "", quality = 100, datarate = 1000, keyframe = 1, raw = "", settings="settings_filename", <FONT COLOR="RED">audio = 0</FONT>)<br>
+QTOutput("FileName.mov")</p>
+<h4>Parameters:<br></h4>
+<b>file</b> - output filename<br>
+<b>format</b> - quicktime FourCC codec (default = "")<br>
+&nbsp;&nbsp;&nbsp; If you leave this value blank, a dialog box will open allowing you to choose which codec to use.<br>
+&nbsp;&nbsp;&nbsp; h264 compression is a little buggy.  It doesn't work if "keyframe every" is checked.  This means you have to use the dialog box for h264 and uncheck it.<br>
+&nbsp;&nbsp;&nbsp; Other options for this depend on what codecs you have installed, some examples:<br>
+&nbsp;&nbsp;&nbsp; "dvc" = DV25 NTSC<br>
+&nbsp;&nbsp;&nbsp; "dvcp" = DV25 PAL<br>
+&nbsp;&nbsp;&nbsp; "rle" = Animation<br>
+&nbsp;&nbsp;&nbsp; "SVQ3" = Sorenson Video 3<br>
+&nbsp;&nbsp;&nbsp; "cvid" = Cinepak<br>
+&nbsp;&nbsp;&nbsp; "IV41" = Intel Indeo¨ Video 4.4<br>
+&nbsp;&nbsp;&nbsp; "cvid" = Cinepak<br>
+<b>quality</b> - compression quality (default = 100)<br>
+&nbsp;&nbsp;&nbsp; This value is divided by 20 and truncated to an integer, so a value of 25 is identical to a value of 20.<br>
+&nbsp;&nbsp;&nbsp; 0 = Least<br>
+&nbsp;&nbsp;&nbsp; 20 = Low<br>
+&nbsp;&nbsp;&nbsp; 40 = Medium<br>
+&nbsp;&nbsp;&nbsp; 60 = High<br>
+&nbsp;&nbsp;&nbsp; 80 = Best<br>
+&nbsp;&nbsp;&nbsp; 100 = Lossless (this is listed as lossless in the SDK, but is probably not always lossless, but rather just the highest setting for a given codec.<br>
+&nbsp;&nbsp;&nbsp; 333 = This is a special mode that will create a file called "Quicktime_CodecList.txt" in the same directory as the avs script. This file will contain a list of the FourCC codes installed on your system.<br>
+<b>datarate</b> - datarate in KBytes/sec (default = 1000)<br>
+<b>keyframe</b> - keyframe every n frames (default = 1)<br>
+<b>raw</b> - raw output colorspace (default = "")<br>
+&nbsp;&nbsp;&nbsp; This is a raw output mode.  Instead of using a quicktime codec to encode data, this mode copies the data directly from YUY2 to the requested output mode.<br>
+&nbsp;&nbsp;&nbsp; You must set <b>format</b> to a valid quicktime FourCC.<br>
+&nbsp;&nbsp;&nbsp; Currently only format="2Vuy", raw="uyvy" is supported.<br>
+&nbsp;&nbsp;&nbsp; And you must have a codec installed that handles 2Vuy, such as the Blackmagic codec.<br>
+<b>settings</b> - This is a filename to save/read output codec settings to/from<br>
+<b>audio</b> - Disable audio (default = 0) or enable audio (1)<br>
+&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; <br>
+
+<h3>Version changes:</h3>
+<ul>
+  <li>Version 0.1.4 2011-05-28<br>
+      <ul><li>QTOutput<br>
+        <ul><li>Fixed a bug in QTInput mode=0 that did not correctly read the cropping parameters from GetMovieBox</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.1.3 2011-03-31<br>
+      <ul><li>QTOutput<br>
+        <ul><li>Fixed a bug in QTInput mode=0 that did not correctly read the rotation matrix in Quicktime Movies, such as those created with an iPhone in landscape mode</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.1.2 2011-02-28<br>
+      <ul><li>QTOutput<br>
+        <ul><li>Fixed a bug (in QTSource or Quicktime API?) that would sometime cause an error when writing a movie to a mapped network drive. If the call to CreateMovieFile() in CreateMovie fails, trying it a second time should succeed. added vi.SetFPS(int(0.5 + 1000.0 * (float)vi.fps_numerator / vi.fps_denominator), 1000) before m_QTMovie->Initialize because BlankClip(fps=29.97) would return fps_numerator = 15712911 and cause some weirdness with the framerate</li></ul>
+        <ul><li>Fixed a bug that caused incorrect timescales to be written to a movie file. Added SetMovieTimeScale(m_Movie, m_MovieTimeScale) to CreateMovie</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.1.1 2011-02-19<br>
+    <ul><li>QTOutput<br>
+      <ul><li>Added "audio" parameter to disable or enable audio output</li></ul>
+      <ul><li>Fixed a bug that caused a file to always be encoded to h264 when setting the "format" parameter to anything other than "none"</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.1.0 Test2 2010-09-16 (Experimental)<br>
+    <ul><li>QTInput<br>
+      <ul><li>audio parameter has changed.  audio=0 (disabled). audio=1 (down mix enabled). audio=2 (multi track/channel enabled)...</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.1.0 Test1, 2010-09-15 (Experimental)<br>
+    <ul><li>QTInput<br>
+      <ul><li>Allow import of multitrack audio as separate tracks...</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.9, 2009-02-03 (Experimental)<br>
+    <ul><li>QTInput<br>
+      <ul><li>???</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.8, 2008-12-06 (Experimental)<br>
+    <ul><li>QTInput<br>
+      <ul><li>Removed TerminateQTML becuase it caused a crash when reopening certain movies (Apple ProRes codec)</li></ul>
+      <ul><li>Added experimental gamma setting</li></ul>
+      <ul><li>Added experimental vfrFPS setting</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.7, 2007-01-?? (Unreleased)<br>
+    <ul><li>QTInput<br>
+    <ul><li>Added new mode that uses an installed video for windows codec to decode the video instead of quicktime</li></ul></li></ul></li>
+  <li>Version 0.0.6, 2006-09-19<br>
+    <ul><li>QTInput<br>
+      <ul><li>Changed audio so it is output as 16bit</li></ul>
+      <ul><li>Added ICMDecompress decoding method (mode = 3), should probably only be used for mpeg4 (h263, h264, etc.)</li></ul>
+    </li></ul>
+    <ul><li>QTInput<br>
+      <ul><li>Added video output settings file</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.5a, 2006-01-09<br>
+    <ul><li>QTInput<br>
+      <ul><li>Fixed raw YUV input that was broken in 0.0.5.</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.5, 2006-01-09<br>
+    <ul><li>QTInput<br>
+      <ul><li>Added raw input mode for RGB and ARGB data.</li></ul>
+      <ul><li>Fixed (hopefully) audio input for Quicktime 7.</li></ul>
+      <ul><li>Fixed several memory errors that caused QTInput to sometimes crash on opening or closing a file.</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.4, 2006-01-07<br>
+    <ul><li>QTInput<br>
+      <ul><li>Added a dither (rounding) mode to raw 10bit input (v210).</li></ul>
+      <ul><li>Removed some unnecessary code.</li></ul>
+    </li></ul>
+    <ul><li>QTInput<br>
+      <ul><li>Added a raw output mode for 2Vuy (uyvy).</li></ul>
+      <ul><li>Added a frame count check to QTOutput.  This keeps it from writing more frames than the input clip has.</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.3, 2006-01-05<br>
+    <ul><li>QTInput<br>
+      <ul><li>Added 10Bit raw decoding of v210 uyvy video.</li></ul>
+      <ul><li>Fixed a bug with the way fps info was calculated for some movies.</li></ul>
+      <ul><li>Fixed a bug with the way frame count was calculated for h264 mp4 files.</li></ul>
+      <ul><li>Fixed part of a bug with the decoding of h264 mp4 files in mode=0.  Still not 100% working, first frame is not decoded and it sometimes skips over a frame.</li></ul>
+    </ul></li>
+    <ul><li>QTOutput<br>
+      <ul><li>Added the default compression dialog box and two new compression parameters, datarate and keyframe.</li></ul>
+      <ul><li>h264 compression is a little buggy.  It doesn't work if "keyframe every" is checked.  This means you have to use the dialog box for h264 and uncheck it.</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.2, 2005-12-20<br>
+    <ul><li>QTInput<br>
+      <ul><li>Added two new decode methods: Quicktime SDK DecompressSequence and a raw mode for some types of YUV data.</li></ul>
+      <ul><li>Added info parameter to overlay codec info on top of video.</li></ul>
+    </li></ul>
+  </li>
+  <li>Version 0.0.1, 2005-12-19<br>
+    <ul><li>Initial release.</li></ul>
+  </li>
+</ul>
+
+
+<h3>Plans:</h3>
+<ul>
+  <li>Fix h264 decoding with b-frames</li>
+  <li>Add more raw input and output formats</li>
+</ul>
+
+
+<h3>License:</h3>
+<p>This program is freeware, but WITHOUT ANY WARRANTY.</p>
+</body>
+</html>

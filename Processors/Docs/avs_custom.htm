@@ -1,0 +1,21 @@
+﻿<html><div style=font-family:Calibri>
+<p>With this editor you can create your own custom AviSynth scripts. When using the &quot;Stills&quot; or &quot;A/VMedia&quot; decoders, FFAStrans will return 'm_clip', which has video size and frame rate of the original source, and one audio stream holding all channels. Other properties might have changed depending on the decoder setting.</p>
+<p></p>
+
+<p><b><u>Set as 64 bit AviSynth</u></b></p>
+<p style=margin-top:-15>Tells the the workflow to use 64 bit processing on subsequent nodes. Note that this option has no effect if you already have used a &quot;A/V Media&quot;-decoder prior to this node.</p>
+<p></p>
+
+<p><i>Check this option ONLY if you know your workflow and plugins will support 64 bit processing. If you're using the QTSource AviSynth plugin, which is only 32 bit, then leave this option off.</i></p>
+<p></p>
+<p><b><u>Skip script verification</u></b></p>
+<p style=margin-top:-15>This option will skip the script verification which normally occurs in some filters that must know some of the input file media properties in order to adapt to the input file. However, no such logic exist in this filter so verifying can safely be skipped. Errors will still be picket up by a subsequent encoder.</p>
+<p></p>
+
+<p><b><u>Adapt color space to video size</u></b></p>
+<p style=margin-top:-15>Enabling this will enable FFAStrans to attempt to set correct color space based on frame size of the output from the script.</p>
+<p><i>Use this option only if you convert colors pace yourself in the script to match the output frame size. Consider as experimental.</i></p>
+<p></p>
+<p><b><u>Clear media properties</u></b></p>
+<p style=margin-top:-15>This will clear all media properties. This is to be compatible with old AviSynth behavior that did not support any media properties.</p>
+</div></html>

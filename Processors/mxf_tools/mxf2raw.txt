@@ -1,0 +1,106 @@
+mxf2raw, bmx v1.3.1, Nov 12 2024 07:42:50 (scm v1.3-1-g07c61443)
+Output MXF file metadata and raw essence
+
+Usage: mxf2raw.exe <<Options>> [<<Input Options>> <filename>]+
+   Use <filename> '-' for standard input
+Options:
+ -h | --help           Show usage and exit
+ -v | --version        Print version info to stderr
+ -l <file>             Log filename. Default log to stderr
+ --log-level <level>   Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1
+
+ --file-chksum-only <type>
+                       Calculate checksum of the file(s) and exit
+                       <type> is one of the following: 'crc32', 'md5', 'sha1'
+
+ --group               Use the group reader instead of the sequence reader
+                       Use this option if the files have different material packages
+                       but actually belong to the same virtual package / group
+ --no-reorder          Don't attempt to re-order the inputs, based on timecode, when constructing a sequence
+                       Use this option for files with broken timecode
+
+ --check-end           Check that the last edit unit (start + duration - 1) can be read when opening the files
+ --check-complete      Check that the input file structure info can be read and is complete
+ --check-app-issues    Check that there are no known issues with the APP (Archive Preservation Project) file
+ --check-app-crc32     Check APP essence CRC-32 data
+
+ -i | --info           Extract input information. Default output is to stdout
+ --info-format <fmt>   Input info format. 'text' or 'xml'. Default 'text'
+ --info-file <name>    Input info output file <name>
+ --track-chksum <type> Calculate checksum of the track essence data
+                       <type> is one of the following: 'crc32', 'md5', 'sha1'
+ --file-chksum <type>  Calculate checksum of the input file(s)
+                       <type> is one of the following: 'crc32', 'md5', 'sha1'
+ --as11                Extract AS-11 and UK DPP metadata
+ --as10                Extract AS-10 metadata
+ --app                 Extract APP metadata
+ --app-events <mask>   Extract APP events metadata
+                       <mask> is a sequence of event types (e.g. dtv) identified using the following characters:
+                           d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error
+ --no-app-events-tc    Don't extract timecodes from the essence container to associate with the APP events metadata
+ --app-crc32 <fname>   Extract APP CRC-32 frame data to <fname>
+ --app-tc <fname>      Extract APP timecodes to <fname>
+ --all-tc <fname>      Extract header and content package metadata timecodes to <fname>
+                       The list of timecodes extracted for each frame is as follows:
+                         frame position, material package, file source package, physical source package,
+                         5 x Avid auxiliary, system item user, system item creation,
+                         4 x system scheme 1 timecode array
+                       The header metadata timecodes are limited to the set extracted by bmx and what bmx accepts
+                       If the timecode property is not present then __:__:__:__ is printed
+ --index               Extract index tables
+ --avid                Extract Avid metadata
+ --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is 2
+ --rdd6 <frames> <filename>
+                       Extract RDD 6 audio metadata from <frames> to XML <filename>, e.g. '--rdd6 0-500 output.xml'
+                       The output XML will contain the RDD 6 metadata from the first frame and the accumulated program description text
+                       from the first and subsequent frames. It is assumed that the RDD 6 metadata is static, except for the frame count and description text.
+                       The description text is spread over frames, 1 character per frame for each program.
+                       <frames> specifies which frames to extract from and can either be a single frame or a range using '-' as a separator.
+                       <frames> is the maximum range of frames to extract a complete description text for all programs.
+                       The description text is complete for a program if a start and finally an end marker character have been found.
+                       The <frames> range should account for the maximum expected text size and whether programs start their text together or not.
+                       Extraction stops once a complete text has been extracted for all programs.
+                       If the program description text is not required then set <frames> to 0 to extract RDD 6 from frame 0 only.
+ --mca-detail          Show detailed MCA channel label information
+
+ -p | --ess-out <prefix>
+                       Extract essence to files starting with <prefix> and suffix '.raw'
+ --wrap-klv <mask>     Wrap essence frames in KLV using the input Key and an 8-byte Length
+                       The filename suffix is '.klv' rather than '.raw'
+                       <mask> is a sequence of characters which identify which data types to wrap
+                           v=video, a=audio, d=data
+ --read-ess            Read the essence data, even when no other option requires it
+ --deint               De-interleave multi-channel / AES-3 sound
+ --start <count>       Set the start edit unit to read from. Default is 0
+ --dur <count>         Set the duration in edit units. Default is minimum available duration
+ --nopc                Don't include pre-charge frames
+ --noro                Don't include roll-out frames
+ --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value
+                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster
+ --no-seq-scan         Do not set the sequential scan hint for optimizing file caching
+ --mmap-file           Use memory-mapped file I/O for the MXF files
+                       Note: this may reduce file I/O performance and was found to be slower over network drives
+ --gf                  Support growing files. Retry reading a frame when it fails
+ --gf-retries <max>    Set the maximum times to retry reading a frame. The default is 10.
+ --gf-delay <sec>      Set the delay (in seconds) between a failure to read and a retry. The default is 1.000000.
+ --gf-rate <factor>    Limit the read rate to realtime rate x <factor> after a read failure. The default is 1.500000
+                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster
+ --disable-indexing-file   Use this option to stop the reader creating an index of the partitions and essence positions in the file up front
+                           This option can be used to avoid indexing files containing many partitions
+
+ --text-out <prefix>   Extract text based objects to files starting with <prefix>
+                       and suffix '.xml' if it is XML and otherwise '.txt'
+ --wave-chunks-out <prefix>   Extract Wave chunks to files starting with <prefix>
+                              The file suffix is '_<chunk id>_<generic stream id>'
+ --filter-wave-chunks <ids>   A comma separated list of Wave chunk identifiers to extract
+ --chna-text-out <prefix>     Extract mapped ADM CHNA descriptors as a text files starting with <prefix>
+                              and suffix '_<MXF track index>.txt'
+
+Input options:
+ --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.
+                           A track is identified by the index reported by mxf2raw
+                           A range of track indexes is specified as '<first>-<last>', e.g. 0-3
+ --disable-audio       Disable audio tracks when reading essence data
+ --disable-video       Disable video tracks when reading essence data
+ --disable-data        Disable data tracks when reading essence data
+

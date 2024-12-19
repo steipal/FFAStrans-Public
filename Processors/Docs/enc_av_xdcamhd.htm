@@ -1,0 +1,130 @@
+﻿<html><div style=font-family:Calibri>
+<p>This encoder creates an XDCAM-HD compliant media file.</p>
+<p>Here you set the resolution and framerate for XDCAM-HD format. Note that XDCAM-HD only support a predefined set of resolution and frame rate.</p>
+<p></p>
+
+<p><b><u>Bit rate (Mb/s)</u></b></p>
+<p style=margin-top:-15>Sets the desired flavor of bitrate and XDCAM-HD type.</p>
+<p>Processing</p>
+<p>Sets the processing mode for the video. This comes especially in handy when you just want to conform audio and leave video as is.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Full processing</i></b> will process (scale, re-interlace, color convert) etc. and re-encode the video.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>None, transwrapping</i></b> cause FFAStrans to try and copy the video stream as is. It will check for <b><i>some key properties</i></b> that fits with the selected profile. If the stream cannot be copied FFAStrans will throw an error.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Transwrap when possible</i></b> cause FFAStrans to try transwrapping. If it fail, it will do full processing.</p>
+<p></p>
+
+<p><i>Note: Audio will undergo full processing regardless of this setting.</i></p>
+<p></p>
+
+<p><b><u>Interlacing</u></b></p>
+<p style=margin-top:-15>With this option you can choose how FFAStrans processes incoming media to the encoder. The &quot;Analyze&quot;option will determine from the actual video, not meta-data.</p>
+<p></p>
+
+<p><b><u>Tuning</u></b></p>
+<p style=margin-top:-15>Sets the most suitable encoding parameters for your input source. Normal being the default is suitable for most content. The "complex" options are suitable for more complex content. Note if you have high complexity for the set tuning you may encounet encoding anomalies cause the bit rate to become out of spec.</p>
+<p></p>
+
+<p><b><u>GOP</u></b></p>
+<p style=margin-top:-15>Sets the GOP structure to open or closed.</p>
+<p></p>
+
+<p><b><u>Use non linear quantization</u></b></p>
+<p style=margin-top:-15>Enables encoding with using non linear quantization method. Disabling this will usually improve FFMpeg's mpeg2 encodig quality but for XDCAM-HD this is standardized as on.</p>
+<p></p>
+
+<p><b><u>Resizing</u></b></p>
+<p style=margin-top:-15>Sets the resizing method for how the source should fit to the output size.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Stretch</i></b> will stretch the source to fit regardless of aspect.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Fit</i></b> will fit the entire source within the output size and keep aspect. This might cause letterboxing or curtains.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Fill</i></b> will make sure the output is filled with source image while keeping aspect.</p>
+<p></p>
+
+<p><b><u>Video range</u></b></p>
+<p style=margin-top:-15>Sets the video range of the output.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Same as source</i></b> implies no change and the encoder will forward the range from the input.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Set to full/limited</i></b> will just set the video range metadata.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Convert to full/limited</i></b> will convert the input to set value. If input range is same as output no converion is being performed.</p>
+<p></p>
+
+<p><b><u>Apply LUT or automatic tone mapping</u></b></p>
+<p style=margin-top:-15>Enables using a LUT in the conversion. This option also support using a custom by setting using a variable representing the full path to a .cube file. Variables representing any of the available inbuilt LUTs is also supported.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>None</i></b> implies no LUTs are being used in the conversion.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Auto (LUT)</i></b> will try to analyze the input file and the desired out color space and apply the corresponding LUT for it.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><i>Auto (Tone mapping)</i></b> will convert using tone mapping algorithm instead of a static LUT.</p>
+<p></p>
+
+<p><b><u>Set start TC</u></b></p>
+<p style=margin-top:-15>This option field sets the start timecode of the video. By default FFAStrans will use the %s_start_tc% variable from the source video but can be changed to other variables or just static timecodes.</p>
+<p></p>
+
+<p><b><u>Wrapper</u></b></p>
+<p style=margin-top:-15>Sets container type for output media. If you select the &quot;MXF (BMX)&quot; wrapper, the output file will be rewrapped using BBCs BMX wrapper. XDCAM-HD from Sony is natively in mxf formatbut it can also be wrapped into MOV format.</p>
+<p></p>
+
+<p><b><u>Discrete tracks</u></b></p>
+<p style=margin-top:-15>Sets the number of audio tracks/streams of the output file. One track can have one ore more channels.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Source channels as tracks</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This setting will distribute all source audio channels into discrete mono channels.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Same as source</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This settings will make FFAStrans try and create the exact same layout as the original media.</p>
+<p></p>
+
+<p><b><u>Total channels</u></b></p>
+<p style=margin-top:-15>Sets the total amount of channels the output file holds. The channels are evenly distributed among the available discrete tracks defined. Regardless of the original layout, all audio channels are mapped to separate audio sources. Based on this, FFAStrans will map these sources to match selected audio configuration.. If the audio source has fewer channels than the output then the rest will be filled with silent audio.</p>
+<p></p>
+
+<p>If you select &quot;Custom channel mapping&quot; in the &quot;Total channels&quot; drop-down, FFAStrans will enable setting custom mapping per audio track:</p>
+<p></p>
+
+<p style='margin-left:36pt'><b><u>Set custom mapping</u></b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This will open a separate window displaying all discrete track selected in the &quot;Discrete tracks&quot; drop-down.</p>
+<p style='margin-left:36pt'>For usage and how to configure press the &quot;?&quot; button in the &quot;Custom audio mapping&quot; window.</p>
+<p></p>
+
+<p><b><u>Conform volume</u></b></p>
+<p style=margin-top:-15>Use this to conform volume level to specified level. For this to work you <b>MUST</b> have a variable table from a previous analyze in the &quot;Loudness&quot;-node. You can also use this option to normalize audio by using the peak levels from &quot;Loudness&quot;-node. Maximum level is 0 dB.</p>
+<p></p>
+
+<p><b><u>Create Avid project structure.</u></b></p>
+<p style=margin-top:-15>Creates Avid compatible files. For proper delivery of media files you should use the &quot;Folder&quot;-delivery and set destination to e.g. .<i>M:\Avid MediaFiles\MXF\1</i> or wherever your Avid puts its . mxf files.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Project name</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Name of the Avid project for output files.</p>
+<p></p>
+
+</p>
+<p style='margin-left:36pt'><b>Tape/ref. name</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Name of the tape for the Avid project. If you prepend with "file://" and add the full original file path the "Source Path" and "Source File" fields in Avid will be populated. Usefull for creating Avid proxy files with reference to original media.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Clip name</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Name of the clip for the Avid project.</p>
+</div></html>

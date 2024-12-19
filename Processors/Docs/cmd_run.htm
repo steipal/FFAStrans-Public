@@ -1,0 +1,72 @@
+﻿<html><div style=font-family:Calibri>
+<p>This processor is what ever you want it to be. It's intended to be used with variables.</p>
+<p></p>
+
+<p><b><u>Command</u></b></p>
+<p style=margin-top:-15>Here you write the complete DOS command you want to execute. FFAStrans will always wait for the execution to end. Remember to use full paths and quotes where needed. Supports variables. Use the &quot;%s_source%&quot; variable to insert source media picked up by monitors or manually submitted.</p>
+<p>Line feed (enter) will be treated as space character on execution.</p>
+<p></p>
+
+<p><i>To run dos-commands you might have to add &quot;<b>%comspec% /c</b>&quot; at the beginning off command with the rest of the command <b><u>encapsulated with quote</u></b><u>(<b>&quot;</b>)</u>.</i></p>
+<p><i>&nbsp;</i></p>
+<p><b><i>Example(copy original):</i></b></p>
+<p><i>%comspec% /c&quot;copy &quot;</i>%s_original_full%&quot;&quot;<i>D:\MediaCopy&quot;&quot;</i></p>
+<p><i>PS: To mimic the deprecated &quot;Copy failed to&quot; set this to execute on error.</i></p>
+<p><i>&nbsp;</i></p>
+<p><b><i>Example(replacement for the removed &quot;Delete original&quot; function):</i></b></p>
+<p><i>%comspec% /c&quot;del /f /q  &quot;</i>%s_original_full%&quot;<i>&quot;</i></p>
+<p></p>
+
+<p><b><i>Example(move original):</i></b></p>
+<p><i>%comspec% /c&quot;move /y  &quot;</i>%s_original_full%&quot;&quot;<i>D:\MediaMove&quot;&quot;</i></p>
+<p></p>
+
+<p><b><i>Example(replacement for the &quot;Remove monitored file record. . . &quot; workflow function):</i></b></p>
+<p><i>%comspec% /c&quot;if exist &quot;</i>%s_cache_record%&quot; del /f /q  &quot;</i>%s_cache_record%&quot;<i>&quot;</i></p>
+<p><i>&nbsp;</i></p>
+<p><b><i>WARNING: Adding the latter to a workflow <u>will</u> cause FFAStrans to pick up the job file in a loop if the file still exist.</i></b></p>
+<p></p>
+
+<p>FFAStrans will try to output stdout and stderr to the status monitor when possible.</p>
+<p></p>
+
+<p><b><i>PS: It's a good habit to encapsulate ALL paths with a quote (&quot;).</i></b></p>
+<p></p>
+
+<p>This node will try to read the exit code from the executed command. If the exit code is &gt; 0 then the output status will be set to error.</p>
+<p></p>
+
+<p><b><u>Set %s_source% variable to</u></b></p>
+<p style=margin-top:-15>Enables you to define your own file as the output source for subsequent node(s). Omitted if blank.</p>
+<p></p>
+
+<p><b><u>Read std-stream to variable</u></b></p>
+<p style=margin-top:-15>Allows you to save the output from STDOUT or/and STDERR to a variable. Default is reading both.</p>
+<p></p>
+
+<p><b><i>Note: The drop down selector accepts only string variables. (%s_variable%)</i></b></p>
+<p></p>
+
+<p><b><u>Set timeout in minutes</u></b></p>
+<p style=margin-top:-15>Allows you to save specify a timeout before the command forcefully exits.</p>
+<p><i>Note:FFAStrans has no way of detecting if a command is soon finished, so use with care.</i></p>
+<p></p>
+
+<p><b><u>Show console</u></b></p>
+<p style=margin-top:-15>If this one is enabled a command prompt window will open where you can follow the execution process. This will only work when running FFAStrans as application, not service.</p>
+<p></p>
+
+<p><b><i>Note: When this option is turned on, output is NOT displayed in the status monitor.</i></b></p>
+<p></p>
+
+<p><b><u>Omit exit code</u></b></p>
+<p style=margin-top:-15>Disregard any exit code from the executed command, effectively setting all outcomes to success.</p>
+<p></p>
+
+<p><b><u>Show executed command in status</u></b></p>
+<p style=margin-top:-15>This option will show the command in the status window. If deselected, the command will be hidden from status view.</p>
+<p></p>
+
+<p><b><u>Read as unicode</u></b></p>
+<p style=margin-top:-15>Reads the output as unicode instead of default system code page.</p>
+</div></html>

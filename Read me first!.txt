@@ -1,0 +1,2 @@
+If you're upgrading from old FFAStrans (0.6-0.9) to 1.x please follow the included upgrade link.
+If you're new to FFAStrans or doing a fresh install, please follow the included installation link.

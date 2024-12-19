@@ -1,0 +1,35 @@
+﻿<html><div style=font-family:Calibri>
+<p>Use this decoder to fetch video links from YouTube, Vimeo, Instagram etc. This works by dragging a link from your browser address bar into a watch folder. Supports links from Internet Explorer, Safari, Chrome, Firefox and Opera using OS-X, Windows or Linux.</p>
+<p></p>
+
+<p>This decoder uses youtube-dl from <a href="http://rg3.github.io/youtube-dl/">http://rg3.github.io/youtube-dl/</a></p>
+<p></p>
+
+<p><b><u>Config file</u></b></p>
+<p style=margin-top:-15>Lets you select a youtube-dl file with custom settings. Please check <a href="https://github.com/rg3/youtube-dl/blob/master/README.md#configuration">https://github.com/rg3/youtube-dl/blob/master/README.md#configuration</a> for more info.</p>
+<p></p>
+
+<p><b><u>Bypass</u></b></p>
+<p style=margin-top:-15>This option will bypass any downloading and just forward the URL as the source to the next node. It is a way of parsing WEB shortcuts.</p>
+<p></p>
+
+<p><b><u>Don't use certificates</u></b></p>
+<p style=margin-top:-15>Omits the HTTPS certificate validation step. This is useful in some cases where access is blocked by security.</p>
+<p></p>
+
+<p><b><u>Use unsecure connection</u></b></p>
+<p style=margin-top:-15>Use an unencrypted connection to retrieve information about the video. (Currently supported only for YouTube)</p>
+<p></p>
+
+<p><b><u>Allow playlist</u></b></p>
+<p style=margin-top:-15>Will support downloading of complete playlists with the option to store the list in a variable.
+<b><i>Note: The source will be a ffmpeg concat v1 file usable as input for encoders.</i></b></p>
+<p></p>
+
+<p><b><u>Download</u></b></p>
+<p style=margin-top:-15>Here you choose between downloading video or audio only, or both.</p>
+<p>Sets the preferred quality to be downloaded. If the quality can't be found FFAStrans will revert to the best available. Quality only applies to video. By default FFAStrans will always fetch the best audio available.</p>
+<p></p>
+
+<p>Starting from FFAStrans 1.0.0 youtube-dl will check for updates on a daily basis.</p>
+</div></html>

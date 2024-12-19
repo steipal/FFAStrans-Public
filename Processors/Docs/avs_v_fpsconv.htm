@@ -1,0 +1,36 @@
+﻿<html><div style=font-family:Calibri>
+<p>Filter for converting to other frame rates. FFAStrans will try to decide if the video is interlaced or not.</p>
+<p></p>
+
+<p><b><u>Convert to</u></b></p>
+<p style=margin-top:-15>Select a set of predefined common frame rates. You can also set custom frame rates.</p>
+<p>There is also some special presets that lets you create interlaced, upper or lower, from progressive. It will check the clip for valid progressive frames before performing the conversion.</p>
+<p></p>
+
+<p><b><i>Example: </i></b><i>If your original video is 50 fps progressive and you set conversion to&quot;p -&gt; i, upper&quot; the result will be 50 fps interlaced (half vertical resolution) set to upper field.</i></p>
+<p><b><i>Note that it is possible to create non standard&nbsp; interlaced frames as FFAStrans does <u>not</u> force output fps to either PAL nor NTSC.</i></b></p>
+<p></p>
+
+<p><b><u>Just set playback speed</u></b></p>
+<p style=margin-top:-15>This option will just set new playback rate, it does not alter the video. If &quot;Convert to&quot; is different from source, the resulting video playback rate will be too fast or to slow.</p>
+<p></p>
+
+<p><b><u>Retain audio pitch</u></b></p>
+<p style=margin-top:-15>This option will make sure the audio pitch stays the same when setting different framerate playback.</p>
+<p><b><i>Note that this feature can only accept up to 16 channels of audio!</i></b></p>
+<p></p>
+
+<p><b><u>Keep source playback frame rate</u></b></p>
+<p style=margin-top:-15>When this option is checked, FFAStrans will preserve the playback frame rate. This may result in either lengthened or shortened video, depending on your &quot;Convert to&quot; setting. Use this to produce fast or slow motion video.</p>
+<p></p>
+
+<p><b><i>Example: </i></b><i>If your original video is 25 fps and you set conversion to 50, enabling this option produce video twice as long as the original and half playback rate (slow motion).</i></b></p>
+<p></p>
+
+<p><b><u>Blend frames</u></b></p>
+<p style=margin-top:-15>Blends frames to create new ones instead of duplicating or throwing away frames. This option gives smoother motion especially when doing PAL&lt;-&gt;NTSC conversions.</p>
+<p></p>
+
+<p><b><u>Use motion compensation</u></b></p>
+<p style=margin-top:-15>This option utilize advanced algorithms using the &quot;MVtools2&quot; AviSynth plugin. Use this to produce &quot;real&quot; missing images.<i>Warning: It&#39;s slow and&nbsp;<u>may</u> produce strange results!</i></p>
+</div></html>

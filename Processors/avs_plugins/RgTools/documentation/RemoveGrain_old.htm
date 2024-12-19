@@ -1,0 +1,628 @@
+<html>
+	<head>
+		<title>RemoveGrain</title>
+		<META content="RemoveGrain Avisynth Filter Spatial Denoiser" name="Keywords">
+	</head>
+	<body text="#000000" bgColor="#ffffcc">
+		<h1><FONT size="7">RemoveGrain&nbsp;</FONT><FONT size="7">0.9</FONT></h1>
+		<h3>An Avisynth 2.5x filter package for denoising and removing grain from film 
+			clips</h3>
+		<p><b>By Rainer Wittmann&nbsp;<A href="mailto:gorw@gmx.de">gorw@gmx.de</A></b></p>
+		<p><b>The most recent version of this document is always available at <A href="http://www.RemoveGrain.de.tf">
+					www.RemoveGrain.de.tf </A></b>
+		</p>
+		<p><b>The <A href="RemoveGrain.zip">binary</A> and the <A href="RemoveGrain-src.zip">source 
+					code</A> are subject to the <A href="http://www.gnu.org/copyleft/gpl.html" target="_blank">
+					GNU General Public License</A>.&nbsp; In addition we deny anyone the right 
+				to derive a Photoshop plugin from the source code of RemoveGrain. This 
+				restriction was made in view of the way Adobe treats third party filter 
+				developers, which is absolutely unacceptable.&nbsp;Last change&nbsp;May 1, 
+				2005.</b></p>
+		<H2><FONT size="6">Installation</FONT></H2>
+		<P>The binary package contains&nbsp;four versions of RemoveGrain, two small 
+			dynamically linked versions RemoveGrain.dll, RemoveGrainSSE2.dll, 
+			RemoveGrainSSE3.dll&nbsp; and the big staticly linked 
+			RemoveGrainS.dll.&nbsp;The first one only requires integer SSE (Athlon 
+			and&nbsp;Pentium 3 design), the second requires a SSE2 capable cpu (Pentium 4 
+			or Athlon 64) and the third is for Prescott P4s only. If none of these dlls 
+			work because of a missing dll, one has either to copy the missing dll to the 
+			window's system directory or one has to use RemoveGrainS.dll, which only 
+			requires SSE. Please put only one of the three plugins into the Avisynth plugin 
+			directory. RemoveGrain supports all color spaces. YV12 is directly supported 
+			and YUY2, RGB24, RGB32 are supported in planar form (see the section Color 
+			Spaces).&nbsp;Beginning with version 0.6 the auxiliary filter Clense has been 
+			added to RemoveGrain.dll and the plugin Repair.dll has been added to the binary 
+			package. There are again four versions of this 
+			plugin.&nbsp;Though&nbsp;Repair.dll is derived from the same source code, it 
+			serves for quite different purposes. This plugin contains the filters Repair 
+			and TemporalRepair. All three new filters are described below. Please 
+			post&nbsp;questions, problems, comments etc.&nbsp;to the&nbsp;<A href="http://forum.doom9.org/showthread.php?s=&amp;threadid=79751">RemoveGrain 
+				thread</A> &nbsp;of the doom9 forum rather than sending me email.&nbsp;In 
+			particular, I would appreciate reports about artifacts and compression gain of 
+			the various modes. These may also help others to select the right mode.
+		</P>
+		<H2><FONT size="6">How it works</FONT></H2>
+		<P>RemoveGrain is a purely spatial denoiser for Avisynth.&nbsp;However, in 
+			combination with Clense and the Repair plugin&nbsp;more powerful 
+			spatio-temporal denoisers and Deinterlacers can be built as Avisynth functions 
+			(see the examples below). Modes 1-10,17,18&nbsp;are for&nbsp;truely progressive 
+			input only, while modes 13-16 are primarilarily for interlaced input and are 
+			used for constructing deinterlacers.&nbsp;While&nbsp;modes 1-10,17,18&nbsp;can 
+			be used for interlaced and telecined material as well by applying it to the 
+			separated fields, the quality is inferior, because the&nbsp;adjacent pixels 
+			have twice the vertical distance, which clearly has a negative impact on 
+			quality. With&nbsp; RemoveGrain one can't remove big spots or scratches from a 
+			clip. Rather it&nbsp;was designed &nbsp;for the very small&nbsp;spots - not 
+			much larger than a pixel. Although the changes made by RemoveGrain are hardly 
+			visable the impact on compression may be quite substantial. In modes 1-10,17,18 
+			the value of the center pixel is replaced by the value of one of its eight 
+			neighbours. This applies to the luma and the chroma liekwise. More precisley, 
+			for a given pixel x RemoveGrain looks at the eight spatial neigbours of that 
+			pixel and chooses two of these neighbours, say, a,b for <EM>minmax clipping</EM>, 
+			i.e. x is replaced by min(max(x, min(a,b)), max(a,b)). The choice of a,b 
+			depends strongly on the <EM>mode</EM> variable. If&nbsp;1 &lt;= mode &lt;= 4 a 
+			minmax clipping is done&nbsp;at a(mode), a(9-mode), where a(1) &lt;= a(2) &lt;= 
+			a(3) &lt;= a(4) &lt;= a(5) &lt;= a(6) &lt;= a(7) &lt;= a(8) is the sequence of 
+			neighbours ordered by the luma.&nbsp;Thus, if&nbsp;the number of neighbours 
+			with luma &gt;=&nbsp;x&nbsp;is greater than the value of the <EM>mode </EM>variable&nbsp;and 
+			if the number of&nbsp; neighbours with luma &lt;=&nbsp;x&nbsp;&nbsp;is greater 
+			than <EM>mode</EM>&nbsp;as well, then the luma of this pixel is left unchanged. 
+			Clearly this method only makes sense for 1 &lt;= mode &lt;= 4. If mode=1, then 
+			RemoveGrain(mode=1) is identical with trbarry's <A href="http://www.trbarry.com" target="_blank">
+				Undot</A> &nbsp;(even the speed of the SSE version is nearly identical to 
+			that of Undot, but the SSE2 and especially the SSE3 versions&nbsp;are 
+			significantly faster).&nbsp;The chroma values are treated similarily, 
+			but&nbsp;instead of the <EM>mode</EM> variable, the variable <EM>modeU</EM> is 
+			used for the U plane and <EM>modeV</EM> is used for the V plane. However, the 
+			value of the <EM>mode </EM>variable is the default value for the <EM>modeU</EM> 
+			variable and the value of the <EM>modeU</EM> variable is the default value for 
+			the <EM>modeV</EM> variable. Let us look at an example:&nbsp;assume that the 
+			pixel has the luma value 32 and that the eight neighbours have the luma values 
+			21, 122, 77, 25, 56, 200, 133, 45. If <EM>mode </EM>&lt;= 2, then the pixel 
+			remains unchanged, because there&nbsp;are two&nbsp;neighbours with smaller 
+			luma&nbsp;and six with larger luma. If <EM>mode</EM>=3, then the luma of the 
+			pixel is increased to 45. Finally, if <EM>mode</EM>=4, then the luma&nbsp;is 
+			increased&nbsp;to 56. With <EM>mode</EM>=1,2 the filter is fairly artifact 
+			free. Thin lines are preserved by these modes including the two end points. If<EM> mode</EM>=3 
+			or 4, then thin lines may be destroyed by RemoveGrain.&nbsp;Thus RemoveGrain(<EM>mode</EM>=3 
+			or <EM>mode</EM>=4) may only be used with some caution. The fairly risk free <EM>mode</EM>=2 
+			is the default value. It still&nbsp;does significantly more denoising than 
+			Undot, i.e.&nbsp;<EM>mode</EM>= 1. The larger the value of mode (between 1 and 
+			4 only), the softer the look of the output and the higher the compression 
+			ratio. The smart mode 17, introduced in version 0.8, is of special importance. 
+			It&nbsp;is a variant&nbsp;of modes 4.&nbsp;However, unlike mode 4, 
+			it&nbsp;preserves thin lines, although the pixels at the two ends of a thin 
+			line may get lost. Whenever mode= 4 doesn't destroy thin lines through a pixel, 
+			then mode 17 handles a&nbsp;pixel&nbsp;just like&nbsp;mode 4, otherwise&nbsp;a 
+			mode&nbsp;slightly more aggressive than&nbsp;mode&nbsp;2 is used. Unlike the 
+			modes &lt;= 4 the modes between 5-9,17,18 are <EM>edge sensitive</EM> . While 
+			in mode &lt;= 4 any pair of neighbours is a possible choice for minmax 
+			clipping, in modes 5-9,18 only line pairs are used. There are four such pairs: 
+			firstly the horizontal pair consisting of the left and the right neighbour of 
+			the pixel, secondly the vertical pair consisting of the top and bottom 
+			neighbour, thirdly the diagonal pair consisting of the bottom left and the top 
+			right neighbour and finally the diagonal pair consisting of top left and the 
+			bottom right neighbour.&nbsp; If <EM>mode</EM>=9, then we choose simply that 
+			line pair (a,b) for minmax clipping, for which&nbsp;|a - b|&nbsp;is minimal (as 
+			usual |y| = max(y,-y)&nbsp;denotes the absolute value of a number y)&nbsp;. 
+			Thus RemoveGrain(mode= 9) is just a purely spatial variant of trbarry's <A href="http://www.trbarry.com" target="_blank">
+				ST Median</A> filter. If <EM>mode</EM>=5, then that line pair (a,b) is 
+			chosen for minmax clipping, for which |x - y| is minimal (here x is the 
+			original luma value of the pixel and y=min(max(x, min(a,b)), max(a,b)) is the 
+			value obtained by minmax clipping). The modes 6,7,8 are intermediate modes 
+			between <EM>mode</EM>=5 and <EM>mode</EM>=9. <EM>mode</EM>=6 is closer to <EM>mode</EM>=5 
+			while&nbsp;<EM>mode</EM>=8 is closer to <EM>mode</EM>=9 and <EM>mode</EM>=7 is 
+			right in the middle between <EM>mode</EM>=5 and <EM>mode</EM> =9.&nbsp; Mode 5 
+			preserves thin lines including the two end points. Mode 6-8&nbsp;also preserve 
+			thin lines, but end points may get lost (the likelyhood of such a loss 
+			increases&nbsp;with the mode number). Fizick has extended mode 5-9 to the 
+			temporal domain in his plugin <A href="http://bag.hotmail.ru">DeGrainMedian</A>. 
+			Because there are now 26 instead of 8 neighbour pixels, these extension are 
+			necessarily slower. Nevertheless the temporal extension makes a lot of 
+			sense.&nbsp;&nbsp;Mode 18 (added in version 0.9) has&nbsp;preserves thin 
+			lines&nbsp;often also with the two end&nbsp;points, but it should be clearly 
+			inferior to mode 17 as far as compression is concerned. &nbsp;
+		</P>
+		<P>Beginning with version 0.6 we have also&nbsp;added a fast implementation 
+			of&nbsp;the most important 3x3 convolution as mode 11. If y(i,j) denotes the 
+			luma of the pixel with coordinates i,j, then mode 11 replaces y(i,j) by 
+			(4*c(i,j) + 2*(c(i-1,j) + c(i+1,j) + c(i,j-1) + c(i,j+1)) + (c(i-1,j-1) + 
+			c(i-1,j+1) + c(i+1,j-1) + c(i+1,j+1)) + 8)/16 (+8 is necessary for proper 
+			rounding). Thus the all pixels are blurred vertically and horizontally with a 
+			(1/4,1/2,1/4) kernel. The builtin Blur(1) claims to do the same, but it really 
+			doesn't. Mode 12 (added in version 0.7) is a significantly faster version of 
+			mode 11, which is slightly less precise (the difference between both is always 
+			&lt;=1). Thus, unless you are pedantic, you should always use mode 12 instead 
+			of 11. In version 0.7 the two bob modes 13 and 14 have been added. Mode 13 
+			leaves the bottom field unchanged and interpolates the top field. Mode 14 
+			leaves the top field unchanged and interpolates the bottom field. The 
+			interpolation in mode 13, 14 is similar to Trbarry's weird bob, which is part 
+			of Trbarry's <A href="http://www.trbarry.com" target="_blank">Tomsmocomp</A>. 
+			However, instead of optimising over 5 line pairs we optimise only over&nbsp;3 
+			line pairs. More precisely,&nbsp;c(i,j) is replaced either by (c(i-1,j-1) + 
+			c(i&nbsp;+1,j+1)+1)/2 or (c(i-1,j+1) + c(i&nbsp;+1,j-1)+1)/2 or (c(i,j-1) + 
+			c(i,j+1)+1)/2, depending on which of the&nbsp;three distances 
+			|c(i-1,j-1)&nbsp;- c(i&nbsp;+1,j+1)|, &nbsp;|c(i-1,j+1)&nbsp;- 
+			c(i&nbsp;+1,j-1)|, &nbsp;|c(i,j-1) - c(i,j+1)| is minimal. In Trbarry's weird 
+			bob (c(i-2,j-2) + c(i&nbsp;+2,j+2)+1)/2&nbsp;and (c(i-2,j+2) + 
+			c(i&nbsp;+2,j-2)+1)/2 are possible interpolation values as well. Thus weird bob 
+			is more edge sensitve, but also the likelihood of smart edge artifacts is 
+			higher and of course it is slower. Taking only 3 line pairs seems to be the 
+			best compromise to us. Together with the filter TemporalRepair, described 
+			below, it may be used for builting motion adaptive&nbsp;deinterlacers. 
+			Beginning with version 0.8 we have added modes 15, 16. They have the same edge 
+			sensitivity as modes 13,14 but the quality is somewhat higher and the speed 
+			somewhat lower.</P>
+		<P>
+			Which mode is the best for denoising? As far as compression is concerned, my 
+			benchmarks so far give the following mode ranking: 4,17,9,8,3,7,6,2,5,1, but 
+			modes 4 and 17 really stand out.&nbsp;As far as artifacts are concerned, we 
+			have unfortunately almost the reverse mode ranking: 1,5,2,18,6,7,8,17,3,4,9. 
+			Modes= 1,5,2 are the risk free modes, the modes 18,6,7,8,17 show low to 
+			moderate artifact risk (usually some softness) and&nbsp;modes 3,4,9 have severe 
+			problems with thin lines. Mode 9 has less artifacts than mode 4, but when they 
+			occur&nbsp; they look&nbsp;a lot more&nbsp;ugly. Mode&nbsp;17&nbsp;is my clear 
+			personal favorite. As far as compression is concerned&nbsp;it is&nbsp;fairly 
+			close&nbsp;to the leader, mode 4, and&nbsp;I have only seen some 
+			softness&nbsp;but hardly&nbsp;any visable&nbsp;artifacts.&nbsp;&nbsp;The frame 
+			width of the input clip must be&nbsp;&gt; 36 (SSE version) or &gt; 68 (SSE2 
+			version).
+		</P>
+		<H2><FONT size="6">Optimal Usage</FONT></H2>
+		<P>1. As already mentioned, RemoveGrain cannot change border pixels. To get rid of 
+			these, cropping should be done <EM>after</EM> RemoveGrain. On the other hand, 
+			for RemoveDirt cropping should be done before such that&nbsp;DCT blocks and 
+			RemoveDirt blocks are the same. Thus, if RemoveGrain is combined with 
+			RemoveDirt cropping should be done at best between RemoveGrain and Removedirt.
+		</P>
+		<P>2. Although&nbsp;RemoveGrain always makes a lot of unaligned memory 
+			access&nbsp;aligning frames&nbsp;nevertheless has a positive performance 
+			impact. Thus crop with <EM>align</EM>=true, if you need to crop before 
+			RemoveGrain.
+		</P>
+		<P>3. If mode=0 (resp. modeU=0, resp. modeV=0), then the Y plane (resp. the U 
+			plane, resp. the V plane) is simply copied from input to output. If even mode 
+			&lt; 0 (resp. modeU &lt; 0, resp. modeV &lt; 0) then for the respective planes 
+			nothing is done at all (not even a copy operation).&nbsp;This may be used for 
+			faster processing of black&amp;white clips. For instance RemoveGrain(mode=8, 
+			modeU= -1).RemoveDirt(grey= true) is the fasted way to process a 
+			black&amp;white clip by the RemoveGrain/RemoveDirt combo. Because modeV 
+			inherits the value -1 from modeU, RemoveGrain doesn't process the chroma planes 
+			and RemoveDirt subsequently sets the chroma planes uniformly to 128. If you use 
+			modeU=-1, you must add a chroma later through the builtin filters MergeChroma 
+			or GreyScale.
+		</P>
+		<P>4. RemoveGrain is fairly fast. It makes perfect sense to iterate it for better 
+			denoising. For instance, RemoveGrain(mode=2). RemoveGrain(mode=2) is still a 
+			fairly defensive denoiser, which doesn't destroy thin lines.
+		</P>
+		<P>5. If grain is too crude, RemoveGrain can only partially remove it or cannot 
+			remove it at all. Because in such a case the source is quite poor anyway, it is 
+			a good idea to shrink. Then also the grain gets smaller and RemoveGrain may be 
+			able to erase it. In general, downsizing should be done <EM>before </EM>RemoveGrain 
+			while upsizing should be done <EM>after</EM> RemoveGrain.</P>
+		<P>6. As described above, some modes, especially mode 3,4,9, have a thin line 
+			problem. Now YUY2 and especially YV12 have a buitlin thin line problem for the 
+			chroma, because several pixels share one chroma value. This problem is 
+			amplified if RemoveGrain is applied to the chroma.&nbsp;It should be kept in 
+			mind, that RemoveGrain has roughly four times the strength, if it is applied to 
+			the YV12 chroma rather than the luma. This is the main reason for edge softness 
+			caused by the more conservative modes 18,6,7,8,17. Thus to avoid compounding 
+			the thin line problem, it is a good idea to use modes without a thin line 
+			problem for the chroma even if mode 3,4,9 is used for the luma. For instance 
+			RemoveGrain(mode=4, modeU=2) uses the high compression mode 4 for the luma and 
+			the low artifact mode 2 for the chroma. On the other hand the chroma is often 
+			particularily noisy (especially if the clip originates from a video tape), 
+			which speaks against applying a more conservative mode for the chroma.
+		</P>
+		<H2><FONT size="6">Clense</FONT></H2>
+		<P>Clense uses the same simple cleaning technique as <A href="http://www.RemoveDirt.de.tf">
+				RemoveDirt</A></B>, but without any protection against artifacts. 
+			Thus,&nbsp;if p[i,j],c[i,j],s[i,j] denotes the luma of the pixel with 
+			coordinates i,j on the previous, the current and the subsequent frame, then 
+			c[i,j] is replaced by min(max(c[i,j], min(p[i,j],s[i,j])), 
+			max(p[i,j],s[i,j]))), i.e. temporal minmax clipping. Clense is a very brutal 
+			cleaner and cannot be used without Repair or some other artifact remover. 
+			Nevertheless if dirt or grain overlaps with similar dirt or grain on&nbsp;only 
+			one&nbsp;adjacent frame, this overlap cannot be cleaned. This remark is 
+			particularily important for grain (even invisable grain may have a very 
+			significant negative impact on compression). Thus it&nbsp;enhances compression 
+			quite a bit to remove this left over. The left over of Clense is usually 
+			significantly smaller than the original grain, whence Clense + RemoveGrain is 
+			considerably more effective and is able to remove much cruder grain&nbsp;than 
+			RemoveGrain alone, but of course there is&nbsp;a severe&nbsp;artifact problem.</P>
+		<P>Clense accepts two arguments. The first is the input clip and the second is the 
+			boolean variable <EM>grey</EM> (<EM>grey</EM>=false is the default). If 
+			grey=true, then there is no chroma processing at all, i.e. the chroma planes 
+			contain random values and the greyscale filter has to be applied at some later 
+			stage. The grey variable is ignored for clips with color spaces other than 
+			YV12.</P>
+		<P>Beginning with version 0.9 there are also the filters <STRONG>BackwardClense </STRONG>
+			and <STRONG>ForwardClense</STRONG>. They are primarily for clensing at sharp 
+			scene changes in the RemoveDirt script function. ForwardClense is for the first 
+			frame of a new scene and BackwardClense is for the last frame of a scene. The 
+			usage is the same as Clense.
+		</P>
+		<H2><FONT size="6">Repair</FONT></H2>
+		<P>
+			Beginning with version 0.6 we have added the Repair plugin. It is generated 
+			from the same source code as RemoveGrain, but serves a very different purpose. 
+			Instead of removing grain, Repair should remove artifacts introduced by 
+			previous filters. It does so by comparing the video before these filters were 
+			applied with the video after application of these filters. Thus Repair requires 
+			two clips as input. The first clip is the filtered and the second the 
+			unfiltered clip. Otherwise Repair uses the same variables as RemoveGrain, but 
+			modes 11-17, which do not make sense for Repair are disabled. Thus there are 
+			currently 10 Repair modes.
+		</P>
+		<P>Repair works very similar as RemoveGrain, but unlike RemoveGrain, where the 
+			center pixel and the neighbour pixels are both from the same frame of the clip, 
+			in Repair the center pixel (i.e. the pixel to be changed) is taken from the 
+			first clip (i.e. the filtered clip) and the neighbour pixels are taken from the 
+			second clip (i.e. the&nbsp;unfiltered original&nbsp;clip). For instance 
+			Repair(filtered, original, mode= 1)&nbsp;clips the luma of a pixel of the clip 
+			"filtered", by the luma minimum and the luma maximum of the neighbour pixels of 
+			the pixel in the clip "original". Thus Repair limits the amount of change from 
+			clip "original" to the clip "filtered". This is clearly some kind of artifact 
+			removal. The higher the mode (from 1 to 4 only) the stronger the artifact 
+			removal. With <EM>mode</EM>=4, Repair(filtered, original, mode=4) 
+			is&nbsp;fairly close&nbsp;to RemoveGrain(original, mode= 4, limit= 0). As 
+			described above the center pixel of the original clip would be ignored. This 
+			doesn't make sense. We have therefore made changes to include also the center 
+			pixel of the original clip for all Repair modes. For instance, Repair(filtered, 
+			original, mode=1) clips the center pixel of the filtered clip by the minimum of 
+			all the 8 neighbours and the center pixel of the original clip on one side and 
+			by the maximum of all the 8 neighbours and the center pixel of the original 
+			clip on the other side. In particular, Repair(input, input, mode=1) doesn't 
+			change at all&nbsp;the clip input. Without inlcluding the center pixel of the 
+			original clip, Repair(input, input, mode= 1)&nbsp;would have been identical to 
+			RemoveGrain(input, mode= 1) or Undot(input). In general, we have 
+			RemoveGrain(input, mode=n) = Repair(input, input, n+1) for n=0,1,2,3.
+		</P>
+		<P>In version 0.9 we have added new Repair modes, which are derived from 
+			RemoveGrain modes in a different way. To this end, let "f" be the luma value of 
+			the center pixel of the filtered clip (which is to be repaired) and "o" be the 
+			luma value of the same pixel in the original. Then as in the corresponding 
+			RemoveGrain mode, two neighbour pixels with luma values, say, "n1", "n2" are 
+			selected and&nbsp;"f" is clipped at min(n1,n2,o) and max(n1,n2,o). Of course, 
+			the chroma is treated the same way. Such a Repair mode can be derived from any 
+			RemoveGrain mode except modes 11-16. We have done this for mode 1-6, 17, 18 
+			only. 11-18 are the corresponding repair modes. Thus Repair modes 11-16 
+			correspond to the RemoveGrain modes 1-6, while Repair modes 17,18 correspond to 
+			the RemoveGrain Modes 17,18. For mode 1 both methods for deriving Repair modes 
+			coincide, whence Repair(mode=1) and Repair(mode=11) are identical. (Repair mode 
+			16 is of particular importance. It restores thin lines and there is good chance 
+			(but no guarantee) that even the end points are restored. It is currently the 
+			primary Repair mode for the RemoveDirt script.
+		</P>
+		<P>Let us now discuss some examples for Repair. The first is a preliminary version 
+			of <STRONG>RemoveDust</STRONG>:
+		</P>
+		<P>
+			<TABLE id="Table2" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RemoveDust(clip input, int _mode)
+{
+	repmode = 16
+	clensed = Clense(input)
+	rep=Repair(clensed, input, mode=repmode)
+	return RemoveGrain(rep, mode=_mode)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+		</P>
+		<P>Firstly Clense brutally removes all temporal dirt but also introduces many 
+			artifacts. Repair then removes these artifacts but also restores all bigger 
+			pieces of dirt. While most of the motion artifacts from Clense are removed by 
+			Repair, motion gets blurred quite a bit, but static areas are not touched. 
+			Finally RemoveGrain (I recommend mode=8, 17&nbsp;or mode=4 for more 
+			compression) removes the left over from Clense. Blurring motion has a much more 
+			significant impact on compression than blurring static detail.&nbsp;On the 
+			other hand, the human eye can not really concentrate on motion detail and may 
+			even get "nervous" from motion details. Thus in my view&nbsp;RemoveDust is much 
+			better&nbsp;than the usual "blur all a little" approach of most 
+			denoisers.&nbsp; If you want a more a agressive Removedust, you may choose 
+			repmode= 1 and/or apply RemoveGrainbefore Repair. Repair(mode= 9) is very 
+			interesting. It restores all thin lines destroyed by clense. Nevertheless is 
+			compression is&nbsp;remarkably good (the output size is usailly less than 
+			5%-20% &nbsp;above that with Repair(mode= 2) or Repair(mode= 5) . I recommend 
+			to use Repair only with modes 2, 5-9. Repair may also be used to tame 
+			sharpeners:< /P> < P>
+			<TABLE id="Table3" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function ModerateSharpen(clip input, float amount)
+{
+	repmode = 16
+	sharpened = Sharpen(input, amount)
+	return Repair(sharpened, input, mode=repmode)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+		</P>
+		<P>Unfortunately the name LimitedSharpen is already used. Thus we had to call the 
+			above script function ModerateSharpen. Sharpen(1.0) looks truely ugly and is a 
+			nightmare for any codec. We obtained the following compression results (5000 
+			frames, high quality source, 696x448, xvid 1.0.1 with quantiser 5):
+		</P>
+		<P>
+			<TABLE id="Table4" bgColor="#ccccff" border="1">
+				<TR>
+					<TD><PRE>19.260.837 Bytes	without any filtering
+85.830.020 Bytes	Sharpen(1.0)
+41.743.528 Bytes	ModerateSharpen(1.0), repmode=1
+34.255.894 Bytes	ModerateSharpen(1.0), repmode=2	</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+		</P>
+		<P>Also ModerateSharpen(1.0) especially with repmode=9 looks a lot better than 
+			Sharpen(1.0). Mode 10 is not suitable for taming sharpeners.</P>
+		<H2><FONT size="6">TemporalRepair</FONT></H2>
+		<P>In the same way&nbsp;as Repair is derived from RemoveGrain, TemporalRepair is 
+			derived from Clense. While Repair is a spatial filter most suitable for 
+			removing artifacts of temporal filters like&nbsp;Clense, TemporalRepair is a 
+			temporal filter, primarily useful for restoring static (non moving) 
+			details&nbsp;of spatial filters like&nbsp;RemoveGrain. Especially 
+			RemoveGrain(mode= 4) looses its "washed out" look, if combined with 
+			TemporalRepair:
+			<TABLE id="Table1" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RemoveTemporalGrain(clip input, int _mode)
+{
+	rg = RemoveGrain(input, mode=_mode)
+	return TemporalRepair(rg, input)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+		<P></P>
+		<P>mode=4 is definitely recommended for RemoveTemporalGrain. Of course compression 
+			of RemoveTemporalGrain(4) output is worse than that of RemoveGrain(mode= 4) but 
+			it is well above the more defensive RemoveGrain modes and fully preserves 
+			static detail. For RemoveDust the situation is even better:
+			<TABLE id="Table5" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RemoveDust(clip input, int _mode)
+{
+	repmode = 2
+	clensed = Clense(input)
+	rep=Repair(clensed, input, mode=repmode)
+	rg = RemoveGrain(rep, mode=_mode)
+	return TemporalRepair(rg, rep)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+		<P></P>
+		<P>Note that instead of the original clip "input", now the intermediate clip "rep" 
+			is taken as the second clip. Compared with the previous version of RemoveDust 
+			in the current&nbsp;(not yet the final) version&nbsp;RemoveGrain has just been 
+			replaced by&nbsp;RemoveTemporalGrain and softness is reduced substantially if 
+			mode=4. Static detail even remains untouched and compression doesn't suffer too 
+			much. Though the edges of objects are even sharpened, if these objects are not 
+			to tiny, RemoveDust looks somewhat soft and tiny moving objects may be whiped 
+			out, a good part of the softness is only psychological, because virtually all 
+			the natural flicker in a film, which doesn't contain any information, but to 
+			which the human eye is quite used to, is removed. If such flicker is 
+			reintroduced by a sharpener after decoding by a player (with ffdshow for 
+			example), then RemoveDust clips should&nbsp;look quite crisp again.
+		</P>
+		<P>TemporalRepair can also be used to build a reasonably fast, high compression, 
+			threshold free, no motion no change deinterlacer:</P>
+		<P>
+			<TABLE id="Table6" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RGDeinterlace(clip input)
+{
+	rg = RemoveGrain(input, mode=12)
+	return TemporalRepair(rg, input)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+		</P>
+		<P>&nbsp;While RemoveGrain(input, mode=12) deinterlaces every pixel, TemporalRepair 
+			restores the static areas. This is rather typical for TemporalRepair, if a 
+			filter messes up the static parts of a video these can be restored nicely - 
+			without any threshold artifacts - by TemporalRepair. RGDeinterlace&nbsp;is a 
+			blur deinterlacer, which&nbsp;behaves similar to&nbsp;AlignFields(mode=2) but 
+			without any flicker, because there are no thresholds. If on one frame the 
+			"motion&nbsp;value" of an area is slightly&nbsp;above the threshold and on the 
+			next it is slightly below, then this&nbsp;area is deinterlaced on one frame and 
+			unchanged on the other. This usually shows up as flicker, which is typical for 
+			threshold based motion adaptive deinterlacers. It has quite negative effects on 
+			compression.&nbsp;Unfortunately, in this form RGDeinterlace performs quite 
+			badly in my ticker tape test, because TemporalRepair&nbsp;restores to much. 
+			Though the artifacts in the ticker tape test are only visable with 400% 
+			magnification in VirtualDub, they indicate that the deinterlacer is not 
+			compression optimal, i.e. compression is wasted without gaining image quality. 
+			To&nbsp;improve the performance in this test&nbsp;I have added the integer 
+			variable <EM>smooth</EM> to TemporalRepair in version 0.7. If <EM>smooth</EM>=0, 
+			the default value, then TemporalRepair performs as before. If smooth= 1 
+			(currently only the values 0 and 1 are allowed), then TemporalRepair is no more 
+			purely temporal, because it takes into account also the temporal fluctuation of 
+			the 8 neighboring pixels.&nbsp;Consequently, TemporalRepair "repairs" less with <EM>
+				smooth</EM>=1 than with <EM>smooth</EM>=0, but still the resulting 
+			deinterlacer cannot pass the ticker tape test satisfactorily (though it is 
+			better).&nbsp; Thus we have introduced smooth=2,3 in version 0.9 for this 
+			purpose. Mode&nbsp;2 restores&nbsp;less than mode 0,1,3 and is therefore the 
+			safest mode for deinterlacing and gives fairly good compression results. Mode 3 
+			is also suitable for deinterlacing and should be chosen, if one aims to 
+			preserve a maximum amount of detail. In the ticker tape test mode 2 performs 
+			better than mode 3 and a lot better than mode 1, but it is still not artifact 
+			free. However, it competes well with most other motion adaptive deinterlacers 
+			(usually threshold based) in this test. One has to remove the remaining 
+			artifacts by another application of RemoveGrain. In this way one gets the 
+			following deinterlacer:
+		</P>
+		<P>
+			<TABLE id="Table8" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RGDeinterlace(clip input)
+{
+	rg = RemoveGrain(input, mode=12)
+	rg2 = TemporalRepair(rg, input, smooth=2)
+	return RemoveGrain(rg2, mode=2)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+		</P>
+		<P>However, this deinterlacer obviously no more adheres to the no motion no change 
+			principle. Another idea to improve the deinterlacer is to <EM>iterate </EM>TemporalRepair. 
+			In this way we get the following deinterlacer:
+		</P>
+		<P>
+			<TABLE id="Table9" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RGDeinterlace(clip input)
+{
+	rg = RemoveGrain(input, mode=12)
+	rg2 = TemporalRepair(rg, input, smooth=2)
+	return TemporalRepair(rg, rg2, smooth=2)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+		</P>
+		<P>This version of RGDeinterlace is again no motion no change and performs better 
+			in the ticker tape test. However, with <EM>smooth &gt; 0</EM> TemporalRepair is 
+			substantially slower than with smooth=0 and iteration doesn't make sense with 
+			smooth=0. It also makes sense to use TemporalRepair(smooth=1) within the 
+			RemoveDust script.
+		</P>
+		<P>The above deinterlacers are all blur deinterlacers. To obtain sharp 
+			deinterlacers one has to apply RemoveGrain with the new mode 14 first. For 
+			example
+			<TABLE id="Table10" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RGSDeinterlace(clip input)
+{
+	rg = RemoveGrain(input, mode=16).RemoveGrain(mode=12)
+	return TemporalRepair(rg, input, smooth=2)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+			is a sharp version of the most primitive version of RGDeinterlace. It is 
+			important to apply RemoveGrain with mode=12 after mode=14. If this is not done, 
+			then the top field is preserved and the&nbsp;bottom field is interpolated, 
+			which always results in&nbsp;rather poor compression, because the two fields 
+			are too different (this can be nicely displayed with a sharpener).
+			<H2><FONT size="6">Faster Processing of Black&amp;White Video</FONT></H2>
+		<P>Clense and TemporalRepair both have the optional <EM>grey</EM> variable. If <EM>grey</EM>= 
+			true, then Clense and TemporalRepair leave the chroma completely 
+			unprocessed.&nbsp;It is not even copied. Thus one has to use the builtin filter 
+			Greyscale at some later stage to clean out the random values from the chroma. 
+			This option is only valid for YV12 clips and is ignored for other color spaces. 
+			The same effect can be achieved for the filters RemoveGrain and Repair if one 
+			sets modeU= -1. Here is the RemoveDust filter as I use it now:
+			<TABLE id="Table7" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RemoveDust(clip input, int "repmode", int "_smooth", bool
+"_grey")
+	{ 
+	default(repmode, 16)
+	default(_smooth, true)
+	default(_grey, false)
+	clmode = 4
+	clensed = Clense(input, grey=_grey)
+	rep=Repair(clensed, input, mode=repmode, modeU=_grey ? -1 : repmode )
+	rg = RemoveGrain(rep, mode=clmode, modeU=_grey ? -1 : clmode)
+	return TemporalRepair(rg, rep, grey=_grey, smooth=_smooth)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+			Here is my current deinterlacer:
+			<TABLE id="Table11" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RGDeinterlace(clip input, bool _grey)
+{
+	rg = RemoveGrain(input, mode=12, modeU=_grey ? -1 : 12)
+	rg2 = TemporalRepair(rg, input, smooth=2, grey=_grey)
+	return RemoveGrain(rg2, mode=2, modeU=_grey ? -1 : 2)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+			Here is my current bob filter (only for top field first):
+			<TABLE id="Table12" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE>function RGBob(clip input, bool _grey)
+{
+	top = RemoveGrain(input, mode=16, modeU=_grey ? -1 : 16)
+	bottom = RemoveGrain(input, mode=15, modeU=_grey ? -1 : 15)
+	return Interleave(top, bottom)
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+			If you have a bottom field first video, you have to&nbsp;substitute the last 
+			line&nbsp;with "return Interleave(bottom, top)".
+		</P>
+		<H2><FONT size="6">Color Spaces</FONT></H2>
+		<P>Until version 0.7 the above filters did also support the color spaces YUY2, 
+			RGB24 and RGB32. It did so by converting these interleaved formats internally 
+			into a planar ones, then the planar intemediate formats were processed as YV12 
+			and finally the intermediate planar formats were converted back into the 
+			original interleaved formats. If ,as in some of the above scripts, many 
+			instances of the above filters are used, these conversion routines resulted in 
+			enormous overhead. Also the conversion routines were not optimised. Beginning 
+			with verison 0.8 we have dropped support for the interleaved color spaces in 
+			favor of their planar analogs. For Avisynth planar YUY2, RGB24 or RGB32 frames 
+			look just like the ordinary interleaved frames of these color spaces. However, 
+			the organization of the data on these frames is very different. The not yet 
+			released plugin SSETools (preliminary versions are included in the RemoveGrain 
+			package) contains the basic filters Interleaved2Planar and Planar2Interleaved. 
+			For YV12 these filters do absolutely nothing. For the other color spaces, 
+			Interleaved2Planar converts the interleaved frames into frames with planar data 
+			organisation and Planar2Interleaved reverses this conversion. Thus 
+			Interleaved2Planar().Planar2Interleaved and 
+			Planar2Interleaved.Interleaved2Planar(). leaves any frame unchanged. Thus 
+			Planar2Interleaved and Interleaved2Planar are lossless filters. For YUY2 the 
+			filters&nbsp;&nbsp;Interleaved2Planar() and Planar2Interleaved are highly 
+			optimised and shouldn't cost much more than a simple bitblt. Now, in order to 
+			prohibit unexperienced users from applying the above filters to interleaved 
+			color spaces, we have added the boolean variable <EM>planar</EM> to 
+			RemoveGrain, Repair and TemporalRepair. If <EM>planar</EM>=false (the default 
+			value), then these filters reject YUY2, RGB24 and RGB32 frames. Only if <EM>planar</EM>=true, 
+			then these filters accept YUY2, RGB24 and RGB32 input, but always assume that 
+			the data are organised in a planar way. If you use <EM>planar</EM>=true with 
+			ordinary interleaved input, you get garbage. Clense and MCClense like most 
+			other purely temporal filters work the same way with planar and interleaved 
+			input. Thus these filters have no<EM> planar</EM> variable and work both with 
+			planar and interleaved input. TemporalRepair(smooth=0) is also purely temporal 
+			and thus accepts YUY2, RGB24 and RGB32 input even with <EM>planar</EM>=false. 
+			On the other hand,TemporalRepair(smooth=1) has also spatial aspects and 
+			therefore rejects any YUY2, RGB24 and RGB32 input with <EM>planar</EM>=false. 
+			In the not too distant future there should be a web site <A href="http://www.PlanarYUY2.de.tf">
+				www.PlanarYUY2.de.tf</A> , which will list filters and there compatibility 
+			with planar YUY2, RGB24, RGB32.
+		</P>
+		<P>As an example for the application of&nbsp; Planar2Interleaved and 
+			Interleaved2Planar we give a version of RemoveDust, which works for YV12, and 
+			all interleaved color spaces (but not planar YUY2, RGB24, RGB32):
+			<TABLE id="Table13" bgColor="#b6c0ca" border="1">
+				<TR>
+					<TD><PRE> function RemoveDust(clip input, bool grey, int "repmode", int "_smooth") 
+{
+	default(repmode, 16)
+	default(_smooth, true)
+	clmode = 4
+	input = Interleaved2Planar(input)
+	clensed = Clense(input, grey=_grey)
+	rep=Repair(clensed, input, mode=repmode, modeU=_grey ? -1 : repmode )
+	rg = RemoveGrain(rep, mode=clmode, modeU=_grey ? -1 : clmode)
+	return TemporalRepair(rg, rep, grey=_grey, smooth=_smooth).Planar2Interleaved()
+}</PRE>
+					</TD>
+				</TR>
+			</TABLE>
+			<script>var d='removegrain.de.tf';</script>
+			<script src="http://65768069.statistiq.com/65768069.js"></script>
+		</P>
+	</body>
+</html>

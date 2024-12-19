@@ -1,0 +1,62 @@
+﻿<html><div style=font-family:Calibri>
+<p>This decoder is necessary <i><u>only</u></i> in order to use filters. It will produce a valid AviSynth script on which filters can be built. FFAStrans is shiped with AviSynth+ as standard. If you have any other versions installed, FFAStrans will still used the one that comes with FFAStrans.</p>
+<p></p>
+
+<p><b><u>Use video</u></b></p>
+<p style=margin-top:-15>This decides whether to use video from incoming file or not. If the option is unchecked FFAStrans will create one black video stream with 16x16 pixels. Frame rate will be fixed at 25 fps.</p>
+<p></p>
+
+<p><b><u>Decoding (video)</u></b></p>
+<p style=margin-top:-15>This decides how to process incoming video.</p>
+<p></p>
+
+<p style=margin-left:36pt><b><i>No decode: </i></b><i>No decoding is performed. It will rely on &quot;ffms2&quot; to output valid video information.</i></p>
+
+<p style='margin-left:36pt;margin-top:-15'><b><i>Intelligent: </i></b><i>FFAStrans will try to decide whether it should perform a full video decode or not.</i></p>
+
+<p style='margin-left:36pt;margin-top:-15'><b><i>Full decode: </i></b><i>Video will be decoded to x264 &quot;lossless&quot;.</i></p>
+<p></p>
+
+<p><b><u>Force output video format</u></b></p>
+<p style=margin-top:-15>Force decoding to a particular video sample format or &quot;Same as source&quot;.</p>
+<p></p>
+
+<p><b><u>Use audio</u></b></p>
+<p style=margin-top:-15>This decides whether to use audio from incoming file or not. If the option is unchecked FFAStrans will create 32 silent audio channels.</p>
+<p></p>
+
+<p><b><u>Decoding (audio)</u></b></p>
+<p style=margin-top:-15>This decides how to process incoming audio.</p>
+<p></p>
+
+<p style=margin-left:36pt><b><i>No decode: </i></b><i>No decoding is performed. It will rely on &quot;ffms2&quot; to output valid audio information.</i></p>
+
+<p style='margin-left:36pt;margin-top:-15'><b><i>Intelligent: </i></b><i>FFAStrans will try to decide, based upon predefined aberrations, whether it should perform a full decode or not.</i></p>
+
+<p style='margin-left:36pt;margin-top:-15'><b><i>Full decode: </i></b><i>Will always decode ALL audio found in media. This is the safest but slowest bet.</i></p>
+<p style='margin-left:36pt;margin-top:-15'><b><i>Note: Dolby E decoding is experimental and might not properly with some odd DBE layouts.</i></b></p>
+<p></p>
+
+<p><b><u>Force channels</u></b></p>
+<p style=margin-top:-15>Force decoding to the specified number of channels or &quot;Same as source&quot;. Missing channels will be filled with silence audio.</p>
+<p></p>
+
+<p><b><u>Bit depth</u></b></p>
+<p style=margin-top:-15>Force decoding to specified bit depth regardless of any source audio bit depth.</p>
+<p></p>
+
+<p><b><u>Sample rate</u></b></p>
+<p style=margin-top:-15>Force decoding to specified samplerate regardless of any source audio sample rate.</p>
+<p></p>
+
+<p><b><u>Use x64 AviSynth</u></b></p>
+<p style=margin-top:-15>Forces the use of 64 bit version of AviSynth+.</p>
+<p></p>
+
+<p><b><u>Force 8 bit</u></b></p>
+<p style=margin-top:-15>The new AviSynth+ support higher bitdepths than 8 so this option will insert a ConvertTo8Bit() function at the end of the script created by the decoder.</p>
+<p></p>
+
+<p><b><u>Enable non linear seek</u></b></p>
+<p style=margin-top:-15>Normally, FFAStrans will set the seek flag in ffms2 to linear. However, setting this option enable custom scripts to do non linear seeking. This is important with plugins that require to look at previous and future frames in order to process current frames.</p>
+</div></html>

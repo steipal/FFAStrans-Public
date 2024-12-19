@@ -1,0 +1,121 @@
+
+
+                            FieldDiff v1.5  -  HELP FILE  (20201214)
+
+
+GENERAL INFO:
+
+
+      FieldDiff supports 8-16 bit Y, planar YUV (4:1:1, 4:2:0, 4:2:2, 4:4:4) and YUY2 colorspaces.
+
+      FieldDiff calculates a field difference metric using the 5 point metric that TFM
+   uses and then outputs it via the debug or display options. It operates on full frames
+   (it differences the two fields in each frame). FieldDiff has a version that can be
+   used in conditional filtering called "CFieldDiff" that returns the value to the script.
+
+   Syntax=>
+
+        FieldDiff(int nt, bool chroma, bool display, bool debug, bool sse, int opt)
+
+	CFieldDiff(int nt, bool chroma, bool debug, bool sse, int opt)
+
+
+
+PARAMETERS:
+
+
+     nt -
+
+         Sets the noise threshold for the field differencing.  Recommended values are
+         between 0 (no noise rejection) and 5.
+
+         Default:  3  (int)
+
+
+     chroma -
+
+         Disables or enables chroma processing.
+         Parameter is ignored and treated as false for greyscale input.
+
+         Default:  true  (bool)
+
+
+     display -
+
+         Draws the difference value on the top left of each frame.
+
+         Default:  false  (bool)
+
+
+     debug -
+
+         Outputs the difference value via OutputDebugString.  Use "DebugView" to
+         view the output.
+
+         Default:  false  (bool)
+
+
+     sse -
+
+         If set to true, then sse (sum of squared errors) will be used instead of
+         sad (sum of absolute differences) when calculating the metrics.
+
+         Default:  false  (bool)
+
+
+     opt -
+
+         Controls which optimizations are used.  Possible settings:
+
+         Note: do not use in production, only for debug, can be changed later, e.g. when AVX2 gets number 5
+
+            0 - use c routines
+            1 - (removed in 2020 -- use mmx routines)
+            2 - (removed in 2020 -- use isse routines)
+            3 - use sse2 routines
+            4 - auto detect
+
+         Default:  4  (int)
+
+
+
+CHANGE LIST:
+   v1.5 - (20201214 - pinterf)
+
+      - parameter 'chroma' ignored and treated as false for greyscale input
+
+   v1.4 - (20200611 - pinterf)
+
+      - 10-16 bit and greyscale support
+
+   (same number) (20200508 - pinterf)
+
+      - opt = 1 and opt = 2 is like opt = 3
+      - add all planar YUV support (422, 444, 411) besides 420
+
+   v1.3 - (03/23/2006)
+
+      - replace explicit frame copy with makewritable
+      - fixed mmx routines containing paddq instruction
+
+
+   v1.2 - (01/24/2006)
+
+      + added sse2/mmx optimizations
+      + added opt parameter
+
+
+   v1.1 - (07/31/2005)
+
+      + added sse option
+
+
+
+TO DO LIST:
+
+
+    - nothing
+
+
+
+contact:   forum.doom9.org  nick = tritical  or  email:  kes25c@mizzou.edu

@@ -1,0 +1,15 @@
+﻿<html><div style=font-family:Calibri>
+<p>This processor node will put the job instance in pause until one of the following criterias are met:</p>
+<p></p>
+
+<p><b><u>Sleep</u></b></p>
+<p style=margin-top:-15>Pauses the job instance in the amount of seconds specified in the &quot;Time&quot; input.</p>
+<p></p>
+
+<p><b><u>Synchronize</u></b></p>
+<p style=margin-top:-15>This special option pauses the job instance until all other instances of the job has reached the same point/node. The timeout option is also used for the &quot;Wait for file(s)&quot; option to specify how long it should wait for the files to be present.</p>
+<p></p>
+
+<p><b><u>Wait for files</u></b></p>
+<p style=margin-top:-15>Pauses the job instance until the file(s) in the list is present. One can specify any number of files in the list. All files are separated with a line feed (Enter). File list as array notation is also supported. You can also specify a file count in the case you're using wildcards like (*) and (?). The default counter is zero (0) indicating it will only search for the exact number of files specified in the list.</p>
+</div></html>

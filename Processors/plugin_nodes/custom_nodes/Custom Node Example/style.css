@@ -1,0 +1,23 @@
+body {
+  font-family: Calibri;
+  font-size: 14px;
+  background-color: #efefef;
+} 
+
+.ffas-label-left{
+    width:140px;
+    display:inline-block
+}
+
+.ffas-text-input{
+	width:250px;
+
+}
+
+input[name="open_vars"] {
+	width: 10px;
+	padding: 0;
+	font-family: monospace;
+	font-weight: bolder;
+	cursor:pointer;
+}

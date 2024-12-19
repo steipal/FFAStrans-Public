@@ -1,0 +1,75 @@
+﻿<html><div style=font-family:Calibri>
+<p>With this node you can evaluate complex expressions, by using variables/statics and functions, in order to alter the path of your workflow job. The node consists of eight (8) rows in which to populate your expressions. All the input fields accepts common mathematical symbols like <b>+</b>, <b>-</b>, <b>*</b>, <b>/</b>, <b>^</b> and <b>()</b>.</p>
+
+<p>An expression within one input field could look like:</p>
+<p><i>   (%i_frames%/%f_fps)+100</i></p>
+<p></p>
+
+<p>So if <i>%i_frames%</i> = 1750 and <i>%f_fps%</i> = 29.97 then the evaluation of the expression would be</p>
+<p>(1750/29.96)+100=158.39</p>
+
+<p>An expression is only valid when both input fields in one row are populated with either values, variables/statics, strings, functions, or a combination:</p>
+<p style='margin-left:36pt'><i>If <b>value</b>/<b>%variable%</b>/<b>"string"</b>/<b>$function()</b> is &lt;operator&gt; <b>value</b>/<b>%variable%</b>/<b>"string"</b>/<b>$function()</b></i></p>
+<p>So a valid full expression would look something like:</p>
+<p style='margin-left:36pt'><i>If <b>%i_fps%*2</b> is equal to (=) <b>25+25</b></i></p>
+<p style='margin-left:36pt'><i>If <b>%s_original_path%</b> is equal to (=) <b>*\Incoming\MXF*</b></i></p>
+<p>The three first operators (=, ==, <span style='font-family:"Cambria Math",serif'>&#8800;</span>)are also valid for strings. Example: </p>
+<p style='margin-left:36pt'><i>If <b>%s_original_ext%</b> is equal to (=) <b>mov</b></i></p>
+<p></p>
+
+<p>This would come out as true if %s_original_ext&quot;=MOV. The &quot;is equal to (=)&quot;-operator is NOT case sensitive when used on strings. The &quot;is exactly like (==)&quot;-operator however is:</p>
+<p style='margin-left:36pt'><i>If <b>%s_original_ext%</b> is exactly like(==) <b>mov</b></i></p>
+<p></p>
+
+<p>Unlike the previous example, this one would come out as <u>false</u> if %s_original_ext%=MOV. Because&quot;mov&quot; and &quot;MOV&quot; is not exactly the same.</p>
+<p>The last operator valid for strings are the &quot;is not equal to (<span style='font-family:"Cambria Math",serif'>&#8800;</span>)&quot;-operator:</p>
+<p></p>
+
+<p style='margin-left:36pt'><i>If <b>%s_original_ext%</b> is not equal to(</i><i><span style='font-family:"Cambria Math",serif'>&#8800;</span>) <b>mov</b></i></p>
+<p>This would come out as true if %s_original_ext%=mp4 and false if %s_original_ext%=mov.</p>
+<p>One can also use wildcard (*) and questionmark (?) in strings. Wildcard (*) being one or more unknown character(s) and questionmark (?) being just <u>one</u> unknown character. An exeption is when using the &quot;is exactly like (==)&quot;-operator. E.g. :</p>
+<p style='margin-left:36pt'><i>If <b>%s_original_ext%</b><u> is equal to</u> (=) <b>m?v</b></i></p>
+<p style='margin-left:36pt'><i>If <b>%s_original_ext%</b><u> is equal to</u> (=) <b>m*</b></i></p>
+<p>Both would come out as true if %s_original_ext%=mov. However:</p>
+<p style='margin-left:36pt'><i>If <b>%s_original_ext%</b><u> is exactly like</u> (==) <b>m?v</b></i></p>
+<p style='margin-left:36pt'><i>If <b>%s_original_ext%</b><u> is exactly like</u> (==) <b>m*</b></i></p>
+<p>Both would come out as <u>false</u> if %s_original_ext%=mov. Because FFAStrans would take &quot;<b>m?v</b>&quot;and &quot;<b>m*</b>&quot; as literal strings.</p>
+<p>The evaluations of all expressions in the node will come out as either <i><u>true</u></i> or <i><u>false</u></i>. FFAStrans will treat true as &quot;<b>Success</b>&quot; and false as &quot;<b>Error</b>&quot;and set the output state accordingly. Thus, if you want an expression to explicitly fail, then you must set the proceeding node(s) to execute on&quot;Error&quot; if you want the workflow to continue as normal.</p>
+<p>You add new expressions by setting &quot;Then&quot; to either &quot;And&quot; or &quot;Or&quot; from the drop-down menu between each row. One node can have a maximum of eight (8) expressions. If you need more then you must chain 2 or more together.</p>
+<p>Using &quot;And&quot;, all conditions must be met for the node to come out true (Success). Example: </p>
+<p style='margin-left:36pt'><i>1.   If <b>%f_fps%</b> is equal to (=) <b>50</b></i></p>
+<p style='margin-left:72pt'><b><i>And</i></b></p>
+<p style='margin-left:36pt'><i>2.   If <b>%i_frames%</b> is larger than (&gt;) <b>3970</b></i></p>
+<p style='margin-left:72pt'><b><i>And</i></b></p>
+<p style='margin-left:36pt'><i>3.   If <b>%i_height%</b> is smaller than (&lt;) <b>1080</b></i></p>
+<p style='margin-left:72pt'><b><i>Then. . .</i></b></p>
+<p>If the evaluation of 1, 2 <b><u>and</u></b> 3 are true, the node will come out as true (Success). If just <u>one</u> of them is false then the node will come out as false (Set output status to&quot;Error&quot;) </p>
+<p>All &quot;Or&quot;'s are treated as &quot;one or the other&quot;. Example: </p>
+<p style='margin-left:36pt'><i>1.   If <b>%f_fps%</b> is equal to (=) <b>50</b></i></p>
+<p style='margin-left:72pt'><b><i>Or</i></b></p>
+<p style='margin-left:36pt'><i>2.   If <b>%f_fps%</b> is equal to (=) <b>25</b></i></p>
+<p style='margin-left:72pt'><b><i>Then. . .</i></b></p>
+<p>If the evaluation of <u>either</u> 1 <b><u>or</u></b> 2 is true then the node will come out true (Success).</p>
+<p>One can group multiple &quot;Or&quot; like:</p>
+<p style='margin-left:36pt'><i>1.   If <b>%f_fps%</b> is equal to (=) <b>100</b></i></p>
+<p style='margin-left:72pt'><b><i>Or</i></b></p>
+<p style='margin-left:36pt'><i>2.   If <b>%f_fps%</b> is equal to (=) <b>50</b></i></p>
+<p style='margin-left:72pt'><b><i>Or</i></b></p>
+<p style='margin-left:36pt'><i>3.   If <b>%f_fps%</b> is equal to (=) <b>25</b></i></p>
+<p style='margin-left:72pt'><b><i>Then. . .</i></b></p>
+<p>Again, if just one of the three expressions are true, the conditional node will come out true (Success).</p>
+<p>Of course you can combine &quot;And&quot; and &quot;Or&quot; to crate a more complex evaluation node. Example: </p>
+<p style='margin-left:36pt'><i>1.   If <b>%f_fps%</b> is equal to (=) <b>50</b></i></p>
+<p style='margin-left:72pt'><b><i>Or</i></b></p>
+<p style='margin-left:36pt'><i>2.   If <b>%f_fps%</b> is equal to (=) <b>25</b></i></p>
+<p style='margin-left:72pt'><b><i>And</i></b></p>
+<p style='margin-left:36pt'><i>3.   If <b>%i_frames%</b> is larger than (&gt;) <b>3970</b></i></p>
+<p style='margin-left:72pt'><b><i>Or</i></b></p>
+<p style='margin-left:36pt'><i>4.   If <b>%i_frames%</b> is equal to (&lt;) <b>250</b></i></p>
+<p style='margin-left:72pt'><b><i>Then</i></b></p>
+<p>In this example, the conditional node will come out true (Success) if <u>either</u> 1 <b><u>or</u></b> 2 is true <b><u>and</u></b> if <u>either</u> 3 <b><u>or</u></b> 4 is true.</p>
+<p></p>
+
+<p><b><u>Dispel job instance on false/failed outcome.</u></b></p>
+<p style=margin-top:-15>If this option is selected the job instance will &quot;disintegrate&quot; without logging anything to the monitor.</p>
+</div></html>

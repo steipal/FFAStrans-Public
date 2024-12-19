@@ -1,0 +1,33 @@
+﻿<html><div style=font-family:Calibri>
+<p>This filter will run through (a portion of) the source file and try to detect the actual scan type of the video.</p>
+<p></p>
+
+<p><b><u>Percent of media</u></b></p>
+<p style=margin-top:-15>How many percent of the media file you want to analyze.</p>
+<p></p>
+
+<p><b><u>Start from</u></b></p>
+<p style=margin-top:-15>Here you specify the starting point in percent.</p>
+<p></p>
+
+<p><b><u>Max analyze duration</u></b></p>
+<p style=margin-top:-15>Lets you specify the max duration in seconds to analyze (set 0 to disable).</p>
+<p></p>
+
+<p><b><u>Skip if source is out of spec and force progressive</u></b></p>
+<p style=margin-top:-15>This option will use some logic in order to find out whether the source is likely to be of interlaced type.</p>
+<p></p>
+
+<p><b><u>Save outcome to</u></b></p>
+<p style=margin-top:-15>Sets the variables to save the outcome of the analyzing; what scan type has been detected. The values comes as 0 (progressive), 1 (upper field) and 2 (lower field). This is consistent with the values coming from the inbuilt %i_interlace% variable. You can use this analyzed value in the encoders and dynamically set the correct value based on deep analyzing and not just from meta-data.</p>
+<p></p>
+
+<p><b><i>Note: The drop down select or accepts only integer variables. (%i_variable%)</i></b></p>
+<p></p>
+
+<p><b><u>Save confidence to</u></b></p>
+<p style=margin-top:-15>This lets you save the confidence level in percent to a variable. The higher the number the more likely is that the analyzer got it right. Useful for reports.</p>
+<p></p>
+
+<p><b><i>Note: The drop down select or accepts only integer variables. (%i_variable%)</i></b></p>
+</div></html>

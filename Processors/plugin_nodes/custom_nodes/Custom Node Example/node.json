@@ -1,0 +1,14 @@
+{
+        "name":"Custom Node Example",
+        "category":"Others",
+        "enabled": 0,
+        "priority": 1,
+        "description":"Example node",
+        "guid": "312dccee-88e1-45b1-906c-9c1234724805",
+		"script_interpreter": "powershell.exe -ExecutionPolicy Unrestricted -File ",
+		"proc_script":"processor.ps1", 
+	    "timeout_minutes": 120,
+		"gui_window_height": 600,
+        "gui_window_height": 600,
+        "version": "1.3"
+}

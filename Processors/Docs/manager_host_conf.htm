@@ -1,0 +1,48 @@
+﻿<html><div style=font-family:Calibri>
+<p>This section is a local host only section.</p>
+<p><b><u>Local host media cache</u></b></p>
+<p style=margin-top:-15>Here you set the working root directory of the local host. This option is only enabled and used if the &quot;Use global shared media cache&quot; option under &quot;General&quot; is deselected. Otherwise the input field will show the same as &quot;shared media cache&quot; under &quot;General&quot;.</p>
+<p></p>
+
+<p><b><u>Web REST service</u></b></p>
+<p style=margin-top:-15>Enables the REST API of FFAStrans.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Install as windows service/Remove windows service:</b></p>
+<p style='margin-left:36pt;margin-top:-15'>Installs and/or removes the REST api as a windows service. Requires admin rights. The service are installed with standard &quot;Local System&quot; user but you probably want to change this if your workflow need access to shared network folders. Also, FFAStrans will open TCP-traffic to the service in order to work.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Run as application:</b></p>
+<p style='margin-left:36pt;margin-top:-15'>Make the FFAStrans Workflow Manager control and start the service. When run as an application, the service will exit once you quit the FFAStrans Workflow Manager.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>HTTP port:</b></p>
+<p style='margin-left:36pt;margin-top:-15'>Sets the communication port of the REST api.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>URL:</b></p>
+<p style='margin-left:36pt;margin-top:-15'>The URL to the discovery web page for the REST api. Clicking the button will open the discovery page in the default browser.</p>
+<p></p>
+
+<p><b><u>Resources</u></b></p>
+<p style=margin-top:-15>This section controls the local host processing options.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Enable local workflow processing as application:</b></p>
+<p style='margin-left:36pt;margin-top:-15'>Enables local processing that's only active when the FFAStrans Workflow Manager is active. If you leave the manager, the processing will stop once the current processing node is finished. Jobs will be put on hold until the manager or service is started again, or it will continue on other hosts if you have a farm setup.</p>
+<p></p>
+
+<p style='margin-left:36pt'><b>CPU roof:</b></p>
+<p style='margin-left:36pt;margin-top:-15'>In order to prevent excessive cpu usage when processing files you may with this option specify how much cpu must be available before starting a new cpu intensive job. It does NOT imply that an encoder wont utilize 100% of the CPU but no new jobs will start if that's the case.</p>
+<p></p>
+
+<p style='margin-left:36pt'><i>Note: Setting this too high might result in unresponsive host.</i></p>
+<p style='margin-left:36pt'><i>Tip: When running as service, set this to 0 (zero) to have API service only. Usefull when running on virtual servers.</i></p>
+<p></p>
+
+<p style='margin-left:36pt'><b>Max jobs per priority class:</b></p>
+<p style='margin-left:36pt;margin-top:-15'>Here you can set how many simultaneous jobs per priority class your computer/host can process at the same time. Note that because this setting is now a per priority class setting, you have potentionally "max active jobs" * 5 (priority classes) simultaneous jobs per host.</p>
+<p></p>
+
+<p style='margin-left:36pt'><i>Note: Setting this to 0 (zero) will effectively disable local processing. Also setting this too high might result in unresponsive host.</i></p>
+</div></html>

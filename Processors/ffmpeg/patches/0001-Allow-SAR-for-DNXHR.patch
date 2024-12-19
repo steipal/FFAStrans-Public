@@ -1,0 +1,34 @@
+From 8b4814fb652136d726621e42efe2fa5c7122d9c6 Mon Sep 17 00:00:00 2001
+From: steipal <steipal@gmail.com>
+Date: Tue, 11 Oct 2022 11:13:57 +0200
+Subject: [PATCH] Allow SAR for DNXHR
+
+---
+ libavformat/mxfenc.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/libavformat/mxfenc.c b/libavformat/mxfenc.c
+index 58c551c83c..2924c999ad 100644
+--- a/libavformat/mxfenc.c
++++ b/libavformat/mxfenc.c
+@@ -2098,9 +2098,14 @@ static int mxf_parse_dnxhd_frame(AVFormatContext *s, AVStream *st, AVPacket *pkt
+         return 0;
+ 
+     if (cid >= 1270) { // RI raster
+-        av_reduce(&sc->aspect_ratio.num, &sc->aspect_ratio.den,
+-                  st->codecpar->width, st->codecpar->height,
+-                  INT_MAX);
++        if (st->codecpar->sample_aspect_ratio.num && st->codecpar->sample_aspect_ratio.den) {
++            sc->aspect_ratio = av_mul_q(st->codecpar->sample_aspect_ratio,
++                                        av_make_q(st->codecpar->width, st->codecpar->height));
++        } else {
++            av_reduce(&sc->aspect_ratio.num, &sc->aspect_ratio.den,
++                      st->codecpar->width, st->codecpar->height,
++                      INT_MAX);
++        }
+     } else {
+         sc->aspect_ratio = (AVRational){ 16, 9 };
+     }
+-- 
+2.34.1.windows.1
+

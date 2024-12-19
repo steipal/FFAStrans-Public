@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+	<head>
+	<meta http-equiv="refresh" content="3">
+	<style>
+	table {
+		width:100%;
+	}
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	th, td {
+		padding: 3px;
+		text-align: left;
+	}
+	table#montior tr:nth-child(even) {
+		background-color: #eee;
+	}
+	table#montior tr:nth-child(odd) {	
+	   background-color:#fff;
+	}
+	table#montior th	{
+		background-color: #555;
+		color: white;
+	}
+	
+	
+	table#log tr:nth-child(even) {
+		background-color: #eee;
+	}
+	table#log tr:nth-child(odd) {	
+	   background-color:#fff;
+	}
+	table#log th	{
+		background-color: #555;
+		color: white;
+	}
+	.progress {
+		position: relative;
+	}
+
+	.progressValue {
+		overflow: hidden;
+		position: absolute;
+		height: 20px;
+		background-color: blue;    
+	}
+
+	.progressInnerLabel {
+		position: absolute;
+		text-align: center; 
+		color: white;  
+		height: 20px;    
+	}
+
+	.progressLabel {
+		background-color: #eee; 
+		text-align: center; 
+		color: black;    
+	}	
+		</style>
+	</head>
+	<body>
+		<h1><center>FFAStrans status monitor</center></h1>
+		<div class="upper">
+			<table id="montior">
+			  <tr style="font-size:16px">
+				<th>Workflow</th>
+				<th>Job start</th>		
+				<th>Source</th>		
+				<th>Processor@Host</th>
+				<th>Status</th>		
+				<th>Total progress</th>
+			  </tr>
+			  <progress></progress>
+			</table>
+	   </div>
+ 
+		<br>
+		<div class="lower">
+			<table id="log">
+			  <tr style="font-size:16px">
+				<th>Workflow</th>
+				<th>Job start</th>		
+				<th>Job end</th>
+				<th>Source</th>		
+				<th>Result</th>
+			  </tr>
+			  <monitor></monitor>
+			</table>
+	   </div>
+	</body>
+</html>

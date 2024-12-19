@@ -1,0 +1,12 @@
+bmxparse, bmx v1.3.1, Nov 12 2024 07:42:50 (scm v1.3-1-g07c61443)
+Text dump raw essence files using the bmx library's parser class
+
+Usage: bmxparse.exe <<Options>> <type> <filename>
+    <type> is 'avc', 'dv', 'j2c', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'
+Options:
+ -h | --help           Show usage and exit
+ -v | --version        Print version info to stderr
+ -l <file>             Log filename. Default log to stderr
+ --log-level <level>   Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1
+ --single-field        Assume MJPEG single field encoding. Default is to parse field pairs
+ --avc-picture         Parse AVC field or frame coded picture and don't combine field pairs

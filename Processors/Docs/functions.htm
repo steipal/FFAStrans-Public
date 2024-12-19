@@ -1,0 +1,776 @@
+﻿<html><div style=font-family:Calibri>
+<p>Functions lets you manipulate strings and/or numbers to fit your needs.</p>
+
+<p><u>Usage description:</u></p>
+<p>$function(input-1 =&quot;string&quot;, input-2 = integer[, optional input-3 =&quot;string&quot;/integer])</p>
+
+<p style='margin-left:36pt'>ALL <u>string</u> inputs containing alphabetic characters (a-z, A-Z) <b><i>must</i></b> be encapsulated with single or double quotes: &quot;my string&quot;, '123abc', &quot;%s_variable%&quot;, '%i_variable%'.</p>
+
+<li style='margin-left:36pt'>Functions that accept numbers <b><i>do not</i></b> need to be encapsulated with quotes.</li>
+
+<li style='margin-left:36pt'>If numeric character(s) (0-9) are used in functions that accept strings then the number will be treated as a string: 123 =&quot;123&quot;</li>
+
+<li style='margin-left:36pt'>All functions can be nested (functions within functions):$replace($left(&quot;my strings&quot;, 6), &quot;my&quot;,&quot;your&quot;) = &quot;your str&quot;</li>
+
+<p style='font-size:16pt'><b>Functions</b></p>
+<p></p>
+
+<p style='font-size:13pt'><b>$replace</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Replace string in string. If &quot;type&quot; is set to 1 then the string to replace are split into characters. The function will then replace all instance of each character with the &quot;replace with string&quot;.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$replace</b>(input string =&quot;string/%variable%&quot;, string to replace =&quot;string/%variable%&quot; [, replace with string =&quot;string/%variable%&quot;, type = 0])</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$replace(&quot;D:\Replace spaces in filename&quot;, &quot;&quot;, &quot;_&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\Replace_spaces_in_filename</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$replace(&quot;D:\Replace spaces in filename&quot;,&quot;eip&quot;, &quot;_&quot;, 1) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\R__lac_ s_ac_s _n f_l_nam_</p>
+
+<p style='font-size:13pt'><b>$regreplace</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Replace string in string by regex pattern.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$regreplace</b>(input string =&quot;string/%variable%&quot;, string to replace =&quot;string/%variable%&quot; [, replace with string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$regreplace(&quot;D:\Replace spaces in filename&quot;, &quot;\s+&quot;, &quot;_&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\Replace_spaces_in_filename</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$regreplace(&quot;D:\Replace spaces in filename&quot;,&quot;[eip]&quot;, &quot;_&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\R__lac_ s_ac_s _n f_l_nam_</p>
+
+<p style='font-size:13pt'><b>$left</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get string n-characters from the left side.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$left</b>(input string =&quot;string/%variable%&quot;, number of characters to extract =integer/%i_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$left(&quot;D:\Replace spaces in filename&quot;, 15) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\Replace spac</p>
+
+<p style='font-size:13pt'><b>$middle</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get string n-characters from n-position.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$middle</b>(input string =&quot;string/%variable%&quot;, start position = integer/%i_variable%, number of characters to extract from start position = integer/%i_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$middle(&quot;D:\Replace spaces in filename&quot;, 5, 8) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>eplace s</p>
+
+<p style='font-size:13pt'><b>$right</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get string n-characters from the right side.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$right</b>(input string =&quot;string/%variable%&quot;, number of characters to extract =integer/%i_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$right(&quot;D:\Replace spaces in filename&quot;, 7) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>ilename</p>
+
+<p style='font-size:13pt'><b>$upper</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Force string to upper case.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$upper</b>(input string = &quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$upper(&quot;D:\Replace spaces in filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\REPLACE SPACES IN FILENAME</p>
+
+<p style='font-size:13pt'><b>$lower</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Force string to lower case.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$lower</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$lower(&quot;D:\Replace spaces in filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>d:\replace spaces in filename</p>
+
+<p style='font-size:13pt'><b>$stripws</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Removes leading and trailing white spaces.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$stripws</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$stripws(&quot;  D:\Replace spaces in filename   &quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\Replace spaces in filename</p>
+
+<p style='font-size:13pt'><b>$stripcrlf</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Removes carriage returns and line feeds from string.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$stripcrlf</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$stripcrlf(&quot;  D:\Replace spaces</p>
+<p style='margin-left:36pt;margin-top:-15pt'>in filename   &quot;) =</p>
+<p>                D:\Replace spaces in filename  </p>
+
+<p style='font-size:13pt'><b>$length</b></p>
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$length</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$length(&quot;D:\Replace spaces in filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>29</p>
+
+<p style='font-size:13pt'><b>$isdigit</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Check if string is only numbers. Success returns 1, failure returns 0.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$isdigit</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$isdigit(&quot;D:\Replace spaces in 123filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>0</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$isdigit(&quot;650375372&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>1</p>
+
+<p style='font-size:13pt'><b>$isalpha</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Check if string is only alphabetic letters. Success returns1, failure returns 0.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$isalpha</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$isalpha(&quot;D:\Replace spaces in filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>0</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$isalpha(&quot;VeryCoolVideo&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>1</p>
+
+<p style='font-size:13pt'><b>$reverse</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Reverse a string.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$reverse</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$reverse(&quot;D:\Replace spaces in filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>emanelif ni secaps ecalpeR\:D</p>
+
+<p style='font-size:13pt'><b>$triml</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Trim string n-characters from the left side.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$triml</b>(input string =&quot;string/%variable%&quot;, number of characters to trim =integer/%i_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$triml(&quot;D:\Replace spaces in filename&quot;, 9) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>e spaces in filename</p>
+
+<p style='font-size:13pt'><b>$trimr</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Trim string n-characters from the right side.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$trimr</b>(input string =&quot;string/%variable%&quot;, number of characters to trim =integer/%i_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$trimr(&quot;D:\Replace spaces in filename&quot;, 5) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\Replace spaces in fil</p>
+
+<p style='font-size:13pt'><b>$round</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Round number to nearest decimal. If number of output decimals is omitted then the function will return an integer.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$roundd</b>(number to round =number/%f_variable%[, number of output decimals = integer/%i_variable%])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$round(29.87, 1) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>29.9</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$round(29.97) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>30</p>
+
+<p style='margin-left:36pt'><i>Example 3:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$round(29.37) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>29</p>
+
+<p style='font-size:13pt'><b>$roundd</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Round number down to nearest integer.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$roundd</b>(number to round =number/%f_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$roundd(29.97) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>29</p>
+
+<p style='font-size:13pt'><b>$roundu</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Round number up to nearest integer.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$roundu</b>(number to round =number/%f_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$roundu(29.97) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>30</p>
+
+<p style='font-size:13pt'><b>$leads</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Add leading character(s) to a string. If string to fill is omitted a zero (0) will be used.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$leads</b>(input string =&quot;string/%variable%&quot;, total number of output characters =integer/%i_variable%[, string to fill = &quot;string/%variable%&quot;])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$leads(&quot;25&quot;, 4) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>0025</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$leads(&quot;8&quot;, 4) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>0008</p>
+
+<p style='margin-left:36pt'><i>Example 3:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$leads(&quot;Oscar&quot;, 9, &quot;-&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>--Oscar</p>
+
+<p style='font-size:13pt'><b>$trails</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Add trailing character(s) to a string. If fill-string is omitted a zero (0) will be used .</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$trails</b>(input string =&quot;string/%variable%&quot;, total number of output characters =integer/%i_variable% [, string to fill = &quot;string/%variable%&quot;])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$trails(&quot;25&quot;, 4) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>2500</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$trails(&quot;8&quot;, 4) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>8000</p>
+
+<p style='margin-left:36pt'><i>Example 3:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$trails(&quot;Oscar&quot;, 9, &quot;-&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Oscar----</p>
+
+<p style='font-size:13pt'><b>$between</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get string between two strings. If instance is specified then the function will return the instance of string between strings found. This is very handy for extracting data in xml-strings.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$between</b>(input string =&quot;string/%variable%&quot;, from string = &quot;string/%variable%&quot;, to string = &quot;string/%variable%&quot;[, instance found= integer/%i_variable%])</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$between(&quot;D:\Replace spaces in filename&quot;,&quot;Replace &quot;, &quot; filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>spaces in</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$between(&quot;&lt;string&gt;123&lt;/string&gt;&lt;string&gt;abc&lt;/string&gt;&lt;string&gt;xyz&lt;/string&gt;&quot;,&quot;&lt;string&gt;&quot;, &quot;&lt;/string&gt;&quot;, 3) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>xyz</p>
+
+<p style='font-size:13pt'><b>$proper</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Capitalizes every first letter following a non-alphanumeric character.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$proper</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$proper(&quot;D:\replace spaces in filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\Replace Spaces In Filename</p>
+
+<p style='font-size:13pt'><b>$alrep</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Replace all non-alphanumeric characters and add optional exceptions.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$alrep</b>(input string =&quot;string/%variable%&quot;[, replace with string =&quot;string/%variable%&quot;][, except characters = &quot;string/%variable%&quot;])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$alrep(&quot;D:\replace + spaces - in file_name@com&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>&quot;Dreplacespacesinfilenamecom&quot;</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$alrep(&quot;D:\replace + spaces in file_name@com&quot;,&quot;_&quot;, &quot;+@:&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:_replace_+_spaces_in_file_name@com</p>
+
+<p style='font-size:13pt'><b>$exists</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This is function will locate file(s) and return the number of matches. If the second argument is 1 then the function will return the first match as a complete path. If second argument is 2 then the function will return a string formated array of complete file paths. The 3'rd argument turns recursive search on (1) or off (0, default)</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$exists</b>(input string =&quot;string/%variable%&quot;[, input integer = integer/%variable%, input integer = integer/%variable%])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$exists(&quot;C:\Windows\explorer.exe&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>1</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$exists(&quot;C:\Windows\system32\win*&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>98</p>
+
+<p style='margin-left:36pt'><i>Example 3:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$exists(&quot;C:\Windows\system32\winsa*&quot;, 1) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>C:\Windows\system32\WinSAT.exe</p>
+
+<p style='margin-left:36pt'><i>Example 4:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$exists(&quot;C:\Windows\system32\winsa*&quot;, 2) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>[&quot;C:\\Windows\\system32\\WinSAT.exe&quot;, &quot;C:\\Windows\\system32\\WinSATAPI.dll&quot;]</p>
+
+<p style='font-size:13pt'><b>$read</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Reads the contents of a any text file. The function will automatically try to determine correct encoding. If storing as a variable thestring length is limited to approximately 80. 000 characters.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$read</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='font-size:13pt'><b>$inttotc</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Converts an integer to a TC time code.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$inttotc</b>(input integer = integer/%variable%, frames per second, float =float/%i_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$inttotc(1647, 29.97) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>00:00:54;27</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$inttotc(1647, 25) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>00:01:05:22</p>
+
+<p style='font-size:13pt'><b>$tctosec</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Converts a TC time code to seconds.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$tctosec</b>(input time code, string = &quot;string/%variable%&quot;, frames persecond, float = float/%i_variable%)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$tctosec(&quot;00:00:54;29&quot;, 29.97) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>54.96</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$tctosec(&quot;00:01:05:22&quot;, 25) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>65.88</p>
+
+<p style='font-size:13pt'><b>$regext</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This is regular expression function. It extracts text based on recognition patterns. It uses the Perl Compatible Regular Expressions (PCRE) engine: <a href="http://www.pcre.org/"><span style='color:windowtext;text-decoration:none'>http://www.pcre.org/</span></a>. If the last optional argument is set to 1 then the function will return a complete array of global matches.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$regext</b>(input string =&quot;string/%variable%&quot;, pattern = &quot;string/%variable%&quot;[, input integer = integer/%variable%])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$regext('&lt;Duration value=&quot;1214&quot;/&gt;','&lt;Duration value=&quot;(\d+)&quot;/&gt;') =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>1214</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$regext(&quot;TVShow_EP0013.mxf&quot;, &quot;(EP\d{4})&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>EP0013</p>
+
+<p style='font-size:13pt'><b>$abs</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns the absolute value of a number.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$abs</b>(input number=number/%variable%)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$abs(-10)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>10</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$abs(10)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>10</p>
+
+<p style='font-size:13pt'><b>$log</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns the natural logarithm of a number.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$log</b>(input number=number/%variable%)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$log(10)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>2.3024...</p>
+
+<p style='font-size:13pt'><b>$random</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns a random integer number between two integers.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$random</b>(input integer =integer/%variable%, input integer = integer/%variable%)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$random(10, 20)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>13</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$random(10, 20)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>18</p>
+
+<p style='font-size:13pt'><b>$hex</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Converts a decimal integer to hexadecimal number.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$hex</b>(input integer =integer/%variable%)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$hex(8)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>8</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$hex(15)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>f</p>
+
+<p style='font-size:13pt'><b>$dec</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Converts a hexadecimal number to decimal integer. Function accepts both quoted and unquoted input but it's a good habit to use quoted.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$dec</b>(input string/integer =&quot;string&quot;/integer/%variable%)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$dec(8)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>8</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$dec(&quot;f&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>15</p>
+
+<p style='font-size:13pt'><b>$guid</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns a random GUID/UUID.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$guid</b>()</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$guid()=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>bc067580-f7de-4e12-9f84-7e905bd60378</p>
+
+<p style='font-size:13pt'><b>$base64</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Encodes the input UTF-8 string as terminated base64 string.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$base64</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$base64(&quot;FFAStrans&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>RkZBU3RyYW5z</p>
+
+<p style='font-size:13pt'><b>$base64dec</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Decodes the input base 64 encoded string to a UTF-8 string.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$base64dec</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$base64dec(&quot;RkZBU3RyYW5z&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>FFAStrans</p>
+
+<p style='font-size:13pt'><b>$urlencode</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Converts the input string to an URL friendly string.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$urlencode</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$urlencode(&quot;FFAStrans is #supercool!&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>FFAStrans%20is%20%23supercool!</p>
+
+<p style='font-size:13pt'><b>$jsonencode</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Converts the input string to an JSON friendly string.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$jsonencode</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$jsonencode(&quot;D:\My\Media\folder&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\\My\\Media\\folder</span></a></p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$jsonencode('Hello &quot;World&quot;')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Hello \&quot;World\&quot;</p>
+
+<p style='font-size:13pt'><b>$readarray</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns an instance from a valid array which must be in the form of &quot;[&quot;data&quot;, data, etc...]&quot;. All JSON formated data is valid. By default the function will return the first instance. By default the search index starts at one (1) but if the last optional argument is 1 the search index will be zero (0) based.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$readarray</b>(input string =&quot;string/%variable%&quot;[, input integer = integer/%variable%, input integer = integer/%variable%])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$readarray(&quot;[23, 55.5, 19]&quot;, 2)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>55.5</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$readarray('[&quot;make&quot;, &quot;my&quot;,&quot;day&quot;]', 3)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>day</p>
+
+<p style='font-size:13pt'><b>$xxhash</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns an 8 character hash for any file. Must include full path. The hash is created using Yann Collet's xxHash which is very fast and suits large video files.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$xxhash</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$xxhash(&quot;x:\path\to\file.mxf&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>61abf926</p>
+
+<p style='font-size:13pt'><b>$xxhash64</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns an 16 character hash for any file. Must include full path. The hash is created using Yann Collet's xxHash which is very fast and suits large video files.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$xxhash64</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$xxhash64(&quot;x:\path\to\file.mxf&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>61aabf9266e8f7de</p>
+
+<p style='font-size:13pt'><b>$jsonget</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Retrieves the value from a JSON object key. The first arguments accept a string or a variable representing a valid JSON string. in the second parameter you refer to the object/key/array you want to get.</p>
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$jsonget</b>(input string =&quot;string/%variable%&quot;, input string = &quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$jsonget('{&quot;things&quot;:{&quot;myStuff&quot;:&quot;some other stuff&quot;}}', &quot;things.myStuff&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>some other stuff</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$jsonget('%s_info_ffprobe%', '[1].format_name')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>mov,mp4,m4a,3gp,3g2,mj2</p>
+
+<p style='font-size:13pt'><b>$jsonput</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Puts a value to a JSON object. The first arguments accept a string or a variable representing a valid JSON string. If and empty string is used FFAStrans will create a new json object. The second argument refer to the object/key/array you want put the value. Third argument is the value to put in the json object. Note that this function will return the new updated or created json string object.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$jsonput</b>(input string =&quot;string/%variable%&quot;, input string = &quot;string/%variable%&quot;, input string = &quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$jsonput(&quot;&quot;, &quot;oldStuff&quot;, &quot;some old stuff&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>{&quot;oldStuff&quot;: &quot;some old stuff&quot;}</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$jsonput(&quot;%s_json_string%&quot;, &quot;myNewStuff&quot;, &quot;some cool new stuff&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>{&quot;oldStuff&quot;: &quot;some old stuff&quot;,&quot;myNewStuff&quot;: &quot;some cool new stuff&quot;}</p>
+
+<p style='font-size:13pt'><b>$week</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns the week number from the date specified in the parameters. If no date is specified, the function retuns the current week number.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$week</b>([input number=YEAR/&quot;%variable%&quot;, input number=MONTH/&quot;%variable%&quot;, input number=MONTH DAY/&quot;%variable%&quot;])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$week(2020, 10, 15)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>42</p>
+
+<p style='font-size:13pt'><b>$weekday</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns the week day number from the date specified in the parameters. If no date is specified, the function retuns the current week number number.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$weekday</b>([input number=YEAR/&quot;%variable%&quot;, input number=MONTH/&quot;%variable%&quot;, input number=MONTH DAY/&quot;%variable%&quot;])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$weekday(2020, 10, 15)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>5</p>
+
+<p style='font-size:13pt'><b>$loopup</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Loopup table for mapping data to other data. The function will only operate on array formated strings.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$lookup</b>(input array =&quot;REFERENCE/%variable%&quot;, inputarray =&quot;TABLE/%variable%&quot;, input string =&quot;SEARCH/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$lookup('[&quot;joe&quot;, &quot;bill&quot;, &quot;greg&quot;]', '[&quot;lucy&quot;, &quot;evy&quot;, &quot;jane&quot;]', &quot;evy&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>bill</p>
+
+<p style='font-size:13pt'><b>$loopuprep</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Loopup table for replacing strings with strings from lookup tables.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$lookuprep</b>(input array =&quot;REFERENCE/%variable%&quot;, input array =&quot;TABLE/%variable%&quot;, input string =&quot;SEARCH/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$lookuprep('[&quot;joe&quot;, &quot;bill&quot;, &quot;greg&quot;]', '[&quot;lucy&quot;, &quot;evy&quot;, &quot;jane&quot;]', &quot;lucylindajane&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>joelindagreg</p>
+
+<p style='font-size:13pt'><b>$sort</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Sorts an array formated string or a regular string. String sorting use crlf as base separator but a custom separator can be specified.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$sort</b>(input string/array =&quot;string/%variable%&quot;[, input string =&quot;SEPARATOR/%variable%&quot;])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$sort(&quot;[6,2,4,3,5]&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>[2,3,4,5,6]</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$sort('[&quot;jack&quot;, &quot;joe&quot;, &quot;jill&quot;, &quot;jane&quot;, &quot;james&quot;, &quot;jules&quot;]')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>[&quot;jack&quot;, &quot;james&quot;, &quot;jane&quot;, &quot;jill&quot;, &quot;joe&quot;, &quot;jules&quot;]</p>
+
+<p style='font-size:13pt'><b>$count</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Counts the occurrences of any string in a string.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$count</b>(input string =&quot;string/%variable%&quot;, input string =&quot;SEARCH/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$count('jack, joe, jill, jane, james, jules', 'ja')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>3</p>
+
+<p style='font-size:13pt'><b>$foreach</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This function will iterate and perform the desired operation on each data value. The result of each iteration will be put back into the array and presented as the new resulting array. Please note that the special keyword &quot;<b>%$%</b>&quot; represents unique data value of each iteration. The special keyword &quot;<b>%i%</b>&quot; represents each iteration number.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$foreach</b>(input string =&quot;string/%variable%&quot;, input string =&quot;OPERATION/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$foreach('[&quot;jack&quot;, &quot;joe&quot;, &quot;jill&quot;, &quot;jane&quot;, &quot;james&quot;, &quot;jules&quot;]', '$triml("%$%", 2)')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>[&quot;ck&quot;, &quot;e&quot;, &quot;ll&quot;, &quot;ne&quot;, &quot;mes&quot;, &quot;les&quot;]</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$foreach('[&quot;jack&quot;, &quot;joe&quot;, &quot;jill&quot;, &quot;jane&quot;, &quot;james&quot;, &quot;jules&quot;]', '%i% - %$%')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>[&quot;1 - jack&quot;, &quot;2 - joe&quot;, &quot;3 - jill&quot;, &quot;4 - jane&quot;, &quot;5 - james&quot;, &quot;6 - jules&quot;]</p>
+
+<p style='margin-left:36pt'><i>Example 3:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$foreach('[10, 11, 12, 10, 20, -6]', '%$%-%i%')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>[9, 9, 9, 6, 15, -12]</p>
+<p style='font-size:13pt'><b>$stringf</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>This function works very much like the printf() function in C. It shares the same notation. The difference is that if you have multiple arguments you need to put them in an array.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$stringf</b>(input string =&quot;string/%variable%&quot;, input data/array =&quot;ARGUMENTS/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$stringf('%05d', 12)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>00012</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$stringf('%02i\%02i\%04i', '[1,8,2021]')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>01\08\2021</p>
+
+<p style='font-size:13pt'><b>$fsize</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get file size in bytes.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$fsize</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$fsize(&quot;D:\Replace spaces in filename&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>57162</p>
+
+<p style='font-size:13pt'><b>$fext</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get file extension.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$fext</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$fext(&quot;D:\Replace spaces in filename.mp4&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>mp4</p>
+
+<p style='font-size:13pt'><b>$fname</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get file name.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$fname</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$fname(&quot;D:\my_file.mxf&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>my_file</p>
+
+<p style='font-size:13pt'><b>$fpath</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get file path.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$fpath</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$fpath(&quot;D:\cool folder\right_here\my_file.mxf&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:\cool folder\right_here</p>
+
+<p style='font-size:13pt'><b>$fdrive</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Get file path.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$fdrive</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$fdrive(&quot;D:\cool folder\right_here\my_file.mxf&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>D:</p>
+
+<p style='font-size:13pt'><b>$asplit</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Splits an array string into a delimited string using the optional separator. Default separator is \r\n (carriage return and line feed)</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$asplit</b>(input string/array =&quot;string/%variable%&quot;[, input string =&quot;SEPARATOR/%variable%&quot;])</p>
+
+<p style='margin-left:36pt'><i>Example 1:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$asplit(&quot;[6,2,4,3,5]&quot;, &quot;|&quot;)=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>6|2|3|4|5</p>
+
+<p style='margin-left:36pt'><i>Example 2:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$asplit('[&quot;jack&quot;, &quot;joe&quot;, &quot;jill&quot;, &quot;jane&quot;, &quot;james&quot;, &quot;jules&quot;]')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>jack</p>
+<p style='margin-left:36pt;margin-top:-15pt'>joe</p>
+<p style='margin-left:36pt;margin-top:-15pt'>jill</p>
+<p style='margin-left:36pt;margin-top:-15pt'>jane</p>
+<p style='margin-left:36pt;margin-top:-15pt'>james</p>
+<p style='margin-left:36pt;margin-top:-15pt'>jules</p>
+
+<p style='font-size:13pt'><b>$ffconcat</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Creates a ffconcat version 1.0 compatible string for use with encoder input.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$ffconcat</b>(input string/array =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example:</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$ffconcat('[&quot;c:\myClips\video1.mov&quot;, &quot;c:\myClips\video1.mov&quot;, &quot;c:\myClips\video3.mov&quot;]')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>ffconcat version 1.0</p>
+<p style='margin-left:36pt;margin-top:-15pt'>file 'c:\myClips\video1.mov'</p>
+<p style='margin-left:36pt;margin-top:-15pt'>file 'c:\myClips\video2.mov'</p>
+<p style='margin-left:36pt;margin-top:-15pt'>file 'c:\myClips\video3.mov'</p>
+
+<p style='font-size:13pt'><b>$owner</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Find the domain owner of a file.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$owner</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$owner(&quot;D:\cool folder\right_here\my_file.mxf&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>domain/ElonMusk</p>
+
+<p style='font-size:13pt'><b>$waccess</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Check if user running the ffastrans system has write access to the specified folder.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$waccess</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$waccess(&quot;D:\cool folder\right_here&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>1</p>
+
+<p style='font-size:13pt'><b>$dateweek</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Finds the date (year_month_mday) of any given year, week number, week day number and week start day.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$dateweek</b>(input integer = integer/%variable%[, input integer = integer/%variable%, input integer = integer/%variable%, input string =&quot;string/%variable%&quot;])</p>
+
+<p style='margin-left:36pt'><i>Example: (find date of week no. 35, the second day of the week starting on monday)</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$dateweek(1973, 35, 2, 'mon')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>1973_08_28</p>
+
+<p style='font-size:13pt'><b>$timecalc</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Calculates a new date/time by adding/subtracting a specified number of time intervals from an initial date/time. y = year, M = month, d = day, w = week, h = hour, m = minute, s = second</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$timecalc</b>(input string =&quot;string/%variable%&quot;, input integer = integer/%variable%, input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example 1: (add 60 days)</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$timecalc('d', 60, '2019/11/24')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>2020_01_23</p>
+
+<p style='margin-left:36pt'><i>Example 2: (add 3 hours)</i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$timecalc('h', 3, '2019/11/24 22:35:00')=</p>
+<p style='margin-left:36pt;margin-top:-15pt'>2019_11_25 01:35:00</p>
+
+<p style='font-size:13pt'><b>$shortcut</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Parse the shortcut (Windows) or alias (MAC) and return the actual file path.</p>
+
+<p style='margin-left:36pt'><u>Usage:</u></p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$shortcut</b>(input string =&quot;string/%variable%&quot;)</p>
+
+<p style='margin-left:36pt'><i>Example: </i></p>
+<p style='margin-left:36pt;margin-top:-15pt'>$shortcut(&quot;c:\users\myname\desktop\cool video.mkv - Shortcut.lnk&quot;) =</p>
+<p style='margin-left:36pt;margin-top:-15pt'>\\server\some_share\projects\REALITY_SHOW\my video files\cool video.mkv</p>
+</div></html>

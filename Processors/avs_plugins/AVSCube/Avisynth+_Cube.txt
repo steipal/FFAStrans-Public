@@ -1,0 +1,45 @@
+Avisynth+ Cube
+--------------
+
+I have added native Avisynth+ support to vscube.dll.
+This allows a 3D LUT to be applied in an Avisynth+ script.
+
+The filter receives and delivers the RGBP16 color space.
+Use avsresize.dll for conversions to/from RGBP16. Examples
+are given below. Use VirtualDub2 for previewing scripts.
+
+Usage:
+
+LoadPlugin("vscube.dll")
+Cube(clip, cube_path, cpu, fullrange)
+
+cube_path: Full path of the 3D LUT file. This must be an Adobe
+*.cube file.
+
+cpu: int, default INT_MAX, which selects best SIMD.
+	SIMD_NONE  = 0,	SIMD_SSE42 = 1,	SIMD_AVX2  = 2
+	
+fullrange: bool, default is true
+
+Examples:
+
+Apply 3D LUT to clip obtained from BlankClip:
+
+loadplugin("...\vscube.dll")
+blankclip(pixel_type="RGBP16",color=$ff0000)
+Cube("...\test.cube")
+converttoyuv420()
+
+Apply 3D LUT to HDR10 PQ clip obtained from DGSource():
+
+loadplugin("...\dgdecodenv.dll")
+loadplugin("...\avsresize.dll")
+loadplugin("...\vscube.dll")
+dgsource("THE GREAT WALL.dgi",fulldepth=true)
+z_ConvertFormat(pixel_type="RGBP16",colorspace_op="2020ncl:st2084:2020:l=>rgb:linear:2020:f", dither_type="none")
+Cube("...\test.cube")
+z_ConvertFormat(pixel_type="YUV420P16",colorspace_op="rgb:linear:2020:f=>2020ncl:st2084:2020:l",dither_type="none")
+
+
+
+

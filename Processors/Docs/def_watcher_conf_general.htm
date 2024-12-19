@@ -1,0 +1,42 @@
+﻿<html><div style=font-family:Calibri>
+<p><b><u>Description</u></b></p>
+<p style=margin-top:-15>Description of your workflow. Has no implication on functionality but it will be displayed in the upper editor area if description is enabled there.</p>
+<p></p>
+
+<p><b><u>Work folder</u></b></p>
+<p style=margin-top:-15>This info tells you where the workfolder for the workflows jobs reside. This is set automatically from the&quot;Work cache&quot; options in the main configuration and cannot be changed by the user.</p>
+<p></p>
+
+<p><b><u>Workflow ID</u></b></p>
+<p style=margin-top:-15>Shows the ID of the workflow. This is automatically generated and cannot be changed by the user.</p>
+<p></p>
+
+<p><b><u>Sleep timer</u></b></p>
+<p style=margin-top:-15>Here you set the loop for how many seconds FFAStrans should wait for the workflows monitors to start looking for new files. In workflows without monitors this setting as no effect.</p>
+<p></p>
+
+<p><b><u>Cron</u></b></p>
+<p style=margin-top:-15>Monitoring for new files support the Cron notation for more complex scheduling. Please consult <a href="https://en.wikipedia.org/wiki/Cron">https://en.wikipedia.org/wiki/Cron</a> for more info.</p>
+<p></p>
+<p><i>Note: Specifying a cron will override the set sleep timer. Also, cron will not work if set to be sceduled on non active days. See "Active on".</i></p>
+
+<p></p>
+
+<p><b><u>Priority</u></b></p>
+<p style=margin-top:-15>This sets the workflow priority. Higher priority jobs will be processed before lower priority jobs. Already started lower priority jobs will finish the current processing node but resources given is lower so in effect, depending on the processing node, the lower priority job will "slow down".</p>
+<p><i>Note: Jobs manually submitted from the GUI will always have the "high" priority. Jobs submitted through the API will use the default workflow priority unless specified different in the job post. Also, sub processes will only be given priority levels from 0 to 2 in order to not hog the host.</i></p>
+<p></p>
+
+<p>Starting form version 1.1.0 the max active jobs setting is now per priority class. Meaning if you have used all slots on lower priority jobs, higher priority jobs will still start until you have used all slots for that priority class. In effect you have now potentionally "max active jobs" * 5 (prioriy classes).</p>
+<p></p>
+
+<p><b><u>Timeout level</u></b></p>
+<p style=margin-top:-15>Defines how quick FFAStrans will abort jobs that seem to have stopped for various reasons. Usually due to encoding/decoding hangups. The lower the number the faster FFAStrans will abort. When working with very large files you might need to set this higher.</p>
+<p></p>
+
+<p><b><u>Active on</u></b></p>
+<p style=margin-top:-15>Here you can set on what week day on which the workflows monitors will be active.</p>
+<p></p>
+
+<p><i>Note: Regardless of this setting and the workflow state, one can always submit jobs either manually from the GUI or through the API.</i></p>
+</div></html>

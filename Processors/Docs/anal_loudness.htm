@@ -1,0 +1,42 @@
+﻿<html><div style=font-family:Calibri>
+<p>This node will analyze the current loudness based on the EBU-128R specification.</p>
+<p></p>
+
+<p><b><u>Discrete tracks</u></b></p>
+<p style=margin-top:-15>Sets the number of audio tracks/streams of be analyzed. A track can have one or more channels.</p>
+<p></p>
+
+<p><b><u>Total channels</u></b></p>
+<p style=margin-top:-15>Sets the total amount of channels the be analyzed per track. Regardless of the original layout, all audio channels are mapped to separate audio sources. Based on this, FFAStrans will map these sources to match selected audio configuration.. If the audio source has fewer channels than the output then the rest will be filled with silent audio.</p>
+<p></p>
+
+<p><b><u>Loop track/channel analysis</u></b></p>
+<p style=margin-top:-15></p>
+<p>If the total channel count to analyze is lower than the total of the input media, the analyzer will continue adding another track until it has reached the total input channel. E.g.: If you have selected one track with 2 (stereo) for analyzing, and the source media has 5 channels in total, FFAStans will analyze channel 1+2 and 3+4 as two separate stereo pairs. The last channel is analyzed as is coupled with a silent channel to accommodate the last missing channel (3 x 2).</p>
+<p></p>
+
+<p><b><u>Set level(s) to</u></b></p>
+<p style=margin-top:-15>Select the variable on which the analyzed loudness levels are stored. The variable can then later be used in the encoders to apply loudness normalization.</p>
+<p></p>
+
+<p><b><u>Set real peak values(s) to</u></b></p>
+<p style=margin-top:-15>Select the variable for the analyzed real peak values.</p>
+<p></p>
+
+<p><b><u>Set threshold(s) to</u></b></p>
+<p style=margin-top:-15>Select the variable for the analyzed thresholds.</p>
+<p></p>
+
+<p><b><u>Set LRA low(s) to</u></b></p>
+<p style=margin-top:-15>Select the variable for the lowest analyzed short term loudness range.</p>
+<p></p>
+
+<p><b><u>Set LRA high(s) to</u></b></p>
+<p style=margin-top:-15>Select the variable for the highest analyzed short term loudness range.</p>
+<p></p>
+
+<p><b><u>Set sample peaks to</u></b></p>
+<p style=margin-top:-15>Select the variable for the highest analyzed sample peak.</p>
+<p></p>
+<p>Only string type variables can be selected in the drop down menus. All values are stored as JSON compatible array strings.</p>
+</div></html>
