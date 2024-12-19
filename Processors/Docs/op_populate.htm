@@ -9,12 +9,4 @@
 <p>The input field accepts mathematical expressions. Example: </p>
 <p style='margin-left:36pt'><i> Set user variable <b>%i_input_bitrate%</b> to <b>%i_v_bitrate%</b> * 10</i></p>
 <p>This will take the video bitrate from the current source, multiply it with ten and save it to <i>%i_input_bitrate%.</i></p>
-<p>The %o_string% (JSON) types of variables need some special attention as they are not populated like normal variables.</p>
-<p style='margin-left:36pt'><i> Set user variable <b>%o_info%</b> to <b>.foo.bar=some text</b></i></p>
-<p>This will populate the main JSON variable <b>%o_info%</b> with the objects <b>foo</b> and <b>bar</b> where the latter holding the value <b>some text</b>.</i></p>
-<p>Any kind of dot. notation can be directly used without declearing any of the keys. You can even create an array directly like:</p>
-<p style='margin-left:36pt'><i> Set user variable <b>%o_info%</b> to <b>.foo.bar[3]=some text</b></i></p>
-<p>This will populate the main JSON variable <b>%o_info%</b> with the object <b>foo</b> with the array <b>bar</b> where the index number 3 being the value <b>some text</b>.</i></p>
-<p>A JSON variable can also be populated with a valid JSON string directly:</p>
-<p style='margin-left:36pt'><i> Set user variable <b>%o_info%</b> to <b>={"foo":{"bar":["","","","some text"]}}</b> will result in the exact same contents as the previous example.</i></p>
 </div></html>
