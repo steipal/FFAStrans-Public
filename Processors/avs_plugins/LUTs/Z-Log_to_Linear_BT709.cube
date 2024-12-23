@@ -1,3 +1,4 @@
+TITLE "Z-Log_to_BT709_SDR"
 LUT_3D_SIZE 16
 
 # Z-Log to BT709 SDR 100 nits - Created by Francesco Bucciantini
