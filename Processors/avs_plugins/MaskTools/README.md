@@ -1,6 +1,8 @@
 ﻿### MaskTools 2 ###
 
-**Masktools2 v2.2.26 (20200904)**
+(20201229: can be built under linux/gcc)
+
+**Masktools2 v2.2.30 (20220219)**
 
 mod by pinterf
 
@@ -29,7 +31,7 @@ Differences to Masktools 2.0b1
 - YV411 (8 bit 4:1:1) support
 - mt_merge accepts 4:2:2 clips when luma=true (8-16 bit)
 - mt_merge accepts 4:1:1 clips when luma=true
-- mt_merge new parameter hint when luma=true and 4:2:0/4:2:2 'cplace' (2.2.15-). Possible values "mpeg1" or "mpeg2" (default)
+- mt_merge new parameter hint when luma=true and 4:2:0/4:2:2 'cplace' (2.2.15-). Possible values "mpeg1", "mpeg2" (default), "topleft" (2.2.37-)
 - mt_merge to discard U and V automatically when input is greyscale
 - some filters got AVX (float) and AVX2 (integer) support:
   mt_merge: 8-16 bit: AVX2, float:AVX
@@ -353,6 +355,93 @@ Original version: tp7's MaskTools 2 repository.
 https://github.com/tp7/masktools/
 
 Changelog
+**v2.2.30 (20220218)
+- mt_hysteresis new parameter: 
+    bool corners (default true)
+  When set to false, mask expanding is ignoring corner-only connections.
+  corners = true (default, old working mode):
+    + + +
+    + O +
+    + + +
+  false:
+    - + -
+    + O +
+    - + -
+  Where the '+' pixels indicate neighbors of the central 'O'
+  (See https://github.com/pinterf/masktools/issues/23 )
+- Add atan2 two operand function to lut expression evaluation. Calls atan2(y,x) math library function.
+
+**v2.2.29 (20211116)
+- floating point number formats are local independent again. Regression since 2.2.26
+- mt_merge accept "top_left" chroma placement ("topleft" is still valid)
+- (avx2: stop using _mm256_zeroupper - compilers are do that automatically, 
+  mainly because LLVM (12.0) generated suboptimal save-restore-all-xmm registers in
+  prologue and epilogue when encountered with it.)
+
+**v2.2.28 (20211005)
+- allow TAB, CR and LF characters as symbol separators in expression strings
+
+**v2.2.27 (20210909)
+- fix zero=false case for shape helper function (mt_rectangle, mt_circle, mt_diamond etc...)
+- lut expressions: report obvious script error (unbalanced stack, invalid keyword or variable, etc)
+- mt_lut: reuse LUTs across planes if they are the same like in e.g. mt_lutxyz.
+- 1D LUT expressions: occupy only the necessary size for 10-14 bit LUT tables (was: buffer was always reserved for 16 bit data)
+- mt_merge: error is luma=false, mask is greyscale but clip is not greyscale
+- mt_merge new parameter hint for chroma placement when luma=true and 4:2:0: "topleft"
+  "topleft" is a new option for 4:2:0 videos only 
+  
+  Refreshing memories for 'cplace' kinds:
+  
+  String 'cplace': possible values "mpeg1", "mpeg2" (default) or "topleft"
+  ("mpeg1" is center and "mpeg2" is left placement)
+  Parameter is effective only for 420 and 422 formats (topleft is 420-only), otherwise ignored.
+
+  Default "mpeg1" is using fast 2x2 pixel (1x2 for 4:2:2) averaging when converting a 4:4:4 mask to a 4:2:0 or 4:2:2 format (old behaviour)
+  420 schema:
+   +------+------+
+   | 0.25 | 0.25 |
+   |------+------|
+   | 0.25 | 0.25 |
+   +------+------+
+
+  "mpeg2" is using 2x3 (1x3 for 4:2:2) pixel weighted averaging when converting a 4:4:4 mask to a 4:2:0 or 4:2:2 format
+  420 schema:
+   ------+------+-------+
+   0.125 | 0.25 | 0.125 |
+   ------|------+-------|
+   0.125 | 0.25 | 0.125 |
+   ------+------+-------+
+
+  "topleft" is using 3x3 pixel weighted averaging when converting a 4:4:4 mask to a 4:2:0 format
+  
+   1/16  | 1/8  | 1/16  |
+   ------+------+-------+
+   1/8   | 1/4  | 1/8   |
+   ------|------+-------|
+   1/16  | 1/8  | 1/16  |
+   ------+------+-------+
+
+- get the source built with LLVM (not clangCl) again
+
+**no new version (20210209) does not appear in release, just another test fork update
+- Fetching the new 'cuda' branch from Nekopanda's masktools fork
+  git fetch git://github.com/nekopanda/masktools.git cuda:cuda
+  (Note: _only_ for experimenting and adjusting to latest Avisynth+ Cuda-aware version. 
+   Cuda version implements only mt_lut.)
+
+- Source syntax update for GCC (20201229)
+- CMake build environment, builds on Linux, at least on my (pinterf) Ubuntu 19.10 WSL
+  (INTEL_INTRINSICS handling not implemented in the source, so it compiles only for Intel at the moment)
+  (Neither is boost library incorporated: mt_infix is unavaliable, MT_HAVE_BOOST_SPIRIT is not defined - maybe later)
+  For build instructions see the end of this readme.
+
+  git clone https://github.com/pinterf/masktools.git
+  cd masktools
+  mkdir build
+  cd build
+  cmake ..
+  sudo make install
+
 **v2.2.26 (20200904)
 - mt_lut family: ignore "use_expr" parameter if "Expr" function does not exist in ancient AviSynth versions.
 - more friendly error messages when an exception occurs during "Expr" call.
@@ -614,3 +703,40 @@ Changelog
   - parameter "stacked" (default false) for filters with stacked format support
   - parameter "realtime" for lut-type filters to override default behaviour
   
+Build instructions
+==================
+VS2019: 
+  use IDE
+
+Windows GCC (mingw installed by msys2):
+  from the 'build' folder under project root:
+
+  del ..\CMakeCache.txt
+  cmake .. -G "MinGW Makefiles" -DENABLE_INTEL_SIMD:bool=on
+  @rem test: cmake .. -G "MinGW Makefiles" -DENABLE_INTEL_SIMD:bool=off
+  cmake --build . --config Release  
+
+Linux
+* Clone repo
+    
+        git clone https://github.com/pinterf/masktools
+        cd masktools
+        cmake -B build -S .
+        cmake --build build
+
+      Not working yet: 
+      Possible option test for C only on x86 arhitectures:
+        cmake -B build -S . -DENABLE_INTEL_SIMD:bool=off
+        cmake --build build
+
+        Note: ENABLE_INTEL_SIMD is automatically off for non x86 arhitectures and ON for x86
+
+* Find binaries at
+    
+        build/masktools/libmasktools2.so
+
+* Install binaries
+
+        cd build
+        sudo make install
+
