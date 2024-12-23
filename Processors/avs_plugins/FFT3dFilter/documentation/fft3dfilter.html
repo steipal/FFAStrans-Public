@@ -11,7 +11,7 @@
 <h1>FFT3DFilter</h1>
 
 <p>Plugin for <a href="http://www.avisynth.org">Avisynth 2.6</a> and <a href="http://avisynth.nl/index.php/AviSynth%2B">Avisynth+</a><br>
-Copyright (C)2017-2021 v2.9: high bit depth and planar rgb support on Avisynth+ (10-16 bits and float) by pinterf<br>
+Copyright (C)2017-2021 v2.10: high bit depth and planar rgb support on Avisynth+ (10-16 bits and float) by pinterf<br>
 Based on version 2.2<br>
 Copyright (C)2017 martin53 doom9.org forum member, with kind permission of Fizick<br>
 Based on Version 2.1.1, which is
@@ -530,6 +530,10 @@ re-enabled SSE optimization for degrid=0; added SSE optimization for bt=3,-1 wit
 - add CMake build system<br>
 - linux build<br>
 - Replace never used 3dnow ApplyWiener3D4 with simd SSE2. (bt=4, degrid=0, pfactor=0) (2x speed)
+</li>
+<li>Version 2.10   - October 18, 2021<br>
+- Fix possible crash on exit on ncpu=1 (uninitialized fft3w threads)<br>
+- Fix C version (possibly unused on Intel builds, when CPU less than SSE2) in sharpen+degrid method
 </li>
 
 </ul>

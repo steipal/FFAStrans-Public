@@ -1,6 +1,10 @@
 ### Change log - fft3dfilter  ###
 
 ```
+FFT3DFilter v2.2.10 (20211018)
+  - Fix possible crash on exit on ncpu=1 (uninitialized fft3w threads)
+  - Fix C version (possibly unused on Intel builds, when CPU less than SSE2) in sharpen+degrid method  
+
 FFT3DFilter v2.9 (20210324)
   - Fix issue when pfactor <> 0 and using 10+ bits (Xinyue Lu, neo_FFT3D) 
   - Fix incorrect negative value float to integer rounding (Xinyue Lu, neo_FFT3D r7)
