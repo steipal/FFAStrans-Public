@@ -1,0 +1,1 @@
+bmxtimecode.exe [--output tc-drop|tc-non-drop|count] [--rate (<n>|<n>/<d>)] (all|<timecode>|<frame count>)
