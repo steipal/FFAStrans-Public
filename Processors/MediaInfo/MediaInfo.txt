@@ -1,5 +1,5 @@
 MediaInfo Command line, 
-MediaInfoLib - v24.05
+MediaInfoLib - v24.12
 Usage: "MediaInfo [-Options...] FileName1 [Filename2...]"
 
 Options:
