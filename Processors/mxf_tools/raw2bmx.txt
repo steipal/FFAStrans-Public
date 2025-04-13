@@ -1,4 +1,4 @@
-raw2bmx, bmx v1.3.1, Nov 12 2024 07:42:50 (scm v1.3-1-g07c61443)
+raw2bmx, bmx v1.5.0, Mar 11 2025 16:42:29 (scm v1.5)
 Create MXF files from raw essence files
 
 Usage: raw2bmx.exe <<Options>> [<<Input Options>> <Input>]+
@@ -104,6 +104,9 @@ Options (* means option is required):
 
   as02/as11op1a/op1a/rdd9/as10:
     --part <interval>       Video essence partition interval in frames, or (floating point) seconds with 's' suffix. Default single partition
+  rdd9:
+    --fixed-part <interval> Force each partition to have the exact same partition interval in frames, except the last partition
+                            New partitions are started if the frame count has been reached, even if the next partition does not begin with the start of a GOP
 
   as11op1a/as11d10:
     --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'
@@ -165,6 +168,9 @@ Options (* means option is required):
   op1a/rdd9:
     --ard-zdf-hdf           Use the ARD ZDF HDF profile
     --repeat-index          Repeat the index table segments in the footer partition
+
+  op1a:
+    --ard-zdf-xdf           Use the ARD ZDF XDF profile
 
   as11d10/d10:
     --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit

@@ -1,4 +1,4 @@
-bmxparse, bmx v1.3.1, Nov 12 2024 07:42:50 (scm v1.3-1-g07c61443)
+bmxparse, bmx v1.5.0, Mar 11 2025 16:42:29 (scm v1.5)
 Text dump raw essence files using the bmx library's parser class
 
 Usage: bmxparse.exe <<Options>> <type> <filename>

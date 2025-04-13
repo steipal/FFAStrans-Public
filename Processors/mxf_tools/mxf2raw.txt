@@ -1,4 +1,4 @@
-mxf2raw, bmx v1.3.1, Nov 12 2024 07:42:50 (scm v1.3-1-g07c61443)
+mxf2raw, bmx v1.5.0, Mar 11 2025 16:42:29 (scm v1.5)
 Output MXF file metadata and raw essence
 
 Usage: mxf2raw.exe <<Options>> [<<Input Options>> <filename>]+

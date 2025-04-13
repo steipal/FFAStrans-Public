@@ -1,4 +1,4 @@
-bmxtranswrap, bmx v1.3.1, Nov 12 2024 07:42:50 (scm v1.3-1-g07c61443)
+bmxtranswrap, bmx v1.6.0, Mar 28 2025 09:42:04 (scm v1.6)
 Re-wrap from one MXF file to another MXF file
 
 Usage: bmxtranswrap.exe <<Options>> [<<Input Options>> <mxf input>]+
@@ -188,6 +188,9 @@ Options (* means option is required):
 
   as02/as11op1a/op1a/rdd9/as10:
     --part <interval>       Video essence partition interval in frames in input edit rate units, or (floating point) seconds with 's' suffix. Default single partition
+  rdd9:
+    --fixed-part <interval> Force each partition to have the exact same partition interval in frames, except the last partition
+                            New partitions are started if the frame count has been reached, even if the next partition does not begin with the start of a GOP
 
   as11op1a/as11d10/as11rdd9:
     --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'
@@ -215,7 +218,7 @@ Options (* means option is required):
                             Header and body partitions will be incomplete for as11op1a/op1a if the number if essence container bytes per edit unit is variable
     --file-md5              Calculate an MD5 checksum of the output file. This requires writing in a single pass (--single-pass is assumed)
 
-  as11op1a/op1a:
+  as11op1a/op1a/rdd9:
     --pass-anc <filter>     Pass through ST 436 ANC data tracks
                             <filter> is a comma separated list of ANC data types to pass through
                             The following ANC data types are supported in <filter>:
@@ -225,6 +228,9 @@ Options (* means option is required):
                                 sdp      : SMPTE RDD 8 / OP-47 Subtitling Distribution Packet data
                                 st12     : SMPTE ST 12 Ancillary timecode
                                 st334    : SMPTE ST 334-1 EIA 708B, EIA 608 and data broadcast (DTV)
+    --strip-anc <filter>    Don't pass through ST 436 ANC data tracks
+                            <filter> is a comma separated list of ANC data types to not pass through. The types are listed in the --pass-anc option
+                            This filter is applied after --pass-anc. The --pass-anc option will default to 'all' when --strip-anc is used
     --pass-vbi              Pass through ST 436 VBI data tracks
     --st436-mf <count>      Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is 2
                             The manifest is used at the start to determine whether an output ANC data track is created
@@ -272,6 +278,9 @@ Options (* means option is required):
   op1a/rdd9:
     --ard-zdf-hdf           Use the ARD ZDF HDF profile
     --repeat-index          Repeat the index table segments in the footer partition
+
+  op1a:
+    --ard-zdf-xdf           Use the ARD ZDF XDF profile
 
   op1a/d10:
     --cbe-index-duration-0  Use duration=0 if index table is CBE
