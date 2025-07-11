@@ -1,7 +1,7 @@
                                                                                                     |
                                 nnedi3 for Avisynth by tritical                                     |
                                        modified by JPSDR                                            |
-                                     v0.9.4.60 (06/02/2022)                                         |
+                                     v0.9.4.65 (13/03/2025)                                         |
                                            HELP FILE                                                |
 -----------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------
@@ -410,6 +410,21 @@ nnedi3_rpow2 EXAMPLES:
 
 
 CHANGE LIST:
+   13/03/2025  v0.9.4.65
+       + Update for new parameters on some resamplers.
+
+   08/01/2025  v0.9.4.64
+       + Update to new AviSynth+ header.
+
+   17/11/2023  v0.9.4.63
+       + Update to new AviSynth+ header.
+
+   23/02/2023  v0.9.4.62
+       + Update to new AviSynth+ header.
+
+   20/11/2022  v0.9.4.61
+       + Update in threadpool, no user limit (except memory).
+
    06/02/2022  v0.9.4.60
        * Fix in threadpool when using prefetch.
 
