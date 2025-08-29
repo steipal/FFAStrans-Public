@@ -42,7 +42,7 @@ Options:
                                     URLs, but emits an error if this is not
                                     possible instead of searching
     --ignore-config                 Don't load any more configuration files
-                                    except those given by --config-locations.
+                                    except those given to --config-locations.
                                     For backward compatibility, if this option
                                     is found inside the system configuration
                                     file, the user configuration is not loaded.
@@ -56,13 +56,22 @@ Options:
                                     containing directory ("-" for stdin). Can be
                                     used multiple times and inside other
                                     configuration files
-    --flat-playlist                 Do not extract the videos of a playlist,
-                                    only list them
+    --plugin-dirs PATH              Path to an additional directory to search
+                                    for plugins. This option can be used
+                                    multiple times to add multiple directories.
+                                    Use "default" to search the default plugin
+                                    directories (default)
+    --no-plugin-dirs                Clear plugin directories to search,
+                                    including defaults and those provided by
+                                    previous --plugin-dirs
+    --flat-playlist                 Do not extract a playlist's URL result
+                                    entries; some entry metadata may be missing
+                                    and downloading may be bypassed
     --no-flat-playlist              Fully extract the videos of a playlist
                                     (default)
     --live-from-start               Download livestreams from the start.
-                                    Currently only supported for YouTube
-                                    (Experimental)
+                                    Currently experimental and only supported
+                                    for YouTube and Twitch
     --no-live-from-start            Download livestreams from the current time
                                     (default)
     --wait-for-video MIN[-MAX]      Wait for scheduled streams to become
@@ -76,7 +85,9 @@ Options:
                                     stderr) to apply the setting to. Can be one
                                     of "always", "auto" (default), "never", or
                                     "no_color" (use non color terminal
-                                    sequences). Can be used multiple times
+                                    sequences). Use "auto-tty" or "no_color-tty"
+                                    to decide based on terminal support only.
+                                    Can be used multiple times
     --compat-options OPTS           Options that can help keep compatibility
                                     with youtube-dl or youtube-dlc
                                     configurations by reverting some of the
@@ -86,18 +97,24 @@ Options:
                                     an alias starts with a dash "-", it is
                                     prefixed with "--". Arguments are parsed
                                     according to the Python string formatting
-                                    mini-language. E.g. --alias get-audio,-X
-                                    "-S=aext:{0},abr -x --audio-format {0}"
-                                    creates options "--get-audio" and "-X" that
-                                    takes an argument (ARG0) and expands to
-                                    "-S=aext:ARG0,abr -x --audio-format ARG0".
-                                    All defined aliases are listed in the --help
+                                    mini-language. E.g. --alias get-audio,-X "-S
+                                    aext:{0},abr -x --audio-format {0}" creates
+                                    options "--get-audio" and "-X" that takes an
+                                    argument (ARG0) and expands to "-S
+                                    aext:ARG0,abr -x --audio-format ARG0". All
+                                    defined aliases are listed in the --help
                                     output. Alias options can trigger more
                                     aliases; so be careful to avoid defining
                                     recursive options. As a safety measure, each
                                     alias may be triggered a maximum of 100
                                     times. This option can be used multiple
                                     times
+    -t, --preset-alias PRESET       Applies a predefined set of options. e.g.
+                                    --preset-alias mp3. The following presets
+                                    are available: mp3, aac, mp4, mkv, sleep.
+                                    See the "Preset Aliases" section at the end
+                                    for more info. This option can be used
+                                    multiple times
 
   Network Options:
     --proxy URL                     Use the specified HTTP/HTTPS/SOCKS proxy. To
@@ -107,6 +124,13 @@ Options:
                                     direct connection
     --socket-timeout SECONDS        Time to wait before giving up, in seconds
     --source-address IP             Client-side IP address to bind to
+    --impersonate CLIENT[:OS]       Client to impersonate for requests. E.g.
+                                    chrome, chrome-110, chrome:windows-10. Pass
+                                    --impersonate="" to impersonate any client.
+                                    Note that forcing impersonation for all
+                                    requests may have a detrimental impact on
+                                    download speed and stability
+    --list-impersonate-targets      List available clients to impersonate.
     -4, --force-ipv4                Make all connections via IPv4
     -6, --force-ipv6                Make all connections via IPv6
     --enable-file-urls              Enable file:// URLs. This is disabled by
@@ -140,15 +164,15 @@ Options:
                                     SIZE, e.g. 50k or 44.6M
     --date DATE                     Download only videos uploaded on this date.
                                     The date can be "YYYYMMDD" or in the format 
-                                    [now|today|yesterday][-N[day|week|month|year
-                                    ]]. E.g. "--date today-2weeks" downloads
-                                    only videos uploaded on the same day two
-                                    weeks ago
+                                    [now|today|yesterday][-
+                                    N[day|week|month|year]]. E.g. "--date
+                                    today-2weeks" downloads only videos uploaded
+                                    on the same day two weeks ago
     --datebefore DATE               Download only videos uploaded on or before
-                                    this date. The date formats accepted is the
+                                    this date. The date formats accepted are the
                                     same as --date
     --dateafter DATE                Download only videos uploaded on or after
-                                    this date. The date formats accepted is the
+                                    this date. The date formats accepted are the
                                     same as --date
     --match-filters FILTER          Generic video filter. Any "OUTPUT TEMPLATE"
                                     field can be compared with a number or a
@@ -159,18 +183,18 @@ Options:
                                     is not present, and "&" to check multiple
                                     conditions. Use a "\" to escape "&" or
                                     quotes if needed. If used multiple times,
-                                    the filter matches if atleast one of the
-                                    conditions are met. E.g. --match-filter
-                                    !is_live --match-filter "like_count>?100 &
+                                    the filter matches if at least one of the
+                                    conditions is met. E.g. --match-filters
+                                    !is_live --match-filters "like_count>?100 &
                                     description~='(?i)\bcats \& dogs\b'" matches
                                     only videos that are not live OR those that
                                     have a like count more than 100 (or the like
                                     field is not available) and also has a
                                     description that contains the phrase "cats &
-                                    dogs" (caseless). Use "--match-filter -" to
+                                    dogs" (caseless). Use "--match-filters -" to
                                     interactively ask whether to download each
                                     video
-    --no-match-filters              Do not use any --match-filter (default)
+    --no-match-filters              Do not use any --match-filters (default)
     --break-match-filters FILTER    Same as "--match-filters" but stops the
                                     download process when a video is rejected
     --no-break-match-filters        Do not use any --break-match-filters
@@ -187,9 +211,13 @@ Options:
     --no-download-archive           Do not use archive file (default)
     --max-downloads NUMBER          Abort after downloading NUMBER files
     --break-on-existing             Stop the download process when encountering
-                                    a file that is in the archive
+                                    a file that is in the archive supplied with
+                                    the --download-archive option
+    --no-break-on-existing          Do not stop the download process when
+                                    encountering a file that is in the archive
+                                    (default)
     --break-per-input               Alters --max-downloads, --break-on-existing,
-                                    --break-match-filter, and autonumber to
+                                    --break-match-filters, and autonumber to
                                     reset per input URL
     --no-break-per-input            --break-on-existing and similar options
                                     terminates the entire download queue
@@ -310,14 +338,13 @@ Options:
     -o, --output [TYPES:]TEMPLATE   Output filename template; see "OUTPUT
                                     TEMPLATE" for details
     --output-na-placeholder TEXT    Placeholder for unavailable fields in
-                                    "OUTPUT TEMPLATE" (default: "NA")
+                                    --output (default: "NA")
     --restrict-filenames            Restrict filenames to only ASCII characters,
                                     and avoid "&" and spaces in filenames
     --no-restrict-filenames         Allow Unicode characters, "&" and spaces in
                                     filenames (default)
     --windows-filenames             Force filenames to be Windows-compatible
-    --no-windows-filenames          Make filenames Windows-compatible only if
-                                    using Windows (default)
+    --no-windows-filenames          Sanitize filenames only minimally
     --trim-filenames LENGTH         Limit the filename length (excluding
                                     extension) to the specified number of
                                     characters
@@ -336,9 +363,9 @@ Options:
     --no-part                       Do not use .part files - write directly into
                                     output file
     --mtime                         Use the Last-modified header to set the file
-                                    modification time (default)
+                                    modification time
     --no-mtime                      Do not use the Last-modified header to set
-                                    the file modification time
+                                    the file modification time (default)
     --write-description             Write video description to a .description
                                     file
     --no-write-description          Do not write video description (default)
@@ -371,16 +398,17 @@ Options:
                                     The name of the browser to load cookies
                                     from. Currently supported browsers are:
                                     brave, chrome, chromium, edge, firefox,
-                                    opera, safari, vivaldi. Optionally, the
-                                    KEYRING used for decrypting Chromium cookies
-                                    on Linux, the name/path of the PROFILE to
-                                    load cookies from, and the CONTAINER name
-                                    (if Firefox) ("none" for no container) can
-                                    be given with their respective seperators.
-                                    By default, all containers of the most
-                                    recently accessed profile are used.
-                                    Currently supported keyrings are: basictext,
-                                    gnomekeyring, kwallet, kwallet5, kwallet6
+                                    opera, safari, vivaldi, whale. Optionally,
+                                    the KEYRING used for decrypting Chromium
+                                    cookies on Linux, the name/path of the
+                                    PROFILE to load cookies from, and the
+                                    CONTAINER name (if Firefox) ("none" for no
+                                    container) can be given with their
+                                    respective separators. By default, all
+                                    containers of the most recently accessed
+                                    profile are used. Currently supported
+                                    keyrings are: basictext, gnomekeyring,
+                                    kwallet, kwallet5, kwallet6
     --no-cookies-from-browser       Do not load cookies from browser (default)
     --cache-dir DIR                 Location in the filesystem where yt-dlp can
                                     store some downloaded information (such as
@@ -433,16 +461,16 @@ Options:
                                     used. This option can be used multiple times
     --print-to-file [WHEN:]TEMPLATE FILE
                                     Append given template to the file. The
-                                    values of WHEN and TEMPLATE are same as that
-                                    of --print. FILE uses the same syntax as the
-                                    output template. This option can be used
-                                    multiple times
+                                    values of WHEN and TEMPLATE are the same as
+                                    that of --print. FILE uses the same syntax
+                                    as the output template. This option can be
+                                    used multiple times
     -j, --dump-json                 Quiet, but print JSON information for each
                                     video. Simulate unless --no-simulate is
                                     used. See "OUTPUT TEMPLATE" for a
                                     description of available keys
     -J, --dump-single-json          Quiet, but print JSON information for each
-                                    url or infojson passed. Simulate unless
+                                    URL or infojson passed. Simulate unless
                                     --no-simulate is used. If the URL refers to
                                     a playlist, the whole playlist information
                                     is dumped in a single line
@@ -465,6 +493,7 @@ Options:
                                     --console-title --progress-template
                                     "download-
                                     title:%(info.id)s-%(progress.eta)s"
+    --progress-delta SECONDS        Time between progress output (default: 0)
     -v, --verbose                   Print various debugging information
     --dump-pages                    Print downloaded pages encoded using base64
                                     to debug problems (very verbose)
@@ -517,9 +546,9 @@ Options:
     --no-audio-multistreams         Only one audio stream is downloaded for each
                                     output file (default)
     --prefer-free-formats           Prefer video formats with free containers
-                                    over non-free ones of same quality. Use with
-                                    "-S ext" to strictly prefer free containers
-                                    irrespective of quality
+                                    over non-free ones of the same quality. Use
+                                    with "-S ext" to strictly prefer free
+                                    containers irrespective of quality
     --no-prefer-free-formats        Don't give any special preference to free
                                     containers (default)
     --check-formats                 Make sure formats are selected only from
@@ -544,15 +573,18 @@ Options:
                                     (default) (Alias: --no-write-automatic-subs)
     --list-subs                     List available subtitles of each video.
                                     Simulate unless --no-simulate is used
-    --sub-format FORMAT             Subtitle format; accepts formats preference,
-                                    e.g. "srt" or "ass/srt/best"
+    --sub-format FORMAT             Subtitle format; accepts formats preference
+                                    separated by "/", e.g. "srt" or
+                                    "ass/srt/best"
     --sub-langs LANGS               Languages of the subtitles to download (can
                                     be regex) or "all" separated by commas, e.g.
-                                    --sub-langs "en.*,ja". You can prefix the
-                                    language code with a "-" to exclude it from
-                                    the requested languages, e.g. --sub-langs
-                                    all,-live_chat. Use --list-subs for a list
-                                    of available language tags
+                                    --sub-langs "en.*,ja" (where "en.*" is a
+                                    regex pattern that matches "en" followed by
+                                    0 or more of any character). You can prefix
+                                    the language code with a "-" to exclude it
+                                    from the requested languages, e.g. --sub-
+                                    langs all,-live_chat. Use --list-subs for a
+                                    list of available language tags
 
   Authentication Options:
     -u, --username USERNAME         Login with this account ID
@@ -600,9 +632,9 @@ Options:
                                     necessary (currently supported: avi, flv,
                                     gif, mkv, mov, mp4, webm, aac, aiff, alac,
                                     flac, m4a, mka, mp3, ogg, opus, vorbis,
-                                    wav). If target container does not support
-                                    the video/audio codec, remuxing will fail.
-                                    You can specify multiple rules; e.g.
+                                    wav). If the target container does not
+                                    support the video/audio codec, remuxing will
+                                    fail. You can specify multiple rules; e.g.
                                     "aac>m4a/mov>mp4/mkv" will remux aac to m4a,
                                     mov to mp4 and anything else to mkv
     --recode-video FORMAT           Re-encode the video into another format if
@@ -670,22 +702,22 @@ Options:
                                     are the same as that of --use-postprocessor
                                     (default: pre_process)
     --xattrs                        Write metadata to the video file's xattrs
-                                    (using dublin core and xdg standards)
+                                    (using Dublin Core and XDG standards)
     --concat-playlist POLICY        Concatenate videos in a playlist. One of
                                     "never", "always", or "multi_video"
                                     (default; only when the videos form a single
-                                    show). All the video files must have same
-                                    codecs and number of streams to be
-                                    concatable. The "pl_video:" prefix can be
+                                    show). All the video files must have the
+                                    same codecs and number of streams to be
+                                    concatenable. The "pl_video:" prefix can be
                                     used with "--paths" and "--output" to set
                                     the output filename for the concatenated
                                     files. See "OUTPUT TEMPLATE" for details
     --fixup POLICY                  Automatically correct known faults of the
                                     file. One of never (do nothing), warn (only
                                     emit a warning), detect_or_warn (the
-                                    default; fix file if we can, warn
-                                    otherwise), force (try fixing even if file
-                                    already exists)
+                                    default; fix the file if we can, warn
+                                    otherwise), force (try fixing even if the
+                                    file already exists)
     --ffmpeg-location PATH          Location of the ffmpeg binary; either the
                                     path to the binary or its containing
                                     directory
@@ -693,7 +725,7 @@ Options:
                                     when to execute it, separated by a ":".
                                     Supported values of "WHEN" are the same as
                                     that of --use-postprocessor (default:
-                                    after_move). Same syntax as the output
+                                    after_move). The same syntax as the output
                                     template can be used to pass any field as
                                     arguments to the command. If no fields are
                                     passed, %(filepath,_filename|)q is appended
@@ -701,12 +733,16 @@ Options:
                                     be used multiple times
     --no-exec                       Remove any previously defined --exec
     --convert-subs FORMAT           Convert the subtitles to another format
-                                    (currently supported: ass, lrc, srt, vtt)
-                                    (Alias: --convert-subtitles)
+                                    (currently supported: ass, lrc, srt, vtt).
+                                    Use "--convert-subs none" to disable
+                                    conversion (default) (Alias: --convert-
+                                    subtitles)
     --convert-thumbnails FORMAT     Convert the thumbnails to another format
                                     (currently supported: jpg, png, webp). You
                                     can specify multiple rules using similar
-                                    syntax as --remux-video
+                                    syntax as "--remux-video". Use "--convert-
+                                    thumbnails none" to disable conversion
+                                    (default)
     --split-chapters                Split video into multiple files based on
                                     internal chapters. The "chapter:" prefix can
                                     be used with "--paths" and "--output" to set
@@ -728,7 +764,7 @@ Options:
     --no-force-keyframes-at-cuts    Do not force keyframes around the chapters
                                     when cutting/splitting (default)
     --use-postprocessor NAME[:ARGS]
-                                    The (case sensitive) name of plugin
+                                    The (case-sensitive) name of plugin
                                     postprocessors to be enabled, and
                                     (optionally) arguments to be passed to it,
                                     separated by a colon ":". ARGS are a
@@ -741,8 +777,8 @@ Options:
                                     --print/--output), "before_dl" (before each
                                     video download), "post_process" (after each
                                     video download; default), "after_move"
-                                    (after moving video file to it's final
-                                    locations), "after_video" (after downloading
+                                    (after moving the video file to its final
+                                    location), "after_video" (after downloading
                                     and processing all formats of a video), or
                                     "playlist" (at end of playlist). This option
                                     can be used multiple times to add different
@@ -760,7 +796,7 @@ Options:
                                     music_offtopic, poi_highlight, chapter, all
                                     and default (=all). You can prefix the
                                     category with a "-" to exclude it. See [1]
-                                    for description of the categories. E.g.
+                                    for descriptions of the categories. E.g.
                                     --sponsorblock-mark all,-preview [1] https:/
                                     /wiki.sponsor.ajay.app/w/Segment_Categories
     --sponsorblock-remove CATS      SponsorBlock categories to be removed from
@@ -792,12 +828,33 @@ Options:
                                     (Alias: --no-allow-dynamic-mpd)
     --hls-split-discontinuity       Split HLS playlists to different formats at
                                     discontinuities such as ad breaks
-    --no-hls-split-discontinuity    Do not split HLS playlists to different
+    --no-hls-split-discontinuity    Do not split HLS playlists into different
                                     formats at discontinuities such as ad breaks
                                     (default)
     --extractor-args IE_KEY:ARGS    Pass ARGS arguments to the IE_KEY extractor.
                                     See "EXTRACTOR ARGUMENTS" for details. You
                                     can use this option multiple times to give
                                     arguments for different extractors
+
+  Preset Aliases:
+    Predefined aliases for convenience and ease of use. Note that future
+    versions of yt-dlp may add or adjust presets, but the existing preset
+    names will not be changed or removed
+
+    -t mp3                          -f 'ba[acodec^=mp3]/ba/b' -x --audio-format
+                                    mp3
+
+    -t aac                          -f
+                                    'ba[acodec^=aac]/ba[acodec^=mp4a.40.]/ba/b'
+                                    -x --audio-format aac
+
+    -t mp4                          --merge-output-format mp4 --remux-video mp4
+                                    -S vcodec:h264,lang,quality,res,fps,hdr:12,a
+                                    codec:aac
+
+    -t mkv                          --merge-output-format mkv --remux-video mkv
+
+    -t sleep                        --sleep-subtitles 5 --sleep-requests 0.75
+                                    --sleep-interval 10 --max-sleep-interval 20
 
 See full documentation at  https://github.com/yt-dlp/yt-dlp#readme
