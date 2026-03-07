@@ -1,6 +1,6 @@
 
 
-                              TDecimate v1.0.11  -  HELP FILE  (20230302)
+                              TDecimate v1.0.12  -  HELP FILE  (20251210)
 
 
 
@@ -40,7 +40,7 @@ A.)  GENERAL INFO:
                   int blockx, int blocky, bool debug, bool display, int vfrDec, bool batch,
                   bool tcfv1, bool se, bool chroma, bool exPP, int maxndl, bool m2PA,
                   bool denoise, bool noblend, bool ssd, int hint, PClip clip2, int sdlim, int opt,
-                  String orgOut, int displayDecimation, int displayOpt)
+                  String orgOut, int displayDecimation, int displayOpt, PClip dclip)
 
    Frame property support was introduced in 1.0.9 (1.0.27 package)
    See Section G.)
@@ -58,6 +58,8 @@ B.)  BASIC PARAMETERS:
                      N are controlled via the cycleR and cycle parameters.  Blend decimation
                      of video (30p) is supported in the this mode (hybrid = 1), as well as
                      blending of 24p into 30p (hybrid = 3).
+                     Set sceneDec=True when hybrid=0 and you want to avoid stutters around 
+                     scene changes.
 
 
            Mode 1 =  Exactly like mode 0, except instead of decimating the M most similar
@@ -67,6 +69,8 @@ B.)  BASIC PARAMETERS:
                      frames are repeated 2, 3 or 4 times in a row, and also supports blend
                      decimation of video (30p) with hybrid = 1, as well as blending of 24p
                      into 30p (hybrid = 3).
+                     Set sceneDec=True when hybrid=0 and you want to avoid stutters around 
+                     scene changes.
 
 
            Mode 2 =  This mode uses a separate decimation algorithm that can achieve any
@@ -270,11 +274,43 @@ C.)  ADVANCED PARAMETERS:
     sceneThresh -
 
         Sets the threshold for detecting scene changes when using blend decimation for video
-        sections (hybrid = 1) or blend conversion for 24p->30p (hybrid = 3).  This value is a
-        % of maximum change for the luma plane.  Good values are between 10 and 15.  Must be
-        in the range 0 to 100.
+        sections (hybrid = 0 and sceneDec=True, or hybrid = 1) or blend conversion for 24p->30p
+        (hybrid = 3).  This value is a % of maximum change for the luma plane.  Good values are 
+        between 10 and 15.  Must be in the range 0 to 100.
 
         Default:  15  (float)
+
+
+    sceneDec -
+
+        Sets the decimation strategy around scene changes when mode=0 or 1 and hybrid=0.
+        When set to true, if the current cycle contains a scenechange frame, and the current cycle
+        is video (eg. 30p) then the frame before the scene change frame will be decimated instead
+        of the most similar frame in the cycle.  This can help avoid stutters around scene changes
+        due to field cadence breaks in the source.  The sensitivity to scene changes can be controlled
+        with sceneThresh.  This setting doesn't need to be enabled when hybrid=1 as it is already
+        part of the default hybrid=1 behaviour.
+
+        For more info visit https://github.com/pinterf/TIVTC/pull/50 and 
+        https://github.com/pinterf/TIVTC/issues/27#issuecomment-2915891603
+
+        Default:  false  (bool)
+
+
+    lowDec -
+
+        Sets an alternative decimation strategy when using mode=1.
+        When set to true: if no frame in the current cycle is part of any string of dupes,
+        then fall back to mode=0 behaviour (lowest metric in cycle).
+        This may help with dirty sources where duplicates cannot always be detected with 100% accuracy,
+        since the frame with the lowest metric is often found in the string of dupes anyway.
+        The sensitivity for detecting duplicates can be controlled with dupThresh, eg. for a dirty source
+        try increasing dupThresh to 2.2 or 4.4 in extreme cases.
+        In the case where sceneDec and lowDec are both enabled and the current cycle has no duplicates,
+        sceneDec will take priority. 
+        See PR #58.
+
+        Default: false (bool)
 
 
     vidDetect -
@@ -521,10 +557,32 @@ C.)  ADVANCED PARAMETERS:
         effectively cancels all dot-crawl, whereas the dot-crawl would usually inflate difference
         values of duplicates.  Using denoising will slow things down somewhat.
 
+        When an already denoised external clip has to be used, use dclip parameter.
+
           true - use denoising
           false - don't
 
         Default:  false (bool)
+
+
+    dclip -
+
+        Specifies an external clip that TDecimate will use for gathering metrics instead of running it on the
+        input clip.  The input clip (or clip2) is still used for decimating.  The "dclip" clip 
+        is simply used for calculating between frames (calcMetric).
+
+        Using dclip is an alternative way of passing a denoised clip to TDecimate,
+        instead of providing a pre-denoised original clip and clip2. With this, hints and
+        properties of an original clip can be safe.
+
+        Parameter "denoise" can still be active, and is applied on the "dclip" clip additionally.
+
+        Can be used for modes 0, 1, 4 and 7.
+
+        The "dclip" clip format must match with the input clip.
+
+        Default:  null (PClip)
+
 
 
      ssd -
@@ -558,10 +616,10 @@ C.)  ADVANCED PARAMETERS:
      clip2 -
 
         Allows specification of a second clip from which to take frames. Metric calculation
-        and decimation are still done on the input clip, but the frames that tdecimate
-        returns are from clip2.  Clip2 must have the same number of frames are the input clip
-        and be in YUY2 or YV12 colorspace (it does not have to have the same colorspace as
-        the input clip).
+        is still done on the input or "dclip" clip and decimation is still done on the input clip, 
+        but the frames that tdecimate returns are from clip2. 
+        Clip2 must have the same number of frames are the input clip,
+        it does not have to have the same colorspace as the input clip.
 
         Default:  null (PClip)
 
@@ -906,6 +964,15 @@ G.) FRAME PROPERTY SUPPORT
 
 
 H.)  CHANGE LIST:
+
+    (20251210) (v1.0.12, in v1.0.30 pack - pinterf)
+         - TDecimate: add dclip parameter - a denoised clip for metrics calculation only
+           See #27: https://github.com/pinterf/TIVTC/issues/27
+         - TDecimate: Allow hybrid=1 scenechange decimation strategy when hybrid=0, new parameter "sceneDec"
+           See #50: https://github.com/pinterf/TIVTC/pull/50 (flossy83)
+           Both for mode=0 and 1.
+         - TDecimate: Alternate strategy for TDecimate mode 1, lowDec parameter
+           See #58: https://github.com/pinterf/TIVTC/pull/58 (flossy83)
 
     (20240302) (v1.0.11, in v1.0.29 pack - pinterf)
          - TDecimate: allow noblend=true when hybrid=1, noblend default value is false when hybrid=1 to keep 
