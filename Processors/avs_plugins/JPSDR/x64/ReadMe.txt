@@ -5,8 +5,9 @@ Broadwell versions are build with archi Broadwell CPU.
 Zen4 versions are build with archi Zen4 CPU.
 Zen4s versions are build tuned for Zen4 CPU but without AVX512.
 
-Release_clang versions are build with clang llvm 20.1.8.
-Others are build with VS2019 Update 11.31.
+Release_clang versions are build with clang llvm 21.1.8.
+Windows XP versions are build with VS2022 Update 14.23.
+Others are build with VS2019 Update 11.53.
 
 Get x64 redistribuable package for Visual Studio 2015-2022.
 https://aka.ms/vs/17/release/VC_redist.x64.exe
