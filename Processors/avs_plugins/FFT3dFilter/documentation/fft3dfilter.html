@@ -11,7 +11,7 @@
 <h1>FFT3DFilter</h1>
 
 <p>Plugin for <a href="http://www.avisynth.org">Avisynth 2.6</a> and <a href="http://avisynth.nl/index.php/AviSynth%2B">Avisynth+</a><br>
-Copyright (C)2017-2021 v2.10: high bit depth and planar rgb support on Avisynth+ (10-16 bits and float) by pinterf<br>
+Copyright (C)2017-2025 v2.12: high bit depth and planar rgb support on Avisynth+ (10-16 bits and float) by pinterf<br>
 Based on version 2.2<br>
 Copyright (C)2017 martin53 doom9.org forum member, with kind permission of Fizick<br>
 Based on Version 2.1.1, which is
@@ -512,7 +512,7 @@ re-enabled SSE optimization for degrid=0; added SSE optimization for bt=3,-1 wit
   Note: for properly operating in MT_SERIALIZED mode in Avisynth MT, please use Avs+ r2504 or better.
 </li>
 <li>Version 2.5   - July 02, 2018<br>
-- Change 32 bit float formar: U/V chroma center to zero instead of 0.5 to match Avisynth+ r2728<br>
+- Change 32 bit float format: U/V chroma center to zero instead of 0.5 to match Avisynth+ r2728<br>
 </li>
 <li>Version 2.6   - January 31, 2019<br>
 - Fix: Proper rounding before internal 32 bit float data are converted back to integer pixel values<br>
@@ -535,7 +535,12 @@ re-enabled SSE optimization for degrid=0; added SSE optimization for bt=3,-1 wit
 - Fix possible crash on exit on ncpu=1 (uninitialized fft3w threads)<br>
 - Fix C version (possibly unused on Intel builds, when CPU less than SSE2) in sharpen+degrid method
 </li>
-
+<li>Version 2.11   - June 03, 2025<br>
+- With Avisynth V12 interface (3.7.6-): use Global Lock to make thread safe fftw3 for all plugins using fftw3 globally.
+  See https://github.com/AviSynth/AviSynthPlus/issues/444
+</ul>
+<li>Version 2.12   - December 25, 2025<br>
+- Fix crash with pre-V9 interface Avisynth due to using env->GetEnvProperty before checking we have at least V9 Avisynth interface.
 </ul>
 
 </body>
