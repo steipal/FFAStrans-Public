@@ -27,12 +27,25 @@
 <p style=margin-top:-15>If this is checked, FFAStrans will automatically create, if it does not exist, the folder specified under «Folder».</p>
 <p></p>
 
-<p><b><u>Recurse</u></b></p>
-<p style=margin-top:-15>This option seeks into sub-directories of the folder specified.</p>
-<p></p>
-
 <p><b><u>Localize file</u></b></p>
 <p style=margin-top:-15>If set, FFAStrans will make a local copy of the accepted files. These are just preliminary files and will be deleted once the job is done.</p>
+<p></p>
+
+<p><b><u>Return folders</u></b></p>
+<p style=margin-top:-15>This will return only folders instead of files.</p>
+<p></p>
+
+<p><b><u>Forget missing files</u></b></p>
+<p style=margin-top:-15>With this option enabled, FFAStrans will synchronize the files history to the actual files. This enables you to remove an already processed file, wait a sleep cycle, and add the same file back again and it will be picked up.</p>
+<p></p>
+
+<p><b><u>Skip source verification</u></b></p>
+<p style=margin-top:-15>When enabled FFAStrans will skip trying to open the file for reading in order to verify if it's ready or not.</p>
+<p></p>
+
+<p><b><u>Recurse</u></b></p>
+<p style=margin-top:-15>This option seeks into sub-directories of the folder specified. With the "Level rule" you can define the rule for accepted path levels. Any comma separated combination (except *) are accepted:</p>
+<table><thead><tr><td>Syntax</td><td>Name</td><td>Description</td></tr></thead><tbody><tr><td><code>*</code></td><td><b>Any Level</b></td><td>Accepts all levels (the default recursive behavior).</td></tr><tr><td><code>n</code></td><td><b>Specific Level</b></td><td>Accepts <i>only</i> level <code>n</code>. (e.g., <code>0</code> for root only).</td></tr><tr><td><code>a,b,c</code></td><td><b>List of Levels</b></td><td>Accepts any of the specific levels listed.</td></tr><tr><td><code>a-b</code></td><td><b>Range of Levels</b></td><td>Accepts all levels from <code>a</code> to <code>b</code>, inclusive.</td></tr><tr><td><code>n+</code></td><td><b>Level 'n' and Deeper</b></td><td>Accepts level <code>n</code> and all levels deeper than it.</td></tr></tbody></table>
 <p></p>
 
 <p><b><u>Check for growing files</u></b></p>
@@ -45,20 +58,12 @@
 <p style='margin-left:36pt'><b>continuously</b>: This option will make FFAStrans execute new job every time the file(s) have changed file size. This comes in handy when looking for constantly updated files that need to be processed for each update.</p>
 <p></p>
 
-<p><b><u>Skip source verification</u></b></p>
-<p style=margin-top:-15>When enabled FFAStrans will skip trying to open the file for reading in order to verify if it's ready or not.</p>
-<p></p>
-
-<p><b><u>Forget missing files</u></b></p>
-<p style=margin-top:-15>With this option enabled, FFAStrans will synchronize the files history to the actual files. This enables you to remove an already processed file, wait a sleep cycle, and add the same file back again and it will be picked up.</p>
-<p></p>
-
 <p><b><u>Limit file size</u></b></p>
 <p style=margin-top:-15>Here you specify the maximum file size accepted by the monitor.</p>
 <p></p>
 
 <p><b><u>Rebuild history</u></b></p>
-<p style=margin-top:-15>This button make FFAStans register files already present in the monitored folder. Use this if you want to skip existing files prior to starting the workflow.</p>
+<p style=margin-top:-15>This button make FFAStrans register files already present in the monitored folder. Use this if you want to skip existing files prior to starting the workflow.</p>
 <p></p>
 
 <p><b><u>Clear history</u></b></p>

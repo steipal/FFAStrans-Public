@@ -7,24 +7,24 @@
 <p>Line feed (enter) will be treated as space character on execution.</p>
 <p></p>
 
-<p><i>To run dos-commands you might have to add &quot;<b>%comspec% /c</b>&quot; at the beginning off command with the rest of the command <b><u>encapsulated with quote</u></b><u>(<b>&quot;</b>)</u>.</i></p>
+<p><i>To run dos-commands you might have to add &quot;<b>%comspec% /c</b>&quot; at the beginning of the command with the rest of the command <b><u>encapsulated with quote</u></b><u>(<b>&quot;</b>)</u>.</i></p>
 <p><i>&nbsp;</i></p>
 <p><b><i>Example(copy original):</i></b></p>
 <p><i>%comspec% /c&quot;copy &quot;</i>%s_original_full%&quot;&quot;<i>D:\MediaCopy&quot;&quot;</i></p>
 <p><i>PS: To mimic the deprecated &quot;Copy failed to&quot; set this to execute on error.</i></p>
 <p><i>&nbsp;</i></p>
 <p><b><i>Example(replacement for the removed &quot;Delete original&quot; function):</i></b></p>
-<p><i>%comspec% /c&quot;del /f /q  &quot;</i>%s_original_full%&quot;<i>&quot;</i></p>
+<p><i>%comspec% /c&quot;del /f /q  &quot;</i>%s_original_full%&quot;<i>&quot;</i></p>
 <p></p>
 
 <p><b><i>Example(move original):</i></b></p>
-<p><i>%comspec% /c&quot;move /y  &quot;</i>%s_original_full%&quot;&quot;<i>D:\MediaMove&quot;&quot;</i></p>
+<p><i>%comspec% /c&quot;move /y  &quot;</i>%s_original_full%&quot;&quot;<i>D:\MediaMove&quot;&quot;</i></p>
 <p></p>
 
 <p><b><i>Example(replacement for the &quot;Remove monitored file record. . . &quot; workflow function):</i></b></p>
-<p><i>%comspec% /c&quot;if exist &quot;</i>%s_cache_record%&quot; del /f /q  &quot;</i>%s_cache_record%&quot;<i>&quot;</i></p>
+<p><i>%comspec% /c&quot;if exist &quot;</i>%s_cache_record%&quot; del /f /q  &quot;</i>%s_cache_record%&quot;<i>&quot;</i></p>
 <p><i>&nbsp;</i></p>
-<p><b><i>WARNING: Adding the latter to a workflow <u>will</u> cause FFAStrans to pick up the job file in a loop if the file still exist.</i></b></p>
+<p><b><i>WARNING: Adding the latter to a workflow <u>will</u> cause FFAStrans to pick up the job file in a loop if the file still exists.</i></b></p>
 <p></p>
 
 <p>FFAStrans will try to output stdout and stderr to the status monitor when possible.</p>
@@ -48,8 +48,8 @@
 <p></p>
 
 <p><b><u>Set timeout in minutes</u></b></p>
-<p style=margin-top:-15>Allows you to save specify a timeout before the command forcefully exits.</p>
-<p><i>Note:FFAStrans has no way of detecting if a command is soon finished, so use with care.</i></p>
+<p style=margin-top:-15>Allows you to specify a timeout before the command forcefully exits.</p>
+<p><i>Note: FFAStrans has no way of detecting if a command is soon finished, so use with care.</i></p>
 <p></p>
 
 <p><b><u>Show console</u></b></p>

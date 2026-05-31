@@ -137,7 +137,7 @@
 <p style='margin-left:36pt;margin-top:-15pt'>1</p>
 
 <p style='font-size:13pt'><b>$isalpha</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Check if string is only alphabetic letters. Success returns1, failure returns 0.</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Check if string is only alphabetic letters. Success returns 1, failure returns 0.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$isalpha</b>(input string =&quot;string/%variable%&quot;)</p>
@@ -293,7 +293,7 @@
 <p style='margin-left:36pt;margin-top:-15pt'>D:_replace_+_spaces_in_file_name@com</p>
 
 <p style='font-size:13pt'><b>$exists</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>This is function will locate file(s) and return the number of matches. If the second argument is 1 then the function will return the first match as a complete path. If second argument is 2 then the function will return a string formated array of complete file paths. The 3'rd argument turns recursive search on (1) or off (0, default)</p>
+<p style='margin-left:36pt;margin-top:-15pt'>This is function will locate file(s) and return the number of matches. If the second argument is 1 then the function will return the first match as a complete path. If second argument is 2 then the function will return a string formatted array of complete file paths. The 3'rd argument turns recursive search on (1) or off (0, default)</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$exists</b>(input string =&quot;string/%variable%&quot;[, input integer = integer/%variable%, input integer = integer/%variable%])</p>
@@ -315,7 +315,7 @@
 <p style='margin-left:36pt;margin-top:-15pt'>[&quot;C:\\Windows\\system32\\WinSAT.exe&quot;, &quot;C:\\Windows\\system32\\WinSATAPI.dll&quot;]</p>
 
 <p style='font-size:13pt'><b>$read</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Reads the contents of a any text file. The function will automatically try to determine correct encoding. If storing as a variable thestring length is limited to approximately 80. 000 characters.</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Reads the contents of a any text file. The function will automatically try to determine correct encoding. If storing as a variable the string length is limited to approximately 80. 000 characters.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$read</b>(input string =&quot;string/%variable%&quot;)</p>
@@ -338,7 +338,7 @@
 <p style='margin-left:36pt;margin-top:-15pt'>Converts a TC time code to seconds.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
-<p style='margin-left:36pt;margin-top:-10pt'><b>$tctosec</b>(input time code, string = &quot;string/%variable%&quot;, frames persecond, float = float/%i_variable%)</p>
+<p style='margin-left:36pt;margin-top:-10pt'><b>$tctosec</b>(input time code, string = &quot;string/%variable%&quot;, frames per second, float = float/%i_variable%)</p>
 
 <p style='margin-left:36pt'><i>Example 1:</i></p>
 <p style='margin-left:36pt;margin-top:-15pt'>$tctosec(&quot;00:00:54;29&quot;, 29.97) =</p>
@@ -483,7 +483,7 @@
 <p style='margin-left:36pt;margin-top:-15pt'>Hello \&quot;World\&quot;</p>
 
 <p style='font-size:13pt'><b>$readarray</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Returns an instance from a valid array which must be in the form of &quot;[&quot;data&quot;, data, etc...]&quot;. All JSON formated data is valid. By default the function will return the first instance. By default the search index starts at one (1) but if the last optional argument is 1 the search index will be zero (0) based.</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns an instance from a valid array which must be in the form of &quot;[&quot;data&quot;, data, etc...]&quot;. All JSON formatted data is valid. By default the function will return the first instance. By default the search index starts at one (1) but if the last optional argument is 1 the search index will be zero (0) based.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$readarray</b>(input string =&quot;string/%variable%&quot;[, input integer = integer/%variable%, input integer = integer/%variable%])</p>
@@ -544,7 +544,7 @@
 <p style='margin-left:36pt;margin-top:-15pt'>{&quot;oldStuff&quot;: &quot;some old stuff&quot;,&quot;myNewStuff&quot;: &quot;some cool new stuff&quot;}</p>
 
 <p style='font-size:13pt'><b>$week</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Returns the week number from the date specified in the parameters. If no date is specified, the function retuns the current week number.</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns the week number from the date specified in the parameters. If no date is specified, the function returns the current week number.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$week</b>([input number=YEAR/&quot;%variable%&quot;, input number=MONTH/&quot;%variable%&quot;, input number=MONTH DAY/&quot;%variable%&quot;])</p>
@@ -554,7 +554,7 @@
 <p style='margin-left:36pt;margin-top:-15pt'>42</p>
 
 <p style='font-size:13pt'><b>$weekday</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Returns the week day number from the date specified in the parameters. If no date is specified, the function retuns the current week number number.</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Returns the week day number from the date specified in the parameters. If no date is specified, the function returns the current week number number.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$weekday</b>([input number=YEAR/&quot;%variable%&quot;, input number=MONTH/&quot;%variable%&quot;, input number=MONTH DAY/&quot;%variable%&quot;])</p>
@@ -563,8 +563,8 @@
 <p style='margin-left:36pt;margin-top:-15pt'>$weekday(2020, 10, 15)=</p>
 <p style='margin-left:36pt;margin-top:-15pt'>5</p>
 
-<p style='font-size:13pt'><b>$loopup</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Loopup table for mapping data to other data. The function will only operate on array formated strings.</p>
+<p style='font-size:13pt'><b>$lookup</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Lookup table for mapping data to other data. The function will only operate on array formatted strings.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$lookup</b>(input array =&quot;REFERENCE/%variable%&quot;, inputarray =&quot;TABLE/%variable%&quot;, input string =&quot;SEARCH/%variable%&quot;)</p>
@@ -573,8 +573,8 @@
 <p style='margin-left:36pt;margin-top:-15pt'>$lookup('[&quot;joe&quot;, &quot;bill&quot;, &quot;greg&quot;]', '[&quot;lucy&quot;, &quot;evy&quot;, &quot;jane&quot;]', &quot;evy&quot;)=</p>
 <p style='margin-left:36pt;margin-top:-15pt'>bill</p>
 
-<p style='font-size:13pt'><b>$loopuprep</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Loopup table for replacing strings with strings from lookup tables.</p>
+<p style='font-size:13pt'><b>$lookuprep</b></p>
+<p style='margin-left:36pt;margin-top:-15pt'>Lookup table for replacing strings with strings from lookup tables.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$lookuprep</b>(input array =&quot;REFERENCE/%variable%&quot;, input array =&quot;TABLE/%variable%&quot;, input string =&quot;SEARCH/%variable%&quot;)</p>
@@ -584,7 +584,7 @@
 <p style='margin-left:36pt;margin-top:-15pt'>joelindagreg</p>
 
 <p style='font-size:13pt'><b>$sort</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Sorts an array formated string or a regular string. String sorting use crlf as base separator but a custom separator can be specified.</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Sorts an array formatted string or a regular string. String sorting use crlf as base separator but a custom separator can be specified.</p>
 
 <p style='margin-left:36pt'><u>Usage:</u></p>
 <p style='margin-left:36pt;margin-top:-10pt'><b>$sort</b>(input string/array =&quot;string/%variable%&quot;[, input string =&quot;SEPARATOR/%variable%&quot;])</p>

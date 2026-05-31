@@ -3,17 +3,17 @@
 <p></p>
 
 <p><b><u>Format</u></b></p>
-<p style=margin-top:-15>Here you set the resolution and framerate for DNxHR format. It will support &quot;any&quot; kind of resolution. If &quot;Same as source&quot; (default) is selected the output video will have same width and hight as the source.</p>
+<p style=margin-top:-15>Here you set the resolution and framerate for DNxHR format. It will support &quot;any&quot; kind of resolution. If &quot;Same as source&quot; (default) is selected the output video will have same width and height as the source.</p>
 <p></p>
 
 <p><i>Note: When using &quot;Same as source&quot; and your source is below 720p (HD), the output files might not be widely supported.</i></p>
 <p></p>
 
 <p><b><u>Profile:</u></b></p>
-<p style=margin-top:-15>Sets the DNxHR profile. FFAStranssupports LB, SQ, HQ, HQX and 444.</p>
+<p style=margin-top:-15>Sets the DNxHR profile. FFAStrans supports LB, SQ, HQ, HQX and 444.</p>
 <p></p>
 
-<p><i>Note: Only 10 bit HQX and 444 issupported.</i></p>
+<p><i>Note: Only 10 bit HQX and 444 is supported.</i></p>
 <p></p>
 
 <p><b><u>Processing</u></b></p>
@@ -59,7 +59,7 @@
 <p style='margin-left:36pt'><b><i>Set to full/limited</i></b> will just set the video range metadata.</p>
 <p></p>
 
-<p style='margin-left:36pt'><b><i>Convert to full/limited</i></b> will convert the input to set value. If input range is same as output no converion is being performed.</p>
+<p style='margin-left:36pt'><b><i>Convert to full/limited</i></b> will convert the input to set value. If input range is same as output no conversion is being performed.</p>
 <p></p>
 
 <p><b><u>Color space</u></b></p>
@@ -87,7 +87,7 @@
 <p></p>
 
 <p><b><u>Interlaced input</u></b></p>
-<p style=margin-top:-15>With this option you can choose how FFAStrans processes incoming media to the encoder. The &quot;Analyze&quot;option will determine from the actual video, not meta-data. Supports variables.</p>
+<p style=margin-top:-15>With this option you can choose how FFAStrans processes incoming media to the encoder. The &quot;Analyze&quot; option will determine from the actual video, not meta-data. Supports variables.</p>
 <p></p>
 
 <p><i>Note: DNxHR does not support encoding interlaced.</i></p>
@@ -106,7 +106,7 @@
 <p></p>
 
 <p><b><u>Discrete tracks</u></b></p>
-<p style=margin-top:-15>Sets the number of audio tracks/streams of the output file. One track can have one ore more channels.</p>
+<p style=margin-top:-15>Sets the number of audio tracks/streams of the output file. One track can have one or more channels.</p>
 <p></p>
 
 <p style='margin-left:36pt'><b>Source channels as tracks</b></p>
@@ -118,7 +118,7 @@
 <p></p>
 
 <p><b><u>Total channels</u></b></p>
-<p style=margin-top:-15>Sets the total amount of channels the output file holds. The channels are evenly distributed among the available discrete tracks defined. Regardless of the original layout, all audio channels are mapped to separate audio sources. Based on this, FFAStrans will map these sources to match selected audio configuration.. If the audio source has fewer channels than the output then the rest will be filled with silent audio.</p>
+<p style=margin-top:-15>Sets the total amount of channels the output file holds. The channels are evenly distributed among the available discrete tracks defined. Regardless of the original layout, all audio channels are mapped to separate audio sources. Based on this, FFAStrans will map these sources to match selected audio configuration. If the audio source has fewer channels than the output then the rest will be filled with silent audio.</p>
 <p></p>
 
 <p>If you select &quot;Custom channel mapping&quot; in the &quot;Total channels&quot; drop-down, FFAStrans will enable setting custom mapping per audio track:</p>
@@ -138,7 +138,7 @@
 <p></p>
 
 <p><b><u>Create Avid project structure.</u></b></p>
-<p style=margin-top:-15>Creates Avid compatible files. For proper delivery of media files you should use the &quot;Folder&quot;-delivery and set destination to e.g. .<i>M:\Avid MediaFiles\MXF\1</i> or wherever your Avid puts its . mxf files.</p>
+<p style=margin-top:-15>Creates Avid compatible files. For proper delivery of media files you should use the &quot;Folder&quot;-delivery and set destination to e.g. .<i>M:\Avid MediaFiles\MXF\1</i> or wherever your Avid puts its .mxf files.</p>
 <p></p>
 
 <p style='margin-left:36pt'><b>Project name</b></p>
@@ -147,7 +147,7 @@
 
 </p>
 <p style='margin-left:36pt'><b>Tape/ref. name</b></p>
-<p style='margin-left:36pt;margin-top:-15pt'>Name of the tape for the Avid project. If you prepend with "file://" and add the full original file path the "Source Path" and "Source File" fields in Avid will be populated. Usefull for creating Avid proxy files with reference to original media.</p>
+<p style='margin-left:36pt;margin-top:-15pt'>Name of the tape for the Avid project. If you prepend with "file://" and add the full original file path the "Source Path" and "Source File" fields in Avid will be populated. Useful for creating Avid proxy files with reference to original media.</p>
 <p></p>
 
 <p style='margin-left:36pt'><b>Clip name</b></p>

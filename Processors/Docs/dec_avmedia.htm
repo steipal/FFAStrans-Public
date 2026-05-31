@@ -1,4 +1,4 @@
-﻿<html><div style=font-family:Calibri>
+<html><div style=font-family:Calibri>
 <p>This decoder is necessary <i><u>only</u></i> in order to use filters. It will produce a valid AviSynth script on which filters can be built. FFAStrans is shiped with AviSynth+ as standard. If you have any other versions installed, FFAStrans will still used the one that comes with FFAStrans.</p>
 <p></p>
 
@@ -34,11 +34,11 @@
 <p style='margin-left:36pt;margin-top:-15'><b><i>Intelligent: </i></b><i>FFAStrans will try to decide, based upon predefined aberrations, whether it should perform a full decode or not.</i></p>
 
 <p style='margin-left:36pt;margin-top:-15'><b><i>Full decode: </i></b><i>Will always decode ALL audio found in media. This is the safest but slowest bet.</i></p>
-<p style='margin-left:36pt;margin-top:-15'><b><i>Note: Dolby E decoding is experimental, it ignores the dialnorm and it might not properly with some odd DBE layouts and DolbyED2 streams.</i></b></p>
+<p style='margin-left:36pt;margin-top:-15'><b><i>Note: Dolby E decoding is experimental, it ignores the dialnorm and it might not work properly with some odd DBE layouts and DolbyED2 streams.</i></b></p>
 <p></p>
 
 <p><b><u>Force channels</u></b></p>
-<p style=margin-top:-15>Force decoding to the specified number of channels or &quot;Same as source&quot;. Missing channels will be filled with silence audio.</p>
+<p style=margin-top:-15>Force decoding to the specified number of channels or &quot;Same as source&quot;. Missing channels will be filled with silent audio.</p>
 <p></p>
 
 <p><b><u>Bit depth</u></b></p>
@@ -46,7 +46,7 @@
 <p></p>
 
 <p><b><u>Sample rate</u></b></p>
-<p style=margin-top:-15>Force decoding to specified samplerate regardless of any source audio sample rate.</p>
+<p style=margin-top:-15>Force decoding to specified sample rate regardless of any source audio sample rate.</p>
 <p></p>
 
 <p><b><u>Use x64 AviSynth</u></b></p>
@@ -54,9 +54,9 @@
 <p></p>
 
 <p><b><u>Force 8 bit</u></b></p>
-<p style=margin-top:-15>The new AviSynth+ support higher bitdepths than 8 so this option will insert a ConvertTo8Bit() function at the end of the script created by the decoder.</p>
+<p style=margin-top:-15>The new AviSynth+ supports higher bit depths than 8 so this option will insert a ConvertTo8Bit() function at the end of the script created by the decoder.</p>
 <p></p>
 
 <p><b><u>Enable non linear seek</u></b></p>
-<p style=margin-top:-15>Normally, FFAStrans will set the seek flag in ffms2 to linear. However, setting this option enable custom scripts to do non linear seeking. This is important with plugins that require to look at previous and future frames in order to process current frames.</p>
 </div></html>
+<p style=margin-top:-15>Normally, FFAStrans will set the seek flag in ffms2 to linear. However, setting this option enables custom scripts to do non linear seeking. This is important with plugins that require to look at previous and future frames in order to process current frames.</p>

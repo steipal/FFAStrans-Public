@@ -18,21 +18,21 @@
 <p><i>Examples: %<b>s</b>_v_codec%, %<b>i</b>_height%, %<b>f</b>_fps%.</i></p>
 <p></p>
 
-<p>To insert a variable click the arrow-button next to a text field. All fields that has an arrow next to it supports variables. Please note that the notation for the JSON variable is the same as accessing JSON objects in modern programming languages. The difference is that the complete notation must be encapsulated with % and currently it only support the dot. notation. For example:</p>
+<p>To insert a variable click the arrow-button next to a text field. All fields that have an arrow next to them support variables. Please note that the notation for the JSON variable is the same as accessing JSON objects in modern programming languages. The difference is that the complete notation must be encapsulated with % and currently it only supports the dot notation. For example:</p>
 <p><i>%o_media.audio.streams[1]%</i> will try to access the %o_media% base variable where &quot;audio&quot; is the child object to &quot;%o_media%&quot;, &quot;stream&quot; is the child array to &quot;audio&quot; and &quot;[1]&quot; is the index number in the array.</p>
 <p></p>
 
 <p><b><u>File variables</u></b></p>
-<p style=margin-top:-15>File properties are derived from the original input file. ALL files has these properties so they will always be populated with data.</p>
+<p style=margin-top:-15>File properties are derived from the original input file. ALL files have these properties so they will always be populated with data.</p>
 <p><b><i>Note: The variable&quot;%s_original_full%&quot; when coming from the &quot;FTP&quot;-monitor will not work when attempted used in FFAStrans as a Windows path.</i></b></p>
 <p></p>
 
 <p><b><u>Media variables</u></b></p>
-<p style=margin-top:-15>Media properties are derived from the original input file. Different types of media can contain different kind of properties. E.g. a wave file does not have height or video bitrate. Properties that cannot be populated is disregarded.</p>
+<p style=margin-top:-15>Media properties are derived from the original input file. Different types of media can contain different kind of properties. E.g. a wave file does not have height or video bitrate. Properties that cannot be populated are disregarded.</p>
 <p></p>
 
 <p><b><u>OS variables/statics</u></b></p>
-<p style=margin-top:-15>These variables, also called system environments, are the ones that resides within the OS independent of FFAStrans. But all can be utilized within FFAStrans. E.g. the variable %username% is a part of the OS variables. OS variables are in fact statics that don't change from job to job, or workflow to workflow. But be aware that they might vary on hosts in a farming environment.</p>
+<p style=margin-top:-15>These variables, also called system environments, are the ones that reside within the OS independent of FFAStrans. But all can be utilized within FFAStrans. E.g. the variable %username% is a part of the OS variables. OS variables are in fact statics that don't change from job to job, or workflow to workflow. But be aware that they might vary on hosts in a farming environment.</p>
 <p></p>
 
 <p><b><u>Time variables</u></b></p>
