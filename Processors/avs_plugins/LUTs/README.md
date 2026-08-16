@@ -28,6 +28,12 @@ From "BT2100_PQ"             to "Linear_BT709"
 <br>
 From "BT2100_PQ"           to "BT2020_HLG"
 <br>
+From "ALog"        to "Linear_BT709"
+<br>
+From "ALog"        to "BT2020_HLG"
+<br>
+From "ALog"        to "BT2100_PQ"
+<br>
 From "CLog3"        to "Linear_BT709"
 <br>
 From "CLog3"        to "BT2020_HLG"
