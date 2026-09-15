@@ -1,0 +1,2117 @@
+{
+	"openapi": "3.0.0",
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"WorkflowsResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"workflows": {
+						"items": {},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"workflows"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"WorkflowResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"workflows": {
+						"items": {},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"workflows"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Record_string.any_": {
+				"properties": {},
+				"additionalProperties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"JsonObject": {
+				"$ref": "#/components/schemas/Record_string.any_"
+			},
+			"WorkflowUserVariablesResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"user_variables": {
+						"items": {},
+						"type": "array"
+					},
+					"dependencies": {
+						"$ref": "#/components/schemas/JsonObject"
+					}
+				},
+				"required": [
+					"discovery",
+					"user_variables"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"WorkflowControlResult": {
+				"properties": {
+					"wf_id": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"enabled",
+							"disabled",
+							"start_requested"
+						]
+					},
+					"status_source": {
+						"type": "string",
+						"enum": [
+							"request_markers"
+						],
+						"nullable": false
+					},
+					"runner_state": {
+						"type": "string",
+						"enum": [
+							"unknown"
+						],
+						"nullable": false
+					},
+					"disabled": {
+						"type": "boolean"
+					},
+					"start_requested": {
+						"type": "boolean"
+					},
+					"action": {
+						"type": "string",
+						"enum": [
+							"start",
+							"stop",
+							"enable",
+							"disable",
+							"reset"
+						]
+					}
+				},
+				"required": [
+					"wf_id",
+					"status",
+					"status_source",
+					"runner_state",
+					"disabled",
+					"start_requested",
+					"action"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"WorkflowActionRequest": {
+				"properties": {
+					"action": {
+						"type": "string",
+						"enum": [
+							"start",
+							"stop",
+							"enable",
+							"disable",
+							"reset"
+						]
+					}
+				},
+				"required": [
+					"action"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"HistoryEntry": {
+				"properties": {
+					"workflow": {
+						"type": "string"
+					},
+					"start_time": {
+						"type": "string"
+					},
+					"end_time": {
+						"type": "string"
+					},
+					"source": {
+						"type": "string"
+					},
+					"result": {
+						"type": "string"
+					},
+					"state": {
+						"type": "number",
+						"format": "double"
+					},
+					"job_id": {
+						"type": "string"
+					},
+					"split_id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"workflow",
+					"start_time",
+					"end_time",
+					"source",
+					"result",
+					"state",
+					"job_id",
+					"split_id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"HistoryResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"history": {
+						"items": {
+							"$ref": "#/components/schemas/HistoryEntry"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"history"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JobLogResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"discovery"
+				],
+				"type": "object",
+				"additionalProperties": {}
+			},
+			"LogLine": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"content": {
+						"$ref": "#/components/schemas/JsonObject"
+					}
+				},
+				"required": [
+					"id",
+					"content"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JobLogLinesResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"lines": {
+						"items": {
+							"$ref": "#/components/schemas/LogLine"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"lines"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JobsResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"jobs": {
+						"items": {},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"jobs"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Record_string.any-Array_": {
+				"properties": {},
+				"additionalProperties": {
+					"items": {},
+					"type": "array"
+				},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"TicketsResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"tickets": {
+						"$ref": "#/components/schemas/Record_string.any-Array_"
+					}
+				},
+				"required": [
+					"discovery",
+					"tickets"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Record_string.number_": {
+				"properties": {},
+				"additionalProperties": {
+					"type": "number",
+					"format": "double"
+				},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"JobDetailResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"job_id": {
+						"type": "string"
+					},
+					"state": {
+						"type": "string",
+						"enum": [
+							"pending",
+							"queued",
+							"running",
+							"held",
+							"active",
+							"finished",
+							"unknown"
+						],
+						"description": "Observed file state; running means a ticket was claimed, not verified worker health."
+					},
+					"jobs": {
+						"items": {},
+						"type": "array"
+					},
+					"ticket_states": {
+						"$ref": "#/components/schemas/Record_string.number_"
+					},
+					"manifest": {
+						"$ref": "#/components/schemas/JsonObject"
+					},
+					"control_requests": {
+						"items": {
+							"properties": {
+								"value": {
+									"type": "number",
+									"format": "double"
+								},
+								"split_id": {
+									"type": "string"
+								},
+								"scope": {
+									"type": "string",
+									"enum": [
+										"job",
+										"split"
+									]
+								},
+								"action": {
+									"type": "string",
+									"enum": [
+										"pause",
+										"abort",
+										"priority"
+									]
+								}
+							},
+							"required": [
+								"scope",
+								"action"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"job_id",
+					"state",
+					"jobs",
+					"ticket_states",
+					"control_requests"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JobResponse": {
+				"properties": {
+					"uri": {
+						"type": "string"
+					},
+					"job_id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"uri",
+					"job_id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JobSubmitRequest": {
+				"properties": {
+					"wf_id": {
+						"type": "string"
+					},
+					"inputfile": {
+						"type": "string"
+					},
+					"start_proc": {
+						"type": "string"
+					},
+					"priority": {
+						"type": "number",
+						"format": "double"
+					},
+					"variables": {
+						"items": {
+							"properties": {
+								"data": {},
+								"name": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"data",
+								"name"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"wf_id",
+					"inputfile"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JobRetryResponse": {
+				"properties": {
+					"uri": {
+						"type": "string"
+					},
+					"job_id": {
+						"type": "string"
+					},
+					"original_job_id": {
+						"type": "string"
+					},
+					"split_id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"uri",
+					"job_id",
+					"original_job_id",
+					"split_id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JobActionRequest": {
+				"properties": {
+					"action": {
+						"type": "string",
+						"enum": [
+							"pause",
+							"resume",
+							"abort",
+							"priority",
+							"retry"
+						]
+					},
+					"value": {
+						"type": "number",
+						"format": "double"
+					},
+					"split_id": {
+						"type": "string"
+					},
+					"user": {
+						"type": "string"
+					},
+					"system": {
+						"type": "string"
+					},
+					"host": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"action"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JobVariablesResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"variables": {
+						"items": {
+							"properties": {
+								"data": {},
+								"name": {
+									"type": "string"
+								},
+								"split_id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"data",
+								"name",
+								"split_id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"variables"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DiscoveryResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"documentation": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"discovery",
+					"documentation",
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AboutResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"about": {
+						"$ref": "#/components/schemas/JsonObject"
+					}
+				},
+				"required": [
+					"discovery",
+					"about"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"VariablesResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"user_variables": {
+						"$ref": "#/components/schemas/JsonObject"
+					}
+				},
+				"required": [
+					"discovery",
+					"user_variables"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateUserVariableRequest": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					},
+					"data": {},
+					"category": {
+						"type": "string",
+						"enum": [
+							"variables",
+							"statics"
+						]
+					}
+				},
+				"required": [
+					"name",
+					"type",
+					"data",
+					"category"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DeleteUserVariableRequest": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"category": {
+						"type": "string",
+						"enum": [
+							"variables",
+							"statics"
+						]
+					}
+				},
+				"required": [
+					"name",
+					"category"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"HostsResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"hosts": {
+						"items": {
+							"$ref": "#/components/schemas/JsonObject"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"hosts"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"HostsGroupsResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"hosts_groups": {
+						"items": {},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"hosts_groups"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateHostGroupRequest": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"hosts": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"name",
+					"hosts"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"UpdateHostGroupRequest": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"name": {
+						"type": "string"
+					},
+					"hosts": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DeleteHostGroupRequest": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"id"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PresetsResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"presets": {
+						"items": {
+							"$ref": "#/components/schemas/JsonObject"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"presets"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CustomNodesResponse": {
+				"properties": {
+					"discovery": {
+						"type": "string"
+					},
+					"custom_nodes": {
+						"items": {
+							"$ref": "#/components/schemas/JsonObject"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"discovery",
+					"custom_nodes"
+				],
+				"type": "object",
+				"additionalProperties": false
+			}
+		},
+		"securitySchemes": {}
+	},
+	"info": {
+		"title": "ffastrans-rest-api",
+		"version": "2.5.0",
+		"description": "FFAStrans REST API",
+		"contact": {}
+	},
+	"paths": {
+		"/api/v2/workflows": {
+			"get": {
+				"operationId": "ListWorkflows",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/WorkflowsResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves workflows and requested monitor state. Runner health is unknown;\nstart_requested means that the shared start marker exists.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "ImportWorkflow",
+				"responses": {
+					"201": {
+						"description": "Imported"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"409": {
+						"description": "Workflow exists"
+					}
+				},
+				"description": "Imports a workflow package, using the same structure as the FFAStrans\ndesktop \"Import workflow\" feature and the export endpoint: a body of\n`{ workflow, presets?, user_variables? }` (a bare workflow object is also\naccepted for backward compatibility). The workflow is created and must\nnot already exist; bundled presets are installed and bundled user\nvariables/statics are merged in (existing names and the reserved system\nvariables are left untouched).",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The workflow package (or a bare workflow definition) to import.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"description": "The workflow package (or a bare workflow definition) to import."
+							}
+						}
+					}
+				}
+			},
+			"put": {
+				"operationId": "UpdateWorkflow",
+				"responses": {
+					"200": {
+						"description": "Updated"
+					},
+					"201": {
+						"description": "Created"
+					},
+					"400": {
+						"description": "Bad Request"
+					}
+				},
+				"description": "Creates or updates a workflow. This is an idempotent operation.\nIf the workflow ID in the body exists, it will be updated.\nIf it does not exist, a new workflow will be created.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The full JSON definition of the workflow.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"description": "The full JSON definition of the workflow."
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/workflows/status": {
+			"get": {
+				"operationId": "ListWorkflowStatuses",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"description": "Retrieves requested monitor states from shared markers. These states do\nnot report runner health or whether submitted jobs are executing.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v2/workflows/{wf_id}": {
+			"get": {
+				"operationId": "GetWorkflow",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/WorkflowResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Retrieves the full definition of a specific workflow by its ID.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the workflow to retrieve.",
+						"in": "path",
+						"name": "wf_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"put": {
+				"operationId": "ControlWorkflow",
+				"responses": {
+					"202": {
+						"description": "Monitor request accepted",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/WorkflowControlResult"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"409": {
+						"description": "Conflict"
+					}
+				},
+				"description": "Changes requested monitor state and returns the resulting markers.\nstop/disable remove the manager's start request; existing submitted jobs\ncontinue. reset clears matching pending tickets and monitor cache.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the workflow to control.",
+						"in": "path",
+						"name": "wf_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "The action to perform on the workflow.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/WorkflowActionRequest",
+								"description": "The action to perform on the workflow."
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteWorkflow",
+				"responses": {
+					"202": {
+						"description": "Deleted"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Requests monitor stop, archives the workflow, and clears disabled state.\nPending and executing jobs retain their normal core lifecycle.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the workflow to delete.",
+						"in": "path",
+						"name": "wf_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/workflows/{wf_id}/presentation": {
+			"get": {
+				"operationId": "GetPresentation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"text/html": {
+								"schema": {
+									"type": "string",
+									"format": "byte"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Retrieves the HTML presentation/description for a workflow.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the workflow.",
+						"in": "path",
+						"name": "wf_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/workflows/{wf_id}/user_variables": {
+			"get": {
+				"operationId": "GetWorkflowUserVariables",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/WorkflowUserVariablesResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Retrieves user variables referenced by the workflow, presets and linked\nworkflows, including indirect definitions. dependencies identifies any\nmissing or runtime-selected definitions that prevent complete discovery.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the workflow to analyze.",
+						"in": "path",
+						"name": "wf_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/workflows/{wf_id}/export": {
+			"get": {
+				"operationId": "ExportWorkflow",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Exports a workflow with available presets and referenced variables in the\ndesktop-compatible package envelope. The dependencies manifest identifies\nexternal workflows that must be installed separately and runtime-selected\nor missing definitions. Check dependencies.self_contained before assuming\nthe package can run independently on another installation.",
+				"tags": [
+					"Workflows"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the workflow to export.",
+						"in": "path",
+						"name": "wf_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "When true, removes installation-specific farm\nsettings (clears the farm host list and resets each node's host\ngroup) so the package is portable. Defaults to false.",
+						"in": "query",
+						"name": "strip_farm_settings",
+						"required": false,
+						"schema": {
+							"default": false,
+							"type": "boolean"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/history": {
+			"get": {
+				"operationId": "GetHistory",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HistoryResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Pagination"
+					}
+				},
+				"description": "Retrieves a paginated list of job history entries from the main log.",
+				"tags": [
+					"Logs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The starting index for pagination. Defaults to 0.",
+						"in": "query",
+						"name": "start",
+						"required": false,
+						"schema": {
+							"default": 0,
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"description": "The number of history entries to retrieve. Defaults to 250.",
+						"in": "query",
+						"name": "count",
+						"required": false,
+						"schema": {
+							"default": 250,
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"description": "Paginate whole jobs, newest first by their first finished split.\nWhen true, start/count refer to jobs and all their splits are returned in completion order.",
+						"in": "query",
+						"name": "group_by_job",
+						"required": false,
+						"schema": {
+							"default": false,
+							"type": "boolean"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/jobs/{job_id}/details": {
+			"get": {
+				"operationId": "GetJobDetails",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"text/html": {
+								"schema": {
+									"type": "string",
+									"format": "byte"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Job ID"
+					},
+					"404": {
+						"description": "Job Log Not Found"
+					},
+					"500": {
+						"description": "Report Generation Failed"
+					},
+					"503": {
+						"description": "Runviz Unavailable"
+					},
+					"504": {
+						"description": "Report Generation Timed Out"
+					}
+				},
+				"description": "Generates and serves an interactive HTML visualization of a job using\nthe configured FFAStrans installation's embedded Python and Runviz tool.\nIncludes live fragments and restores archived logs on demand. Before a\nworker creates its log cache this endpoint returns 404.",
+				"tags": [
+					"Logs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The ID of the job, including all its splits.",
+						"in": "path",
+						"name": "job_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/logs/{job_id}": {
+			"get": {
+				"operationId": "GetJobLogs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/JobLogResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Job Log Not Found"
+					},
+					"500": {
+						"description": "Stored Job Log Unreadable"
+					},
+					"503": {
+						"description": "Job Cache or Archive Extractor Unavailable"
+					},
+					"504": {
+						"description": "Archive Restoration Timed Out"
+					}
+				},
+				"description": "Retrieves the full, detailed log for a specific job, including all splits and variables.\nRestores archived records on demand; returns 404 until a job manifest exists.",
+				"tags": [
+					"Logs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the job to retrieve logs for.",
+						"in": "path",
+						"name": "job_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/joblog/{job_id}": {
+			"get": {
+				"operationId": "GetJobLog",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/JobLogLinesResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Job Log Not Found"
+					},
+					"500": {
+						"description": "Stored Job Log Unreadable"
+					},
+					"503": {
+						"description": "Job Cache or Archive Extractor Unavailable"
+					},
+					"504": {
+						"description": "Archive Restoration Timed Out"
+					}
+				},
+				"description": "Retrieves a paginated list of log lines from a specific job's detailed log.",
+				"tags": [
+					"Logs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the job to retrieve log lines from.\nKnown jobs with no events return an empty array. Missing jobs return 404.",
+						"in": "path",
+						"name": "job_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Non-negative integer starting line index. Defaults to 0.",
+						"in": "query",
+						"name": "start",
+						"required": false,
+						"schema": {
+							"default": 0,
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"description": "Non-negative integer number of lines. Defaults to 300.",
+						"in": "query",
+						"name": "count",
+						"required": false,
+						"schema": {
+							"default": 300,
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/jobs": {
+			"get": {
+				"operationId": "GetJobs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/JobsResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves a list of all currently running jobs from the monitor.",
+				"tags": [
+					"Jobs"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "SubmitJob",
+				"responses": {
+					"202": {
+						"description": "Job Accepted",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/JobResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"409": {
+						"description": "Workflow Disabled"
+					}
+				},
+				"description": "Submits a new job to a workflow.",
+				"tags": [
+					"Jobs"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The job submission payload.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/JobSubmitRequest",
+								"description": "The job submission payload."
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/tickets": {
+			"get": {
+				"operationId": "GetTickets",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TicketsResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves all active tickets, including pending, running, queued and held branches.",
+				"tags": [
+					"Jobs"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v2/jobs/{job_id}": {
+			"get": {
+				"operationId": "GetJob",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/JobDetailResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Stored Job Data Unreadable"
+					},
+					"503": {
+						"description": "Job Cache or Archive Extractor Unavailable"
+					},
+					"504": {
+						"description": "Archive Restoration Timed Out"
+					}
+				},
+				"description": "Retrieves observed job state, active monitor rows, ticket counts and the\nsaved manifest. Archived jobs are restored on demand. Running means a\nclaimed ticket; control_requests are requests, not completion acknowledgments.",
+				"tags": [
+					"Jobs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the job to retrieve.",
+						"in": "path",
+						"name": "job_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"put": {
+				"operationId": "ControlJob",
+				"responses": {
+					"202": {
+						"description": "Accepted; retry responses include the job identity",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/JobRetryResponse"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"409": {
+						"description": "Conflict"
+					},
+					"500": {
+						"description": "Control or Retry Failed"
+					},
+					"503": {
+						"description": "Job Cache or Archive Extractor Unavailable"
+					},
+					"504": {
+						"description": "Archive Restoration Timed Out"
+					}
+				},
+				"description": "Sends a control action to a job (e.g., pause, resume, abort).\nRetry returns the accepted job identity: a new job for a restart, or the\nexisting job and split for a failed-node retry. Other actions have no body.",
+				"tags": [
+					"Jobs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the job to control.",
+						"in": "path",
+						"name": "job_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"description": "The action to perform on the job.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/JobActionRequest",
+								"description": "The action to perform on the job."
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/jobvars/{job_id}": {
+			"get": {
+				"operationId": "GetJobVariables",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/JobVariablesResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Stored Job Data Unreadable"
+					},
+					"503": {
+						"description": "Job Cache or Archive Extractor Unavailable"
+					},
+					"504": {
+						"description": "Archive Restoration Timed Out"
+					}
+				},
+				"description": "Retrieves variables from finished splits, restoring archived jobs on demand.",
+				"tags": [
+					"Jobs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The job GUID to retrieve variables from.",
+						"in": "path",
+						"name": "job_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Optional. A pipe-separated list of variable names to filter by (e.g., \"s_source_path|s_destination_path\").",
+						"in": "query",
+						"name": "vars",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2": {
+			"get": {
+				"operationId": "GetDiscovery",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DiscoveryResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Provides API discovery endpoints.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v2/about": {
+			"get": {
+				"operationId": "GetAbout",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AboutResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves general information about the FFAStrans installation.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"put": {
+				"operationId": "UpdateAbout",
+				"responses": {
+					"200": {
+						"description": "Updated"
+					},
+					"400": {
+						"description": "Bad Request"
+					}
+				},
+				"description": "Replaces the FFAStrans installation configuration (ffastrans.json).\nExpects the full, same-structured config object (general/email/debug).",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The complete configuration object to write.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"description": "The complete configuration object to write."
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/variables": {
+			"get": {
+				"operationId": "GetVariables",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/VariablesResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves all user variables.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v2/user_variables": {
+			"get": {
+				"operationId": "GetUserVariables",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/VariablesResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves all user variables. (Alias for /variables)",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "CreateUserVariable",
+				"responses": {
+					"201": {
+						"description": "Created"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"409": {
+						"description": "Conflict"
+					}
+				},
+				"description": "Creates a user variable or static in their shared, case-sensitive namespace.\nValues may be JSON objects, arrays or scalars. Names s_success, s_error\nand s_source are reserved by FFAStrans.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The user variable to create.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateUserVariableRequest",
+								"description": "The user variable to create."
+							}
+						}
+					}
+				}
+			},
+			"put": {
+				"operationId": "UpdateUserVariable",
+				"responses": {
+					"200": {
+						"description": "Updated"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"409": {
+						"description": "Conflicting variable definitions"
+					}
+				},
+				"description": "Updates an existing user variable by name and category.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The user variable to update.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateUserVariableRequest",
+								"description": "The user variable to update."
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteUserVariable",
+				"responses": {
+					"202": {
+						"description": "Deleted"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Deletes a user variable by name and category.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The name and category of the variable to delete.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DeleteUserVariableRequest",
+								"description": "The name and category of the variable to delete."
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/hosts": {
+			"get": {
+				"operationId": "GetHosts",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HostsResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves a list of all configured hosts.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v2/hosts_groups": {
+			"get": {
+				"operationId": "GetHostGroups",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HostsGroupsResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves a list of all configured host groups.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "CreateHostGroup",
+				"responses": {
+					"201": {
+						"description": "Created"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"409": {
+						"description": "Conflict"
+					}
+				},
+				"description": "Creates a host group with an auto-assigned ID from 1 through 254.\nGroup 0 (All) and value 255 (same host) are reserved.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The host group to create.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateHostGroupRequest",
+								"description": "The host group to create."
+							}
+						}
+					}
+				}
+			},
+			"put": {
+				"operationId": "UpdateHostGroup",
+				"responses": {
+					"200": {
+						"description": "Updated"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"409": {
+						"description": "Conflicting host group name"
+					}
+				},
+				"description": "Updates an existing host group by its numeric ID.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The fields to update. Must include the group ID.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateHostGroupRequest",
+								"description": "The fields to update. Must include the group ID."
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteHostGroup",
+				"responses": {
+					"202": {
+						"description": "Deleted"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Deletes a host group by its numeric ID.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The ID of the host group to delete.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DeleteHostGroupRequest",
+								"description": "The ID of the host group to delete."
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/presets": {
+			"get": {
+				"operationId": "GetPresets",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PresetsResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves a list of all available presets.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"put": {
+				"operationId": "UpdatePreset",
+				"responses": {
+					"200": {
+						"description": "Updated"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Updates an existing preset by its ID.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The updated preset definition. Must include an \"id\" field.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"description": "The updated preset definition. Must include an \"id\" field."
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"operationId": "CreatePreset",
+				"responses": {
+					"201": {
+						"description": "Created"
+					},
+					"400": {
+						"description": "Bad Request"
+					}
+				},
+				"description": "Creates a new preset.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The preset definition to create.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"description": "The preset definition to create."
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeletePreset",
+				"responses": {
+					"202": {
+						"description": "Deleted"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Deletes a preset by its ID.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "The request body containing the ID of the preset to delete.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object",
+								"description": "The request body containing the ID of the preset to delete."
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/custom_nodes": {
+			"get": {
+				"operationId": "GetCustomNodes",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/CustomNodesResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Retrieves the node.json descriptors of all installed custom (plugin) nodes.",
+				"tags": [
+					"General"
+				],
+				"security": [],
+				"parameters": []
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
+}

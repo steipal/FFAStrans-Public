@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFAStrans Job Monitor</title>
+    <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-panel: #252526;
+            --text-main: #e9e9e9;
+            --text-muted: #858585;
+            --border: #3e3e42;
+            --accent: #007acc;
+            --success: #4ec969;
+            --error: #f04f2f;
+            --running: #5196ff;
+            --aborted: #d1b225;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            background-color: var(--bg-panel);
+            padding: 10px 20px;
+            position: relative;
+            /* Needed for absolute positioning of child */
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            /* Center the main content (h1) */
+            align-items: center;
+            height: 50px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.9rem;
+            font-weight: 600;
+        }
+
+        .header-logo {
+            height: 36px;
+            width: 36px;
+            margin-right: 15px;
+        }
+
+        .status-badge {
+            position: absolute;
+            /* Position relative to header */
+            right: 20px;
+            /* Pin to the right */
+            top: 50%;
+            /* Center vertically */
+            transform: translateY(-50%);
+            /* Adjust for exact vertical center */
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .status-badge.live {
+            color: var(--success);
+        }
+
+        /* --- Layout --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .item-count {
+            font-size: 1rem;
+            color: var(--text-main);
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pagination-controls button {
+            background-color: var(--bg-panel);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .pagination-controls button:hover:not(:disabled) {
+            background-color: #3e3e42;
+        }
+
+        .pagination-controls button[aria-pressed="true"] {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            height: 18px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--accent);
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: width 0.3s ease; /* Smooth transition for updates */
+        }
+        
+        .progress-bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 18px;
+            font-size: 0.8rem;
+            color: white;
+            white-space: nowrap;
+            z-index: 2;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+
+        /* --- Active Jobs Panel --- */
+        #active-panel {
+            flex: 0 0 auto;
+            max-height: 40vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- History Panel --- */
+        #history-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .table-container {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* --- Tables --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            table-layout: fixed; /* Better performance and layout stability */
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background-color: #333333;
+            z-index: 10;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px;
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 4px 10px;
+            border-bottom: 1px solid #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Workflow */
+        th:nth-child(1) {
+            width: 10%;
+        }
+
+        /* Start Time */
+        th:nth-child(2) {
+            width: 10%;
+        }
+
+        /* File / Source*/
+        th:nth-child(3) {
+            width: 35%;
+        }
+
+        /* Proc@Host:pri / Duration */
+        th:nth-child(4) {
+            width: 10%;
+        }
+
+        /* Status / Outcome */
+        th:nth-child(5) {
+            width: 32%;
+        }
+
+        /* Brogress */
+        th:nth-child(6) {
+            width: 8%;
+        }
+
+        /* Progress */
+
+        tbody tr:nth-child(even) {
+            background-color: #2a2d2e;
+        }
+
+        /* Underline effect on hover */
+        tr:hover td {
+            border-top: 2px solid var(--accent);
+            padding-top: 3px; /* Original padding (4px) - (border-width-difference (1px)) */
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 3px; /* Original padding (4px) - (border-width-difference (1px)) */
+        }
+
+        tr:hover td:first-child {
+            border-bottom-left-radius: 4px;
+            border-top-left-radius: 4px;
+        }
+        
+        /* --- History Table Specifics --- */
+        #history-body .history-job-row {
+            background-color: var(--bg-panel);
+        }
+
+        .history-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .history-toggle:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
+        }
+
+        .history-workflow {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+        }
+
+        .history-split-count {
+            margin-left: auto;
+            color: var(--text-muted);
+        }
+
+        .history-toggle-icon, .history-split-count {
+            flex-shrink: 0;
+        }
+
+        .history-split-row td:first-child {
+            padding-left: 30px;
+            color: var(--text-muted);
+        }
+
+        .context-selected td {
+            background-color: #364552;
+        }
+
+        /* --- Context Menus --- */
+        .context-menu {
+            position: fixed;
+            box-sizing: border-box;
+            z-index: 100;
+            min-width: 210px;
+            max-width: calc(100vw - 8px);
+            padding: 4px;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            /* body is overflow:hidden, so a menu taller than the viewport would
+               put its last items out of reach without a scroller of its own. */
+            max-height: calc(100vh - 8px);
+            overflow-y: auto;
+        }
+
+        .context-item {
+            display: block;
+            box-sizing: border-box;
+            width: 100%;
+            padding: 7px 12px;
+            border: 0;
+            border-radius: 2px;
+            background: transparent;
+            color: var(--text-main);
+            font: inherit;
+            text-align: left;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+            cursor: pointer;
+        }
+
+        .context-item:hover:not(:disabled), .context-item:focus:not(:disabled) {
+            background-color: var(--accent);
+            outline: none;
+        }
+
+        .context-item:disabled {
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        .context-separator {
+            height: 1px;
+            margin: 4px 6px;
+            background-color: var(--border);
+        }
+
+        /* Flyout for "Set priority", anchored to its trigger. */
+        .context-submenu-wrap {
+            position: relative;
+        }
+
+        .context-submenu-trigger::after {
+            content: '\25B8';
+            float: right;
+            margin-left: 12px;
+        }
+
+        .context-submenu {
+            /* Fixed positioning escapes the parent menu's scrolling clip. */
+            position: fixed;
+            box-sizing: border-box;
+            z-index: 101;
+            min-width: 150px;
+            max-width: calc(100vw - 8px);
+            padding: 4px;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            max-height: calc(100vh - 8px);
+            overflow-y: auto;
+        }
+
+        /* --- Toast --- */
+        /* Actions are fire-and-forget PUTs, so their outcome needs a home. The
+           live region stays rendered and is faded out rather than hidden: a
+           screen reader only announces text that arrives in a region already in
+           the accessibility tree, so `hidden` here would silence every message. */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            z-index: 200;
+            max-width: 80vw;
+            padding: 10px 18px;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .toast.toast-visible {
+            opacity: 1;
+        }
+
+        .toast.toast-error {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        /* --- Status Colors --- */
+        .state-success { color: var(--success); }
+        .state-error { color: var(--error); font-weight: bold; }
+        .state-running { color: var(--running); }
+        .state-aborted { color: var(--aborted); }
+
+        /* Special class to show ellipsis at the start of a string */
+        .truncate-start {
+            direction: rtl;
+            text-align: left;
+        }
+
+
+        .empty-msg {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <img class="header-logo" src="icons/ffastrans.ico" alt="FFAStrans logo" />
+        <h1 id="header-title">FFAStrans status monitor</h1>
+        <div id="connection-status" class="status-badge">Connecting...</div>
+    </header>
+
+    <main>
+        <section id="active-panel">
+            <div class="section-header">
+                <div class="section-title">Active Jobs</div>
+                <span id="active-jobs-count" class="item-count"></span>
+            </div>
+            <div class="table-container">
+                <table id="active-table">
+                    <thead>
+                        <tr>
+                            <th>Workflow</th>
+                            <th>Start Time</th>
+                            <th>File / Source</th>
+                            <th>Processor @ Host : Priority</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody id="active-body">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="history-panel">
+            <div class="section-header">
+                <div class="section-title">History</div>
+                <div class="pagination-controls">
+                    <button id="history-grouping-btn" type="button" aria-pressed="true" title="Group finished splits by job ID">Group jobs: On</button>
+                    <button id="history-latest-btn" style="display: none;">Latest</button>
+                    <button id="history-older-btn">Older</button>
+                    <span id="history-page-info"></span>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Workflow</th>
+                            <th>Start Time</th>
+                            <th>File / Source</th>
+                            <th>Duration</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- One menu element serves both tables; its items are rebuilt per row. -->
+    <div id="context-menu" class="context-menu" role="menu" aria-label="Job actions" hidden></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        // --- Configuration ---
+        // Relative to this page (served at <base>/monitor) so the dashboard works
+        // unchanged when the service is mounted behind a reverse proxy at any base path.
+        const API_BASE = 'api/v2';
+        const POLL_INTERVAL_MS = 2000;
+
+        // --- State Management ---
+        let lastHistoryHash = '';
+        let historyStartIndex = 0;
+        const HISTORY_PAGE_SIZE = 250;
+        let latestActiveRequest = 0;
+        let latestHistoryRequest = 0;
+        let historyGroupingEnabled = true;
+        let renderedHistoryGrouping = true;
+        const historyGroups = new Map();
+        const expandedHistoryJobs = new Set();
+        let contextRow = null;
+        let toastTimer = 0;
+
+        const els = {
+            activeBody: document.getElementById('active-body'),
+            activeJobsCount: document.getElementById('active-jobs-count'),
+            historyBody: document.getElementById('history-body'),
+            status: document.getElementById('connection-status'),
+            headerTitle: document.getElementById('header-title'),
+            historyGroupingBtn: document.getElementById('history-grouping-btn'),
+            contextMenu: document.getElementById('context-menu'),
+            toast: document.getElementById('toast'),
+            historyOlderBtn: document.getElementById('history-older-btn'),
+            historyLatestBtn: document.getElementById('history-latest-btn'),
+            historyPageInfo: document.getElementById('history-page-info')
+        };
+
+        /**
+         * Main polling loop using Recursive Timeout
+         * This prevents request stacking ("Thundering Herd")
+         */
+        async function loop() {
+            try {
+                await Promise.all([
+                    fetchActiveJobs(),
+                    // Only auto-refresh history if user is on the first page
+                    historyStartIndex === 0 ? fetchHistory() : Promise.resolve()
+                ]);
+
+                els.status.textContent = `Live • Last checked: ${new Date().toLocaleTimeString()}`;
+                els.status.classList.add('live');
+                // A repaint can drop the row an open menu is acting on (job
+                // finished, history re-rendered); the menu must not outlive it.
+                if (contextRow && !contextRow.isConnected) closeContextMenu();
+            } catch (error) {
+                console.error("Polling error:", error);
+                els.status.textContent = 'Connection Lost';
+                els.status.classList.remove('live');
+            } finally {
+                // Schedule next run only after current one finishes
+                setTimeout(loop, POLL_INTERVAL_MS);
+            }
+        }
+
+        /**
+         * Fetch and render Active Jobs
+         * Uses "Diffing" logic to update DOM without destroying selection
+         */
+        async function fetchActiveJobs() {
+            const requestId = ++latestActiveRequest;
+            const res = await fetch(`${API_BASE}/jobs`);
+            if (!res.ok) throw new Error('Failed to fetch jobs');
+            const jobs = await res.json();
+            if (requestId !== latestActiveRequest) return;
+            renderActiveJobs(jobs.jobs);
+        }
+
+        function renderActiveJobs(jobs) {
+            els.activeJobsCount.textContent = `Running: ${jobs.length}`;
+
+            // Handle Empty State
+            if (!jobs || jobs.length === 0) {
+                if (els.activeBody.contains(contextRow)) closeContextMenu();
+                els.activeBody.innerHTML = '';
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 6;
+                cell.className = 'empty-msg';
+                cell.textContent = 'No active jobs';
+                row.appendChild(cell);
+                els.activeBody.appendChild(row);
+                return;
+            }
+
+            // Remove the empty message if it exists and we have jobs
+            if (els.activeBody.querySelector('.empty-msg')) {
+                els.activeBody.innerHTML = '';
+            }
+
+            // 1. Identify current Job IDs in DOM
+            const activeIds = new Set(jobs.map(j => getJobId(j)));
+            
+            // 2. Remove rows that are no longer running
+            Array.from(els.activeBody.children).forEach(row => {
+                if (row.dataset.id && !activeIds.has(row.dataset.id)) {
+                    if (row === contextRow) closeContextMenu();
+                    row.remove();
+                }
+            });
+
+            // 3. Add or Update rows
+            jobs.forEach(job => {
+                const jobId = getJobId(job);
+                let row = els.activeBody.querySelector(`tr[data-id="${jobId}"]`);
+
+                if (!row) {
+                    // Create new row
+                    row = document.createElement('tr');
+                    row.dataset.id = jobId;
+                    // Reachable by keyboard so the context menu is too.
+                    row.tabIndex = 0;
+                    row.setAttribute('aria-haspopup', 'menu');
+
+                    // Create cells with safe textContent (XSS Protection)
+                    // We create 6 cells and append them
+                    for(let i=0; i<6; i++) row.appendChild(document.createElement('td'));
+
+                    els.activeBody.appendChild(row);
+                }
+
+                // Job and split are addressed separately by the control API, so
+                // keep them apart from the combined data-id used for diffing.
+                row.dataset.jobId = job.job_id || '';
+                row.dataset.splitId = job.split_id || '';
+
+                // Update Cells (Safe DOM manipulation)
+                const cells = row.children;
+                
+                const cellData = [
+                    job.workflow || 'Unknown',
+                    new Date(job.start_time).toLocaleString(),
+                    job.source ? '\u200E' + job.source : 'N/A', // Add LRM character to fix RTL rendering
+                    `${job.proc || '?'} @ ${job.host || '?'} : ${job.priority ?? ''}`,
+                    job.status || 'Running'
+                ];
+
+                // Update text-based cells (0-4) with truncation and tooltips
+                for (let i = 0; i < cellData.length; i++) {
+                    // Always set text and tooltip
+                    cells[i].textContent = cellData[i];
+                    cells[i].title = cellData[i];
+
+                    // Reset classes and apply truncation conditionally
+                    cells[i].className = ''; // Clear all previous classes
+                    if (i === 2) { // Apply start-truncation ONLY to the 'File / Source' column
+                        cells[i].classList.add('truncate-start');
+                    }
+                }
+
+                // Add specific class for status color without overwriting
+                cells[4].classList.add('state-running');
+
+                // Progress Bar (Complex HTML, but built safely)
+                updateProgressBar(cells[5], job.progress, job.steps);
+            });
+        }
+
+        function updateProgressBar(cell, progress, stepsRaw) {
+            // Parse progress
+            let text = 'N/A';
+            
+            if (stepsRaw && typeof stepsRaw === 'string' && stepsRaw.includes('/')) {
+                const [current, total] = stepsRaw.split('/').map(Number);
+                if (!isNaN(current) && !isNaN(total) && total > 0) {
+                    text = `${progress}%, node ${stepsRaw}`;
+                }
+            }
+
+            // Check if bar structure exists, if not create it
+            let container = cell.querySelector('.progress-bar-container');
+            if (!container) {
+                cell.innerHTML = ''; // Clear cell
+                container = document.createElement('div');
+                container.className = 'progress-bar-container';
+                
+                const fill = document.createElement('div');
+                fill.className = 'progress-bar-fill';
+                
+                const label = document.createElement('div');
+                label.className = 'progress-bar-text';
+
+                container.appendChild(fill);
+                container.appendChild(label);
+                cell.appendChild(container);
+            }
+
+            // Update width and text
+            const fillEl = container.querySelector('.progress-bar-fill');
+            const textEl = container.querySelector('.progress-bar-text');
+            
+            fillEl.style.width = `${progress}%`;
+            textEl.textContent = text;
+        }
+
+        /**
+         * Helper: Generate a unique ID for a job
+         * API v2 usually sends job_id, but we fallback if missing
+         */
+        function getJobId(job) {
+            return `${job.job_id}~${job.split_id}`;
+        }
+
+        /**
+         * Fetch and render History
+         * Uses element creation to avoid XSS
+         */
+        async function fetchHistory() {
+            const requestId = ++latestHistoryRequest;
+            const start = historyStartIndex;
+            const grouped = historyGroupingEnabled;
+            const res = await fetch(`${API_BASE}/history?count=${HISTORY_PAGE_SIZE}&start=${start}&group_by_job=${grouped}`);
+            if (!res.ok) throw new Error('Failed to fetch history');
+
+            const data = await res.json();
+            // Ignore a response superseded by pagination or a newer refresh.
+            if (requestId !== latestHistoryRequest) return;
+            const history = data.history || [];
+
+            // Simple hash check to avoid unnecessary repaints of static history
+            const currentHash = JSON.stringify([start, grouped, history]);
+            if (currentHash === lastHistoryHash) return;
+
+            const itemCount = renderHistory(history);
+            updatePaginationControls(itemCount);
+            lastHistoryHash = currentHash;
+        }
+
+        function renderHistory(history) {
+            // A history row can be reused for a different split or retry state.
+            if (els.historyBody.contains(contextRow)) closeContextMenu();
+            if (renderedHistoryGrouping !== historyGroupingEnabled) {
+                els.historyBody.innerHTML = '';
+                historyGroups.clear();
+                renderedHistoryGrouping = historyGroupingEnabled;
+            }
+
+            if (!historyGroupingEnabled) {
+                els.historyBody.innerHTML = '';
+                history.forEach(entry => {
+                    if (!entry) return;
+                    const row = createHistoryRow();
+                    updateHistoryRow(row, entry, entry.workflow || 'Unknown');
+                    tagHistorySplit(row, entry);
+                    row.children[0].title = `Job ${entry.job_id}, split ${entry.split_id || '(main)'}`;
+                    els.historyBody.appendChild(row);
+                });
+                const entryCount = els.historyBody.children.length;
+                if (entryCount > 0) return entryCount;
+                // Fall through to the shared empty-history state below.
+            }
+
+            const jobs = new Map();
+            history.forEach(entry => {
+                if (!entry) return;
+                if (!jobs.has(entry.job_id)) jobs.set(entry.job_id, []);
+                jobs.get(entry.job_id).push(entry);
+            });
+
+            for (const [jobId, group] of historyGroups) {
+                if (jobs.has(jobId)) continue;
+                group.row.remove();
+                group.splitRows.forEach(row => row.remove());
+                historyGroups.delete(jobId);
+            }
+
+            if (jobs.size === 0) {
+                els.historyBody.innerHTML = '';
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="5" class="empty-msg">No history found</td>';
+                els.historyBody.appendChild(row);
+                return 0;
+            }
+
+            if (els.historyBody.querySelector('.empty-msg')) els.historyBody.innerHTML = '';
+
+            // Keep existing rows (and focused toggles) when later splits arrive.
+            let nextRow = els.historyBody.firstElementChild;
+            const placeRow = row => {
+                if (row === nextRow) nextRow = nextRow.nextElementSibling;
+                else els.historyBody.insertBefore(row, nextRow);
+            };
+
+            for (const [jobId, entries] of jobs) {
+                const first = entries[0]; // Grouped history is in completion order.
+                let group = historyGroups.get(jobId);
+                if (!group) {
+                    const row = createHistoryRow();
+                    row.className = 'history-job-row';
+                    row.dataset.jobId = jobId;
+                    const toggle = document.createElement('button');
+                    toggle.type = 'button';
+                    toggle.className = 'history-toggle';
+                    const icon = document.createElement('span');
+                    icon.className = 'history-toggle-icon';
+                    icon.setAttribute('aria-hidden', 'true');
+                    const workflow = document.createElement('span');
+                    workflow.className = 'history-workflow';
+                    const count = document.createElement('span');
+                    count.className = 'history-split-count';
+                    toggle.append(icon, workflow, count);
+                    row.children[0].appendChild(toggle);
+                    group = { row, toggle, icon, workflow, count, splitRows: [] };
+                    toggle.addEventListener('click', () => {
+                        if (expandedHistoryJobs.has(jobId)) expandedHistoryJobs.delete(jobId);
+                        else expandedHistoryJobs.add(jobId);
+                        updateHistoryExpansion(jobId, group);
+                    });
+                    historyGroups.set(jobId, group);
+                }
+
+                group.workflow.textContent = first.workflow || 'Unknown';
+                group.count.textContent = `(${entries.length})`;
+                const label = `${first.workflow || 'Unknown'}, job ${jobId}, ${entries.length} finished split${entries.length === 1 ? '' : 's'}`;
+                group.toggle.setAttribute('aria-label', label);
+                group.row.children[0].title = label;
+
+                const summary = { ...first, end_time: entries[entries.length - 1].end_time };
+                if (entries.length > 1) {
+                    const failed = entries.filter(entry => entry.state === 0).length;
+                    const aborted = entries.filter(entry => entry.state === 2).length;
+                    const succeeded = entries.filter(entry => entry.state === 1).length;
+                    const unknown = entries.length - failed - aborted - succeeded;
+                    summary.result = [
+                        failed && `${failed} failed`,
+                        aborted && `${aborted} aborted`,
+                        succeeded && `${succeeded} succeeded`,
+                        unknown && `${unknown} unknown`
+                    ].filter(Boolean).join(', ');
+                    summary.state = failed ? 0 : aborted ? 2 : unknown ? undefined : 1;
+                }
+                updateHistoryRow(group.row, summary);
+                placeRow(group.row);
+
+                // Later completions supersede earlier attempts of the same split.
+                const latestSplits = new Map(entries.map(entry => [entry.split_id, entry]));
+                group.retrySplits = [...latestSplits.values()]
+                    .filter(isRetryableSplit).map(entry => entry.split_id).filter(Boolean);
+
+                entries.forEach((entry, index) => {
+                    let row = group.splitRows[index];
+                    if (!row) {
+                        row = createHistoryRow();
+                        row.className = 'history-split-row';
+                        row.dataset.jobId = jobId;
+                        group.splitRows.push(row);
+                    }
+                    updateHistoryRow(row, entry, `Split ${entry.split_id || '(main)'}`);
+                    tagHistorySplit(row, entry);
+                    if (entry !== latestSplits.get(entry.split_id)) row.dataset.retryable = 'false';
+                    placeRow(row);
+                });
+                // History may shrink when the server's log is rotated.
+                group.splitRows.splice(entries.length).forEach(row => {
+                    if (row === nextRow) nextRow = row.nextElementSibling;
+                    row.remove();
+                });
+                updateHistoryExpansion(jobId, group);
+            }
+            return jobs.size;
+        }
+
+        function createHistoryRow() {
+            const row = document.createElement('tr');
+            row.tabIndex = 0;
+            row.setAttribute('aria-haspopup', 'menu');
+            for (let i = 0; i < 5; i++) row.appendChild(document.createElement('td'));
+            return row;
+        }
+
+        // Only a failed (0) or aborted (2) split has a node to resume from.
+        function isRetryableSplit(entry) {
+            return entry.state === 0 || entry.state === 2;
+        }
+
+        // Mark a row that represents exactly one split (ungrouped, or a split row).
+        function tagHistorySplit(row, entry) {
+            row.dataset.splitId = entry.split_id || '';
+            row.dataset.retryable = String(isRetryableSplit(entry));
+        }
+
+        function updateHistoryExpansion(jobId, group) {
+            const expanded = expandedHistoryJobs.has(jobId);
+            group.toggle.setAttribute('aria-expanded', String(expanded));
+            group.icon.textContent = expanded ? '\u25BE' : '\u25B8';
+            group.splitRows.forEach(row => { row.hidden = !expanded; });
+        }
+
+        function updateHistoryRow(row, entry, splitLabel) {
+            row.dataset.jobId = entry.job_id || '';
+            const cellData = [
+                splitLabel,
+                new Date(entry.start_time).toLocaleString(),
+                entry.source ? '\u200E' + entry.source : 'N/A',
+                calculateDuration(entry.start_time, entry.end_time),
+                entry.result || 'N/A'
+            ];
+            const stateClass = { 0: 'state-error', 1: 'state-success', 2: 'state-aborted' }[entry.state] || '';
+            cellData.forEach((text, index) => {
+                if (index === 0 && splitLabel === undefined) return; // Preserve the toggle.
+                const cell = row.children[index];
+                if (cell.textContent !== text) cell.textContent = text;
+                cell.title = index === 0 ? `${entry.workflow || 'Unknown'}: ${text}` : text;
+                cell.className = index === 2 ? 'truncate-start' : index === 4 ? stateClass : '';
+            });
+        }
+
+        function calculateDuration(start, end) {
+            if (!start || !end) return 'N/A';
+            const diffMs = new Date(end) - new Date(start);
+            if (isNaN(diffMs) || diffMs < 0) return 'N/A';
+
+            let totalSeconds = Math.floor(diffMs / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            totalSeconds %= 3600;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+
+            // Pad with leading zeros and return in HH:MM:SS format
+            return [hours, minutes, seconds]
+                .map(v => String(v).padStart(2, '0')).join(':');
+        }
+
+        function updatePaginationControls(currentBatchSize) {
+            const startRange = historyStartIndex + 1;
+            const endRange = historyStartIndex + currentBatchSize;
+            
+            if(currentBatchSize === 0) {
+                els.historyPageInfo.textContent = '0 - 0';
+            } else {
+                const unit = historyGroupingEnabled ? 'jobs' : 'splits';
+                els.historyPageInfo.textContent = `Showing ${unit} ${startRange} - ${endRange}`;
+            }
+
+            els.historyLatestBtn.style.display = historyStartIndex > 0 ? 'inline-block' : 'none';
+            els.historyOlderBtn.disabled = currentBatchSize < HISTORY_PAGE_SIZE;
+        }
+
+        async function fetchAndSetEnvironmentName() {
+            try {
+                const res = await fetch(`${API_BASE}/about`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data?.about?.general?.environment_name) {
+                    els.headerTitle.textContent += ` @ ${data.about.general.environment_name}`;
+                }
+            } catch (error) {
+                console.error('Could not fetch environment name:', error);
+            }
+        }
+
+        /* ------------------------------------------------------------------
+         * Job actions
+         *
+         * Every entry below maps onto an endpoint this service already serves:
+         * PUT api/v2/jobs/{job_id} for the control actions and GET for the
+         * read-only views. Wording follows the legacy status monitor; its items
+         * that need local file access (open work/log folder, reveal source in
+         * explorer, export log) have no browser equivalent and are left out.
+         * ------------------------------------------------------------------ */
+
+        // The scale the control API accepts, highest first (0-5, 2 is default).
+        const PRIORITIES = [
+            [5, '5 (highest)'],
+            [4, '4 (very high)'],
+            [3, '3 (high)'],
+            [2, '2 (normal)'],
+            [1, '1 (low)'],
+            [0, '0 (very low)']
+        ];
+
+        // A split_id of undefined is dropped by JSON.stringify, which is what
+        // makes the same call job-wide; an empty string must never be sent.
+        async function jobAction(jobId, action, { splitId, value } = {}) {
+            const res = await fetch(`${API_BASE}/jobs/${encodeURIComponent(jobId)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, value, split_id: splitId || undefined })
+            });
+            // Success is 202 with an empty body, so only the error path is parsed.
+            if (!res.ok) {
+                const detail = await res.json().catch(() => null);
+                // A rejected body arrives as 400 with the generic handler message,
+                // because tsoa raises ValidateError without one.
+                if (res.status === 400 && detail?.message === 'Internal Server Error') {
+                    throw new Error('The server rejected the request.');
+                }
+                throw new Error(detail?.message || `${res.status} ${res.statusText}`);
+            }
+        }
+
+        // Control files are picked up asynchronously, so pull the next update in
+        // early rather than waiting out the poll interval.
+        function refreshAfterAction() {
+            fetchActiveJobs().catch(error => console.error('Refresh failed:', error));
+        }
+
+        // Read-only views shared by both menus. Plain links so the response opens
+        // directly in a new tab, even when generating it takes a while or popups
+        // are blocked.
+        function inspectItems(jobId) {
+            return [
+                { label: 'Job details', href: `${API_BASE}/jobs/${encodeURIComponent(jobId)}/details` },
+                { label: 'View job log', href: `${API_BASE}/logs/${encodeURIComponent(jobId)}` },
+                { label: 'View job variables', href: `${API_BASE}/jobvars/${encodeURIComponent(jobId)}` },
+                { separator: true },
+                { label: 'Copy job id to clipboard', run: () => copyToClipboard(jobId) }
+            ];
+        }
+
+        async function copyToClipboard(text) {
+            // Requires a secure context; http:// deployments fall back to prompt().
+            if (navigator.clipboard?.writeText) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return 'Job id copied to clipboard.';
+                } catch { /* Permission denial also needs the manual fallback. */ }
+            }
+            window.prompt('Copy the job id:', text);
+            return '';
+        }
+
+        // A row in the active table is one job instance (a single split).
+        // Pause and resume are per instance because that is what the legacy
+        // monitor offers, not because of any engine limit — a job-wide pause
+        // file works too, should a "Pause parent job" item ever be wanted.
+        function activeJobMenu(row) {
+            const jobId = row.dataset.jobId;
+            const splitId = row.dataset.splitId;
+            const instance = { splitId };
+            const sent = async (action, options, message) => {
+                await jobAction(jobId, action, options);
+                refreshAfterAction();
+                return message;
+            };
+
+            return [
+                {
+                    label: 'Pause job instance',
+                    run: () => sent('pause', instance, 'Pause message sent to job instance.')
+                },
+                {
+                    label: 'Resume job instance',
+                    run: () => sent('resume', instance, 'Resume message sent to job instance.')
+                },
+                { separator: true },
+                {
+                    label: 'Abort job instance',
+                    confirm: 'Are you sure you want to abort this job instance?',
+                    run: () => sent('abort', instance, 'Abort message sent to job instance.')
+                },
+                {
+                    // Omitting the split aborts the whole job, every instance of it.
+                    label: 'Abort parent job',
+                    confirm: 'Are you sure you want to abort the parent job and all its instances?',
+                    run: () => sent('abort', {}, 'Abort message sent to parent job.')
+                },
+                {
+                    label: 'Abort all',
+                    confirm: 'Are you sure you want to abort all jobs?',
+                    run: abortAllJobs
+                },
+                {
+                    label: 'Set priority',
+                    items: PRIORITIES.map(([value, label]) => ({
+                        label,
+                        run: () => sent('priority', { ...instance, value }, `Priority ${label} sent to job instance.`)
+                    }))
+                },
+                { separator: true },
+                ...inspectItems(jobId)
+            ];
+        }
+
+        async function abortAllJobs() {
+            // One abort per parent job; the table lists a row per split.
+            const jobIds = [...new Set(Array.from(els.activeBody.children)
+                .map(row => row.dataset.jobId).filter(Boolean))];
+            if (!jobIds.length) return 'No active jobs to abort.';
+
+            const results = await Promise.allSettled(jobIds.map(id => jobAction(id, 'abort')));
+            refreshAfterAction();
+            const failed = results.filter(result => result.status === 'rejected').length;
+            if (failed) throw new Error(`Abort failed for ${failed} of ${jobIds.length} jobs.`);
+            return `Abort message sent to ${jobIds.length} job${jobIds.length === 1 ? '' : 's'}.`;
+        }
+
+        // A history row is either a whole job (grouped mode) or a single split.
+        function historyJobMenu(row) {
+            const jobId = row.dataset.jobId;
+            const grouped = row.classList.contains('history-job-row');
+            const noun = grouped ? 'job' : 'split';
+            // Keep the submitted scope identical to the confirmation text.
+            const retrySplits = grouped
+                ? [...(historyGroups.get(jobId)?.retrySplits || [])]
+                : row.dataset.retryable === 'true' && row.dataset.splitId ? [row.dataset.splitId] : [];
+
+            return [
+                {
+                    // No split id: the job restarts from the workflow's start node.
+                    label: 'Retry job from start',
+                    confirm: 'Retry this job from the start? A new job will be submitted.',
+                    run: async () => {
+                        await jobAction(jobId, 'retry');
+                        refreshAfterAction();
+                        return 'Job submitted for retry from start.';
+                    }
+                },
+                {
+                    label: `Retry ${noun} at failed/aborted node`,
+                    disabled: retrySplits.length === 0,
+                    title: retrySplits.length
+                        ? `${retrySplits.length} failed or aborted split${retrySplits.length === 1 ? '' : 's'}`
+                        : `This ${noun} has no failed or aborted split to resume from`,
+                    confirm: `Retry ${retrySplits.length === 1 ? 'this split' : `${retrySplits.length} splits`} at the failed/aborted node?`,
+                    run: async () => {
+                        const splits = retrySplits;
+                        if (!splits.length) return 'Nothing left to retry.';
+                        const results = await Promise.allSettled(
+                            splits.map(splitId => jobAction(jobId, 'retry', { splitId })));
+                        refreshAfterAction();
+                        const failed = results.filter(result => result.status === 'rejected').length;
+                        // One split: report the server's own message rather than a count.
+                        if (failed && failed === results.length) {
+                            throw new Error(results[0].reason?.message || 'Retry failed.');
+                        }
+                        if (failed) throw new Error(`Retry failed for ${failed} of ${results.length} splits.`);
+                        return `Submitted ${results.length} split${results.length === 1 ? '' : 's'} for retry.`;
+                    }
+                },
+                { separator: true },
+                ...inspectItems(jobId)
+            ];
+        }
+
+        /* --- Generic context menu --------------------------------------- */
+
+        function createMenuEntry(item) {
+            if (item.separator) {
+                const separator = document.createElement('div');
+                separator.className = 'context-separator';
+                separator.setAttribute('role', 'separator');
+                return separator;
+            }
+
+            if (item.items) {
+                const wrap = document.createElement('div');
+                wrap.className = 'context-submenu-wrap';
+                // A menu may only own menuitems, groups and separators.
+                wrap.setAttribute('role', 'none');
+                const trigger = document.createElement('button');
+                trigger.type = 'button';
+                trigger.className = 'context-item context-submenu-trigger';
+                trigger.setAttribute('role', 'menuitem');
+                trigger.setAttribute('aria-haspopup', 'menu');
+                trigger.setAttribute('aria-expanded', 'false');
+                trigger.textContent = item.label;
+
+                const submenu = document.createElement('div');
+                submenu.className = 'context-submenu';
+                submenu.setAttribute('role', 'menu');
+                submenu.setAttribute('aria-label', item.label);
+                submenu.hidden = true;
+                item.items.forEach(child => submenu.appendChild(createMenuEntry(child)));
+
+                // Open-only: hovering has already opened the flyout by the time a
+                // click lands on the trigger, so a toggle here would shut it again.
+                trigger.addEventListener('click', () => toggleSubmenu(trigger, true));
+                wrap.addEventListener('mouseenter', () => toggleSubmenu(trigger, true));
+                wrap.addEventListener('mouseleave', () => {
+                    // Closing under the keyboard would drop focus onto <body> and
+                    // leave the menu open but unreachable.
+                    if (!wrap.contains(document.activeElement)) toggleSubmenu(trigger, false);
+                });
+                wrap.append(trigger, submenu);
+                return wrap;
+            }
+
+            const entry = document.createElement(item.href ? 'a' : 'button');
+            entry.className = 'context-item';
+            entry.setAttribute('role', 'menuitem');
+            entry.textContent = item.label;
+            if (item.title) entry.title = item.title;
+
+            if (item.href) {
+                entry.href = item.href;
+                entry.target = '_blank';
+                entry.rel = 'noopener';
+                entry.addEventListener('click', () => closeContextMenu(true));
+            } else {
+                entry.type = 'button';
+                entry.disabled = Boolean(item.disabled);
+                if (item.disabled) entry.setAttribute('aria-disabled', 'true');
+                else entry.addEventListener('click', () => runMenuAction(item));
+            }
+            return entry;
+        }
+
+        function toggleSubmenu(trigger, open) {
+            const submenu = trigger.nextElementSibling;
+            trigger.setAttribute('aria-expanded', String(open));
+            submenu.hidden = !open;
+            if (!open) return;
+            const bounds = trigger.getBoundingClientRect();
+            const parent = els.contextMenu.getBoundingClientRect();
+            const x = parent.right + submenu.offsetWidth <= window.innerWidth - 4
+                ? parent.right - 1 : parent.left - submenu.offsetWidth + 1;
+            submenu.style.left = `${Math.max(4, Math.min(x, window.innerWidth - submenu.offsetWidth - 4))}px`;
+            submenu.style.top = `${Math.max(4, Math.min(bounds.top - 4, window.innerHeight - submenu.offsetHeight - 4))}px`;
+        }
+
+        async function runMenuAction(item) {
+            if (item.confirm && !window.confirm(item.confirm)) return;
+            closeContextMenu(true);
+            try {
+                const message = await item.run();
+                if (message) showToast(message);
+            } catch (error) {
+                showToast(error.message || 'Action failed.', true);
+            }
+        }
+
+        function showToast(message, isError = false) {
+            els.toast.textContent = message;
+            els.toast.classList.toggle('toast-error', isError);
+            els.toast.classList.add('toast-visible');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                els.toast.classList.remove('toast-visible');
+                // Clear the text too, so the region is empty for the next message.
+                els.toast.textContent = '';
+            }, isError ? 8000 : 4000);
+        }
+
+        // Every enabled item of one menu, in visual order. Scoped to that menu's
+        // own children so an open flyout's entries do not splice themselves into
+        // the parent menu's arrow-key order.
+        function menuItems(scope = els.contextMenu) {
+            const own = ':scope > [role="menuitem"], :scope > .context-submenu-wrap > .context-submenu-trigger';
+            return Array.from(scope.querySelectorAll(own))
+                .filter(item => !item.disabled && item.offsetParent !== null);
+        }
+
+        function showContextMenu(row, items, x, y) {
+            closeContextMenu();
+            contextRow = row;
+            row.classList.add('context-selected');
+
+            const menu = els.contextMenu;
+            menu.replaceChildren(...items.map(createMenuEntry));
+            menu.hidden = false;
+            menu.style.left = `${Math.max(0, Math.min(x, window.innerWidth - menu.offsetWidth - 4))}px`;
+            menu.style.top = `${Math.max(0, Math.min(y, window.innerHeight - menu.offsetHeight - 4))}px`;
+            menuItems()[0]?.focus({ preventScroll: true });
+        }
+
+        function closeContextMenu(restoreFocus = false) {
+            els.contextMenu.hidden = true;
+            els.contextMenu.replaceChildren();
+            if (contextRow) {
+                contextRow.classList.remove('context-selected');
+                if (restoreFocus && contextRow.isConnected) contextRow.focus({ preventScroll: true });
+                contextRow = null;
+            }
+        }
+
+        // Wire a table body up to the menu its rows belong to.
+        function enableContextMenu(tbody, buildItems) {
+            const open = (row, x, y) => showContextMenu(row, buildItems(row), x, y);
+
+            tbody.addEventListener('contextmenu', event => {
+                const row = event.target.closest('tr[data-job-id]');
+                if (!row?.dataset.jobId) return;
+                event.preventDefault();
+                open(row, event.clientX, event.clientY);
+            });
+
+            tbody.addEventListener('keydown', event => {
+                if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
+                const row = event.target.closest('tr[data-job-id]');
+                if (!row?.dataset.jobId) return;
+                event.preventDefault();
+                const bounds = row.getBoundingClientRect();
+                open(row, bounds.left + 10, bounds.bottom);
+            });
+        }
+
+        // --- Event Listeners ---
+        enableContextMenu(els.activeBody, activeJobMenu);
+        enableContextMenu(els.historyBody, historyJobMenu);
+
+        els.contextMenu.addEventListener('keydown', event => {
+            // Arrow keys stay within the menu that currently owns focus.
+            const scope = document.activeElement?.closest('[role="menu"]') || els.contextMenu;
+            const items = menuItems(scope);
+            const index = items.indexOf(document.activeElement);
+            const trigger = document.activeElement?.closest('.context-submenu-wrap')?.firstElementChild;
+
+            if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+                event.preventDefault();
+                const next = event.key === 'Home' ? 0
+                    : event.key === 'End' ? items.length - 1
+                    : event.key === 'ArrowDown' ? index + 1
+                    : index - 1;
+                items[(next + items.length) % items.length]?.focus();
+            } else if (event.key === 'ArrowRight' && trigger?.classList.contains('context-submenu-trigger')) {
+                event.preventDefault();
+                toggleSubmenu(trigger, true);
+                trigger.nextElementSibling.querySelector('[role="menuitem"]')?.focus();
+            } else if (event.key === 'ArrowLeft' && trigger && document.activeElement !== trigger) {
+                event.preventDefault();
+                toggleSubmenu(trigger, false);
+                trigger.focus();
+            } else if (event.key === ' ') {
+                event.preventDefault();
+                document.activeElement?.click();
+            } else if (event.key === 'Tab') {
+                closeContextMenu(true);
+            }
+        });
+        document.addEventListener('pointerdown', event => {
+            if (!els.contextMenu.contains(event.target)) closeContextMenu();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !els.contextMenu.hidden) {
+                event.preventDefault();
+                closeContextMenu(true);
+            }
+        });
+        document.addEventListener('scroll', event => {
+            // Scrolling the menu (including keyboard focus scrolling) is expected.
+            if (els.contextMenu.contains(event.target)) {
+                if (event.target === els.contextMenu) {
+                    els.contextMenu.querySelectorAll('.context-submenu-trigger[aria-expanded="true"]')
+                        .forEach(trigger => toggleSubmenu(trigger, true));
+                }
+                return;
+            }
+            closeContextMenu();
+        }, true);
+        window.addEventListener('resize', () => closeContextMenu());
+
+        els.historyGroupingBtn.addEventListener('click', () => {
+            closeContextMenu();
+            historyGroupingEnabled = !historyGroupingEnabled;
+            els.historyGroupingBtn.textContent = `Group jobs: ${historyGroupingEnabled ? 'On' : 'Off'}`;
+            els.historyGroupingBtn.setAttribute('aria-pressed', String(historyGroupingEnabled));
+            // Job and split pages use different offsets, so return to latest.
+            historyStartIndex = 0;
+            fetchHistory();
+        });
+
+        els.historyOlderBtn.addEventListener('click', () => {
+            closeContextMenu();
+            historyStartIndex += HISTORY_PAGE_SIZE;
+            fetchHistory();
+        });
+
+        els.historyLatestBtn.addEventListener('click', () => {
+            closeContextMenu();
+            historyStartIndex = 0;
+            fetchHistory();
+        });
+
+        // Start Loop
+        fetchAndSetEnvironmentName();
+        loop();
+
+    </script>
+</body>
+</html>
