@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__RUNVIZ_TITLE__</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f3f3f0;
+  --surface: #fcfcfb;
+  --surface-2: #f0efec;
+  --canvas: #f0f0f0;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --hair: #e1e0d9;
+  --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6;
+  --accent-soft: rgba(42,120,214,0.14);
+  --good: #0ca30c;
+  --warning: #fab219;
+  --warning-ink: #b57a00;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --aborted: #6b7c93;
+  --unknown: #898781;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "Segoe UI Mono", Menlo, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --surface-2: #242423; --canvas: #202020;
+    --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781; --hair: #2c2c2a; --border: rgba(255,255,255,0.10);
+    --accent: #3987e5; --accent-soft: rgba(57,135,229,0.22); --warning-ink: #fab219; --aborted: #8a9bb3;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --surface-2: #242423; --canvas: #202020;
+  --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781; --hair: #2c2c2a; --border: rgba(255,255,255,0.10);
+  --accent: #3987e5; --accent-soft: rgba(57,135,229,0.22); --warning-ink: #fab219; --aborted: #8a9bb3;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 13px/1.4 var(--sans); }
+button, input, select { font: inherit; color: inherit; }
+button { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 3px 9px; cursor: pointer; }
+button:hover { background: var(--surface-2); }
+button.on { background: var(--accent-soft); border-color: var(--accent); }
+code, pre, .mono { font-family: var(--mono); }
+a { color: var(--accent); }
+
+#app { height: 100vh; display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 8px; padding: 8px 12px; }
+#hdr { display: flex; align-items: flex-start; gap: 8px 16px; min-width: 0; }
+#jobInfo { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; overflow-wrap: anywhere; }
+#hdr h1 { font-size: 17px; margin: 0; font-weight: 600; }
+#hdr .sub { color: var(--ink-2); }
+#hdr .src { color: var(--ink-2); font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); background: var(--surface); }
+.chip.ok { border-color: var(--good); color: var(--good); }
+.chip.error { border-color: var(--critical); color: var(--critical); }
+.chip.warn { border-color: var(--serious); color: var(--serious); }
+.chip.cond { border-color: var(--warning-ink); color: var(--warning-ink); }
+.chip.aborted { border-color: var(--aborted); color: var(--aborted); }
+#helpBtn { margin-left: auto; }
+#help { position: relative; }
+#helpBox { display: none; position: absolute; right: 0; top: 30px; z-index: 20; width: min(520px, 90vw); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; box-shadow: 0 8px 24px rgba(0,0,0,.2); font-size: 12px; }
+#helpBox.open { display: block; }
+#helpBox dt { font-weight: 600; margin-top: 6px; }
+#helpBox dd { margin: 0 0 2px; color: var(--ink-2); }
+
+#stats { flex: 0 0 62%; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+.tile { flex: 1 0 82px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }
+.tile .v { font-size: 17px; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.tile .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.tile .s { font-size: 11px; color: var(--ink-2); }
+.tile.bad .v { color: var(--critical); }
+.tile.cond .v { color: var(--warning-ink); }
+.tile.warn .v { color: var(--serious); }
+.tile.aborted .v { color: var(--aborted); }
+
+#workspace { display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) 10px var(--timeline-height, 260px); min-height: 0; min-width: 0; }
+#workspace.tl-collapsed { grid-template-rows: minmax(0,1fr) 0px auto; row-gap: 4px; }
+#main { display: grid; grid-template-columns: minmax(0,1fr) 10px var(--panel-width, 470px); min-height: 0; min-width: 0; }
+.splitter { position: relative; touch-action: none; user-select: none; border-radius: 4px; cursor: col-resize; }
+.splitter::after { content: ''; position: absolute; background: var(--hair); border-radius: 2px; width: 3px; height: 32px; left: calc(50% - 1.5px); top: calc(50% - 16px); }
+.splitter.horizontal { cursor: row-resize; }
+.splitter.horizontal::after { width: 32px; height: 3px; left: calc(50% - 16px); top: calc(50% - 1.5px); }
+.splitter:hover, .splitter:focus-visible, .splitter.dragging { background: var(--accent-soft); outline: none; }
+.splitter:hover::after, .splitter:focus-visible::after, .splitter.dragging::after { background: var(--accent); }
+#workspace.tl-collapsed #timelineSplitter { visibility: hidden; }
+body.resizing, body.resizing * { cursor: var(--resize-cursor) !important; user-select: none !important; }
+#canvasWrap { position: relative; background: var(--canvas); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+#canvasBar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--hair); background: var(--surface); }
+#wfTabs { display: flex; gap: 4px; flex-wrap: wrap; }
+#wfTabs button.on { font-weight: 600; }
+#canvasBar .spacer { flex: 1; }
+#canvasBar .zoom { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+#canvas { flex: 1; width: 100%; height: 100%; min-height: 0; display: block; cursor: grab; touch-action: none; user-select: none; }
+#canvas.panning { cursor: grabbing; }
+#canvas.far .desc { display: none; }
+#tooltip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.18); max-width: 340px; display: none; z-index: 50; }
+#tooltip b { display: block; }
+#tooltip .m { color: var(--ink-2); }
+
+#panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: auto; min-height: 0; min-width: 0; padding: 10px 12px; }
+#logHeading { scroll-margin-top: 10px; }
+#logHeading:focus { outline: none; color: var(--ink); }
+#panel h2 { font-size: 15px; margin: 0 0 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#panel h3 { font-size: 12px; margin: 14px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+#panel .back { margin-bottom: 8px; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; font-size: 12px; }
+.kv .k { color: var(--muted); }
+.kv .v { overflow-wrap: anywhere; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); vertical-align: -1px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
+.st-ok { color: var(--good); } .st-error { color: var(--critical); } .st-cond_false { color: var(--warning-ink); } .st-warn { color: var(--serious); } .st-aborted { color: var(--aborted); } .st-unknown, .st-idle { color: var(--muted); }
+.bg-ok { background: var(--good); } .bg-error { background: var(--critical); } .bg-cond_false { background: var(--warning); } .bg-warn { background: var(--serious); } .bg-aborted { background: var(--aborted); } .bg-unknown, .bg-idle { background: var(--unknown); }
+
+.issue, .runcard, .splitrow { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin: 4px 0; background: var(--surface-2); cursor: pointer; }
+.issue:hover, .runcard:hover, .splitrow:hover { border-color: var(--accent); }
+.issue .m, .runcard .m, .splitrow .m { color: var(--ink-2); font-size: 12px; }
+.issue .msg { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; font-family: var(--mono); max-height: 96px; overflow: auto; }
+.issue .src { color: var(--muted); font-size: 11px; }
+.issue .evs { margin: 4px 0 0; padding: 0; list-style: none; font-size: 11px; }
+.issue .evs li { display: flex; gap: 6px; align-items: baseline; }
+.issue .evs .t { font-family: var(--mono); color: var(--muted); min-width: 62px; }
+.issue .evs .line { color: var(--ink-2); overflow-wrap: anywhere; }
+.issue.sev-error { border-left: 3px solid var(--critical); }
+.issue.sev-aborted { border-left: 3px solid var(--aborted); }
+.issue.sev-cond_false { border-left: 3px solid var(--warning); }
+.issue.sev-warn { border-left: 3px solid var(--serious); }
+.grp-title { margin: 10px 0 2px; color: var(--ink-2); font-weight: 600; font-size: 12px; }
+.explain { font-size: 12px; color: var(--ink-2); background: var(--surface); border: 1px dashed var(--border); border-radius: 6px; padding: 4px 8px; margin: 4px 0; }
+.runcard.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.splitrow.sel { border-color: var(--accent); }
+.tree { margin: 0; padding-left: 14px; list-style: none; }
+.tree > li { margin: 2px 0; }
+.chain { color: var(--ink-2); font-size: 11px; }
+.chain .cur { color: var(--ink); }
+.link { color: var(--accent); cursor: pointer; text-decoration: underline dotted; }
+
+#evtools { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 6px 0; position: sticky; top: -10px; background: var(--surface); padding: 6px 0; z-index: 2; }
+#evtools input[type=search] { flex: 1; min-width: 120px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); }
+.ev { border-top: 1px solid var(--hair); padding: 3px 4px; cursor: pointer; }
+.ev:hover { background: var(--surface-2); }
+.ev .row { display: grid; grid-template-columns: 62px 84px 58px 62px 1fr; gap: 6px; align-items: baseline; font-size: 12px; }
+.ev .t { font-family: var(--mono); color: var(--muted); }
+.ev .c { font-family: var(--mono); color: var(--ink-2); }
+.ev .d { font-family: var(--mono); color: var(--muted); text-align: right; }
+.ev .d.big { color: var(--serious); font-weight: 600; }
+/* The pill holds the entry type and nothing else, so it always fits its column. */
+.ev .ty { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; padding: 0 5px; border-radius: 4px; border: 1px solid var(--border); text-align: center; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ev .tag { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; padding: 0 4px; margin-left: 4px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.ev .tag.last { border-color: var(--critical); color: var(--critical); }
+.ev .tag.probe { border-color: var(--serious); color: var(--serious); }
+.ev.type-error .ty { background: var(--critical); color: #fff; border-color: var(--critical); }
+.ev.type-error { background: rgba(208,59,59,.08); }
+.ev.type-error.benign, .ev.type-error.soft { background: transparent; }
+.ev.type-error.benign .ty { background: transparent; color: var(--muted); border-color: var(--border); }
+.ev.type-error.soft .ty { background: var(--serious); border-color: var(--serious); }
+.ev.type-warning .ty { background: var(--serious); color: #fff; border-color: var(--serious); }
+.ev.type-sys .ty { color: var(--muted); }
+.ev.evidence { background: rgba(208,59,59,.06); }
+.ev .n { font-weight: 600; }
+.ev .s { color: var(--ink-2); }
+.ev .payload { display: none; margin: 4px 0 2px 0; }
+.ev.open .payload { display: block; }
+.ev pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; background: var(--surface-2); border: 1px solid var(--hair); border-radius: 6px; padding: 6px 8px; max-height: 420px; overflow: auto; }
+.ev .ptools { display: flex; gap: 6px; margin-bottom: 4px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+.ev .ptools button { padding: 1px 7px; font-size: 11px; }
+.ev .hint { font-size: 12px; color: var(--ink-2); margin: 2px 0 4px; }
+.ev.hl { outline: 2px solid var(--accent); }
+.more { margin: 8px 0; }
+.warnbox { border: 1px solid var(--serious); border-radius: 6px; padding: 6px 8px; margin: 6px 0; font-size: 12px; background: rgba(236,131,90,.08); }
+.empty { color: var(--muted); font-style: italic; }
+.nomatch { border: 1px dashed var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; color: var(--ink-2); }
+details.props summary { cursor: pointer; color: var(--accent); font-size: 12px; }
+details.props pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border-radius: 6px; padding: 6px; max-height: 300px; overflow: auto; }
+
+#tlWrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+#tlHead { display: flex; flex-shrink: 0; gap: 10px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--hair); font-size: 12px; color: var(--ink-2); }
+#tlHead b { color: var(--ink); }
+#tlHead .spacer { flex: 1; }
+#tlAxis { display: block; flex-shrink: 0; border-bottom: 1px solid var(--hair); }
+#tlScroll { overflow: auto; flex: 1; min-height: 0; }
+#tlWrap.collapsed #tlScroll, #tlWrap.collapsed #tlAxis { display: none; }
+#tlWrap.collapsed { min-height: min-content; }
+#tl, #tlAxis { display: block; font-family: var(--sans); }
+#tl .lbl { font-size: 11px; fill: var(--ink-2); cursor: pointer; }
+#tl .lbl.sp { font-weight: 600; fill: var(--ink); }
+#tl .tick, #tlAxis .tick { stroke: var(--hair); stroke-width: 1; }
+#tlAxis .axis { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+#tl .bar { cursor: pointer; }
+#tl .bar.sel { stroke: var(--ink); stroke-width: 2; }
+#tl .band { fill: var(--surface-2); }
+#tl .errtick { stroke: var(--critical); stroke-width: 2; }
+#tl .softtick { stroke: var(--serious); stroke-width: 2; }
+#tl .evtick { stroke: var(--critical); stroke-width: 2; stroke-dasharray: 2 2; }
+#tl .spline { stroke: var(--hair); }
+
+#legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: var(--ink-2); align-items: center; padding: 0 2px 2px; }
+#legend .grp { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+#legend .grp b { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; }
+#legend .item { display: inline-flex; align-items: center; gap: 4px; }
+#legend .ring { display: inline-block; width: 12px; height: 9px; border-radius: 2px; border: 2px solid; }
+#legend .pill { display: inline-block; min-width: 15px; padding: 0 4px; border-radius: 7px; color: #fff; font-size: 10px; font-weight: 600; line-height: 14px; text-align: center; }
+.lineswatch { display: inline-block; width: 18px; border-top: 3px solid; }
+#jsError { display: none; color: #fff; background: var(--critical); padding: 8px 12px; border-radius: 6px; white-space: pre-wrap; }
+
+.tile.nav { cursor: pointer; }
+.tile.nav:hover, .tile.nav:focus-visible { border-color: var(--accent); outline: none; }
+.tile.nav .l::after { content: ' \203A'; color: var(--accent); }
+.anom { border: 1px solid var(--border); border-left: 3px solid var(--serious); border-radius: 6px; padding: 5px 8px; margin: 4px 0; background: var(--surface-2); font-size: 12px; }
+.anom.info { border-left-color: var(--hair); }
+.anom[data-sel-run] { cursor: pointer; }
+.anom[data-sel-run]:hover { border-color: var(--accent); }
+.anom .m { color: var(--ink-2); }
+.tbar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); margin: 6px 0 4px; }
+.tbar span { display: block; height: 100%; min-width: 1px; }
+.tbar .idle { background: repeating-linear-gradient(135deg, var(--surface-2) 0 4px, var(--hair) 4px 8px); }
+.tlist { margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.tlist li { display: grid; grid-template-columns: minmax(0,1fr) 68px; gap: 8px; align-items: center; padding: 2px 0; cursor: pointer; }
+.tlist li:hover .lab { color: var(--accent); }
+.tlist .bar { height: 6px; background: var(--accent); border-radius: 3px; margin-top: 2px; }
+.tlist .n { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.ev .ctx { font-size: 10px; color: var(--muted); border: 1px solid var(--hair); border-radius: 4px; padding: 0 4px; margin-left: 4px; white-space: nowrap; }
+.ev.slow .d { color: var(--serious); font-weight: 600; }
+.ev pre .hl-line { background: rgba(208,59,59,.14); display: inline-block; width: 100%; }
+.ev pre mark { background: rgba(250,178,25,.55); color: inherit; padding: 0 1px; }
+.ev.cur { box-shadow: inset 3px 0 0 var(--accent); }
+#evcount { color: var(--muted); font-size: 11px; white-space: nowrap; flex-basis: 100%; }
+.node.hover .selring { display: block; opacity: .25; }
+#tl .gapfill { fill: url(#gapHatch); pointer-events: none; }
+#tl .winfill { fill: var(--accent-soft); }
+.kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
+.h2tools { margin-left: auto; display: flex; gap: 6px; }
+.h2tools button { font-size: 11px; padding: 2px 7px; }
+
+/* node boxes (SVG) */
+.node { cursor: pointer; }
+.node.idle { opacity: .38; }
+.node.idle.hidden { display: none; }
+.node .title { fill: #ffffff; font-family: var(--sans); }
+.node.bypass .title { fill: #444444; }
+.node .desc { fill: #303030; font-family: var(--sans); }
+.node.bypass .desc { fill: #666666; }
+.node .desc.typeonly { fill: #5a5a5a; font-style: italic; }
+/* The ring marks the selection only: the run result is carried by the badge. */
+.node .ring { fill: none; stroke: none; stroke-width: 3; vector-effect: non-scaling-stroke; }
+.node .selring { fill: none; stroke: var(--accent); stroke-width: 9; opacity: .45; vector-effect: non-scaling-stroke; display: none; }
+.node.sel .selring { display: block; }
+.node.sel .ring { stroke: var(--ink); }
+.node .badge text { fill: #fff; font-family: var(--sans); font-size: 10px; font-weight: 600; }
+.edge { fill: none; }
+/* A traversed edge is a thin line with a wider, faint copy under it for the glow. Both use
+   non-scaling-stroke, so the glow keeps the same weight at every zoom level. Order matters:
+   the halo rules must follow the ones they override at equal specificity. */
+.edge.trav { stroke: var(--accent); vector-effect: non-scaling-stroke; stroke-width: 2; stroke-linecap: round; }
+.edge.trav.dim { opacity: .28; }
+.edge.trav.selsplit { stroke-width: 3; opacity: 1; }
+.edge.trav.halo { stroke-width: 7; opacity: .16; }
+.edge.trav.halo.selsplit { stroke-width: 11; opacity: .26; }
+.grid line { stroke: rgba(128,128,128,.14); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+@media (max-width: 980px) {
+  #app { height: auto; }
+  #hdr { flex-wrap: wrap; }
+  #jobInfo, #stats { flex-basis: 100%; }
+  #workspace { height: calc(100vh + 220px); min-height: 680px; }
+  #main { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) 10px var(--panel-height, 320px); }
+  #panelSplitter { cursor: row-resize; }
+  #panelSplitter::after { width: 32px; height: 3px; left: calc(50% - 16px); top: calc(50% - 1.5px); }
+}
+</style>
+</head>
+<body>
+<div id="jsError"></div>
+<div id="app">
+  <header id="hdr"><div id="jobInfo"></div><div id="stats"></div></header>
+  <div id="workspace">
+  <main id="main">
+    <section id="canvasWrap">
+      <div id="canvasBar">
+        <div id="wfTabs"></div>
+        <span class="spacer"></span>
+        <span class="zoom" id="zoomLbl"></span>
+        <button id="btnFit" title="Fit the whole workflow into the view (F)">Fit all</button>
+        <button id="btnFitRun" title="Fit only the nodes that ran (R)">Fit run</button>
+        <button id="btnZoomIn" title="Zoom in (+)">+</button>
+        <button id="btnZoomOut" title="Zoom out (-)">&minus;</button>
+        <button id="btnGrid" title="Toggle the editor grid">Grid</button>
+        <button id="btnIdle" class="on" title="Show or hide nodes that did not run">Idle nodes</button>
+        <button id="btnLink" title="Copy a link to the current selection">Copy link</button>
+      </div>
+      <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
+        <g id="view"><g id="gGrid" class="grid"></g><g id="gEdges"></g><g id="gTrav"></g><g id="gNodes"></g></g>
+      </svg>
+    </section>
+    <div id="panelSplitter" class="splitter" role="separator" tabindex="0" aria-label="Resize canvas and run overview" aria-orientation="vertical" aria-controls="canvasWrap panel" title="Drag to resize canvas and run overview; use arrow keys when focused"></div>
+    <aside id="panel"></aside>
+  </main>
+  <div id="timelineSplitter" class="splitter horizontal" role="separator" tabindex="0" aria-label="Resize timeline" aria-orientation="horizontal" aria-controls="main tlWrap" title="Drag to resize timeline; use arrow keys when focused"></div>
+  <section id="tlWrap">
+    <div id="tlHead"></div>
+    <svg id="tlAxis" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="tlScroll"><svg id="tl" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  </section>
+  </div>
+  <footer id="legend"></footer>
+</div>
+<div id="tooltip"></div>
+<script id="runviz-data" type="application/json">__RUNVIZ_DATA__</script>
+<script>
+(function () {
+'use strict';
+window.addEventListener('error', function (e) {
+  var box = document.getElementById('jsError');
+  box.style.display = 'block';
+  box.textContent = 'Page script error: ' + (e.message || e) + (e.filename ? ' (' + e.lineno + ')' : '');
+});
+
+var D = JSON.parse(document.getElementById('runviz-data').textContent);
+window.RUNVIZ = D;
+
+// ------------------------------------------------------------------ indexes
+var WF = new Map(); D.workflows.forEach(function (w) { WF.set(w.wf_id, w); });
+var NODE = new Map(); D.workflows.forEach(function (w) { w.nodes.forEach(function (n) { NODE.set(w.wf_id + '|' + n.id, n); }); });
+var RUN = new Map(); D.runs.forEach(function (r) { RUN.set(r.run_id, r); });
+var SPLIT = new Map(); D.splits.forEach(function (s) { SPLIT.set(s.split_id, s); });
+var EV = D.events;
+var EVBYI = new Map(); EV.forEach(function (e) { EVBYI.set(e.i, e); });
+var EVBYRUN = new Map(); EV.forEach(function (e) { if (e.run_id) { if (!EVBYRUN.has(e.run_id)) EVBYRUN.set(e.run_id, []); EVBYRUN.get(e.run_id).push(e); } });
+var NODE_RUNS = new Map(); D.runs.forEach(function (r) { var k = r.wf_id + '|' + r.node_id; if (!NODE_RUNS.has(k)) NODE_RUNS.set(k, []); NODE_RUNS.get(k).push(r); });
+var TAB_WORKFLOWS = workflowsInLogOrder();
+var EVIDENCE = new Set(); D.runs.forEach(function (r) { (r.evidence || []).forEach(function (i) { EVIDENCE.add(i); }); });
+var STATE_COL = { ok: 'var(--good)', error: 'var(--critical)', cond_false: 'var(--warning)', warn: 'var(--serious)', aborted: 'var(--aborted)', unknown: 'var(--unknown)', idle: 'transparent' };
+var STATE_TXT = { ok: 'OK', error: 'Error', cond_false: 'Condition false', warn: 'Warning (carried on)', aborted: 'Aborted', unknown: 'Unknown', idle: 'Did not run' };
+var STATE_ICON = { ok: '\u2713', error: '!', cond_false: '\u2717', warn: '\u26a0', aborted: '\u25a0', unknown: '?', idle: '' };
+var ANCHOR_TXT = {
+  node_start: 'its logged \u201cnode start\u201d (exact)',
+  node_end: 'its logged \u201cnode end\u201d (exact)',
+  next_start: 'the next node\u2019s \u201cnode start\u201d',
+  previous_end: 'the previous node\u2019s end (this node never logged a start)',
+  first_entry: 'its first log entry',
+  previous_last: 'the previous node\u2019s last entry (this node only logs when it is done)',
+  previous_last_no_entries: 'the previous node\u2019s last entry (this node logged nothing)',
+  next_first: 'the next node\u2019s first entry',
+  split_end: 'the split\u2019s recorded end',
+  own_last: 'its own last entry (the next node logged nothing, so this is a lower bound)'
+};
+
+var S = { wf: D.main_wf_id, sel: null, showIdle: true, grid: false, q: '', errorsOnly: false, slowOnly: false, runOnly: false, evLimit: 1500, tlOpen: true, evFocus: null, tlWin: null, nav: {} };
+var SINKS = D.time_sinks || [];
+var SINKS_BY_RUN = new Map(); SINKS.forEach(function (s) { if (s.run_id) { if (!SINKS_BY_RUN.has(s.run_id)) SINKS_BY_RUN.set(s.run_id, []); SINKS_BY_RUN.get(s.run_id).push(s); } });
+var FLAG_RE = /\b(error|failed|failure|invalid|not found|no such|cannot|can't|could not|denied|permission|refused|timed? ?out|exception|unable|missing|corrupt|abort)/i;
+var view = { x: 0, y: 0, k: 1 };
+
+// ------------------------------------------------------------------ helpers
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function fmtDur(ms) {
+  if (ms == null || isNaN(ms)) return '\u2013';
+  if (ms < 1000) return Math.round(ms) + ' ms';
+  var s = ms / 1000;
+  if (s < 60) return (s < 10 ? s.toFixed(2) : s.toFixed(1)) + ' s';
+  var m = Math.floor(s / 60); s = s - m * 60;
+  if (m < 60) return m + 'm ' + s.toFixed(1) + 's';
+  var h = Math.floor(m / 60); m = m - h * 60;
+  return h + 'h ' + m + 'm ' + Math.round(s) + 's';
+}
+function fmtRunDur(r) { return (r.duration_is_lower_bound ? '\u2265 ' : '') + fmtDur(r.duration_ms); }
+function fmtClock(isoStr) { if (!isoStr) return '\u2013'; var m = /T(\d\d:\d\d:\d\d(?:\.\d+)?)/.exec(isoStr); return m ? m[1].slice(0, 12) : isoStr; }
+function fmtRel(ms) { if (ms == null) return ''; return '+' + (ms / 1000).toFixed(3) + 's'; }
+function fmtDate(isoStr) { if (!isoStr) return '\u2013'; return isoStr.replace('T', ' ').slice(0, 23); }
+function payloadText(data) {
+  if (data == null) return '';
+  if (typeof data === 'string') return data.replace(/\r\n/g, '\n');
+  try { return JSON.stringify(data, null, 1); } catch (e) { return String(data); }
+}
+function desat(hex) { // FFAStrans bypass colour: halve the distance from 128 per channel
+  var v = parseInt(hex.slice(1), 16); var out = '#';
+  [16, 8, 0].forEach(function (sh) { var c = (v >> sh) & 255; var d = c - 128; d = d > 0 ? d / 2 : (d < 0 ? -(Math.abs(d) / 2) : 0); out += ('0' + Math.round(d + 128).toString(16)).slice(-2); });
+  return out;
+}
+function nodeKey(wf, id) { return wf + '|' + id; }
+function nodeOf(wf, id) { return NODE.get(nodeKey(wf, id)); }
+function svgEl(tag, attrs) { var el = document.createElementNS('http://www.w3.org/2000/svg', tag); if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
+function wrapText(text, maxChars, maxLines) {
+  var lines = []; var paras = String(text).split(/\r?\n/);
+  for (var p = 0; p < paras.length && lines.length < maxLines; p++) {
+    var words = paras[p].split(/\s+/).filter(Boolean); var cur = '';
+    if (!words.length) { continue; }
+    words.forEach(function (w) {
+      if (lines.length >= maxLines) return;
+      if ((cur + ' ' + w).trim().length <= maxChars) { cur = (cur + ' ' + w).trim(); }
+      else { if (cur) lines.push(cur); cur = w.length > maxChars ? w.slice(0, maxChars - 1) + '\u2026' : w; }
+    });
+    if (cur && lines.length < maxLines) lines.push(cur);
+  }
+  if (lines.length >= maxLines && paras.join(' ').length > lines.join(' ').length) lines[maxLines - 1] = lines[maxLines - 1].slice(0, Math.max(1, maxChars - 1)) + '\u2026';
+  return lines;
+}
+function nodeRuns(wf, id) { return NODE_RUNS.get(nodeKey(wf, id)) || []; }
+function runEvents(runId) { return EVBYRUN.get(runId) || []; }
+function stateBadge(state) { return '<span class="st-' + state + '"><span class="dot bg-' + state + '"></span>' + esc(STATE_TXT[state] || state) + '</span>'; }
+function splitState(s) { return s.state || (s.has_record ? 'ok' : 'unknown'); }
+function splitResultText(s) { // derived state first; a custom success text is worth showing
+  var st = splitState(s), txt = STATE_ICON[st] + ' ' + STATE_TXT[st];
+  var raw = s.result != null && s.result !== '' ? String(s.result) : '';
+  if (st === 'ok' && raw && raw.toLowerCase() !== 'success') txt += ' \u00b7 ' + raw;
+  if (!s.has_record) txt = '? no record yet';
+  return txt;
+}
+function runGaps(r) {
+  var evs = runEvents(r.run_id).filter(function (e) { return e.t != null; }).sort(function (a, b) { return a.t - b.t; });
+  var best = null;
+  for (var i = 1; i < evs.length; i++) { var g = evs[i].t - evs[i - 1].t; if (!best || g > best.gap) best = { gap: g, from: evs[i - 1], to: evs[i] }; }
+  var tail = (r.t1 != null && r.last != null && r.end_anchor === 'next_first' && r.t1 > r.last) ? r.t1 - r.last : null;
+  var head = (r.t0 != null && r.first != null && r.start_anchor !== 'first_entry' && r.start_anchor !== 'node_start' && r.first > r.t0) ? r.first - r.t0 : null;
+  var handover = null;               // exact-timing logs: gap between node end and the next node's start
+  if (r.end_anchor === 'node_end' && r.t1 != null) {
+    var sp = SPLIT.get(r.split_id);
+    if (sp) { var ids = sp.runs, k = ids.indexOf(r.run_id); if (k >= 0 && k + 1 < ids.length) { var nx = RUN.get(ids[k + 1]); if (nx && nx.t0 != null && nx.t0 > r.t1) handover = nx.t0 - r.t1; } }
+  }
+  return { longest: best, tail: tail, head: head, handover: handover };
+}
+
+// ------------------------------------------------------------------ header + stats
+function outcome() {
+  var s = D.summary;
+  var fb = s.n_failed_branches != null ? s.n_failed_branches : s.n_fatal;
+  if (fb) return { cls: 'error', txt: (D.job.status || 'finished') + ' \u00b7 ' + fb + ' branch' + (fb > 1 ? 'es' : '') + ' failed' };
+  if (s.n_fatal) return { cls: 'error', txt: (D.job.status || 'finished') + ' \u00b7 ' + s.n_fatal + ' node failure' + (s.n_fatal > 1 ? 's' : '') };
+  if (s.n_aborted) return { cls: 'aborted', txt: (D.job.status || 'finished') + ' \u00b7 aborted' };
+  var st = String(D.job.status || '').toLowerCase();
+  if (st && st !== 'finished' && st !== 'success') return { cls: 'warn', txt: D.job.status };
+  if (s.n_cond_false && !s.n_runs) return { cls: 'cond', txt: (D.job.status || '?') };
+  return { cls: 'ok', txt: (D.job.status || 'finished') + (s.n_cond_false ? ' \u00b7 ' + s.n_cond_false + ' condition' + (s.n_cond_false > 1 ? 's' : '') + ' false' : '') + (s.n_warn ? ' \u00b7 ' + s.n_warn + ' warning' + (s.n_warn > 1 ? 's' : '') : '') };
+}
+function renderHeader() {
+  var j = D.job, o = outcome();
+  var h = '<h1>' + esc(j.wf_name || 'FFAStrans workflow') + '</h1>' +
+    '<span class="chip ' + o.cls + '">' + esc(o.txt) + '</span>' +
+    '<span class="sub">job <span class="mono">' + esc(j.job_id) + '</span></span>' +
+    '<span class="sub">' + esc(fmtDate(j.start_time)) + ' \u2192 ' + esc(fmtClock(j.end_time)) + '</span>' +
+    (j.hosts && j.hosts.length ? '<span class="sub">host ' + esc(j.hosts.join(', ')) + '</span>' : '') +
+    (j.log_level ? '<span class="sub">log level ' + esc(j.log_level) + '</span>' : '') +
+    '<span id="help"><button id="helpBtn" title="What do the terms on this page mean?">?</button><div id="helpBox"><dl>' +
+    '<dt>Split</dt><dd>One branch of the job. FFAStrans starts with split <span class="mono">1-&lt;node index&gt;-&lt;node index&gt;</span>; when a node has several outbounds the job splits into children named <span class="mono">&lt;parent base&gt;&lt;counter&gt;-0-0</span>, so <span class="mono">11-0-0</span>, <span class="mono">12-0-0</span> are the children of split <span class="mono">1-…</span> and <span class="mono">121-0-0</span> is the first child of <span class="mono">12-0-0</span>.</dd>' +
+    '<dt>Node run</dt><dd>One node executing inside one split. A node can run several times (once per split that passes through it).</dd>' +
+    '<dt>Duration of a run</dt><dd>' + (D.summary.exact_timing ? 'Taken from the node\u2019s own \u201cnode start\u201d and \u201cnode end\u201d log entries, so it is the node\u2019s real execution time; the wait before the next node started is shown separately in the run card.' : 'From the node\u2019s first log entry until the next node of the same split writes its first entry (the last node ends at the split\u2019s recorded end). Nodes that only log when they are done (conditionals, populate variables) start at the previous node\u2019s last entry instead. \u201c\u2265\u201d marks a lower bound: the next node logged nothing, so the hand-over time is unknown.') + '</dd>' +
+    '<dt>Error</dt><dd>The branch ended at this node with an error message or result \u201cerror\u201d in its record.</dd>' +
+    '<dt>Condition false</dt><dd>A Conditional node evaluated false. The branch stops there by design, unless an “execute on error” connector carries it on.</dd>' +
+    '<dt>Warning (carried on)</dt><dd>Error or warning entries were logged (typically ffprobe/mediainfo/exiftool failing on a source) but the branch went on.</dd>' +
+    '<dt>Aborted</dt><dd>The job was stopped by a user (error code 995), not by a node failure.</dd>' +
+    '</dl></div></span>' +
+    (j.source && (j.source.original_file || j.source.pretty_name) ? '<div class="src" style="flex-basis:100%">' + esc(j.source.original_file || j.source.pretty_name) + '</div>' : '');
+  document.getElementById('jobInfo').innerHTML = h;
+  document.getElementById('helpBtn').addEventListener('click', function (e) { e.stopPropagation(); document.getElementById('helpBox').classList.toggle('open'); });
+  document.addEventListener('click', function () { var b = document.getElementById('helpBox'); if (b) b.classList.remove('open'); });
+  var s = D.summary;
+  var tb = D.time_breakdown || {};
+  var tiles = [
+    ['Total time', fmtDur(j.duration_ms), '', tb.job_ms && tb.idle_ms >= 1000 ? fmtDur(tb.idle_ms) + ' with no node active' : (j.start_source !== 'job record' ? 'start from ' + j.start_source : ''), null],
+    ['Nodes run', s.n_nodes_run + ' / ' + s.n_nodes, '', '', null],
+    ['Node runs', s.n_runs, '', '', null],
+    ['Splits', s.n_splits, '', 'branches', null],
+    ['Log events', s.n_events, '', s.n_error_events ? s.n_error_events + ' error-typed' : '', null],
+    ['Node failures', s.n_fatal, s.n_fatal ? 'bad' : '',
+      s.n_fatal ? ((s.n_failed_branches != null ? s.n_failed_branches : s.n_fatal) + ' branch' + ((s.n_failed_branches != null ? s.n_failed_branches : s.n_fatal) === 1 ? '' : 'es') + ' ended') : '', 'error'],
+  ];
+  if (s.n_aborted) tiles.push(['Aborted', s.n_aborted, 'aborted', 'by user', 'aborted']);
+  tiles.push(['Cond. false', s.n_cond_false, s.n_cond_false ? 'cond' : '', 'branches stopped', 'cond_false']);
+  tiles.push(['Warnings', s.n_warn, s.n_warn ? 'warn' : '', 'carried on', 'warn']);
+  tiles.push(['Anomalies', s.n_anomalies || 0, s.n_anomalies ? 'warn' : '', 'waits, retries, gaps', 'anom']);
+  document.getElementById('stats').innerHTML = tiles.map(function (t) {
+    var nav = t[4] && Number(t[1]) > 0;
+    return '<div class="tile ' + t[2] + (nav ? ' nav' : '') + '"' + (nav ? ' data-nav="' + t[4] + '" tabindex="0" role="button" title="Click to step through them (n / p on the keyboard steps through flagged log entries)"' : '') + '><div class="v">' + esc(t[1]) + '</div><div class="l">' + esc(t[0]) + '</div>' + (t[3] ? '<div class="s">' + esc(t[3]) + '</div>' : '') + '</div>';
+  }).join('');
+  document.querySelectorAll('#stats .tile[data-nav]').forEach(function (el) {
+    var go = function () { jumpNext(el.getAttribute('data-nav')); };
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+}
+// Step through the items behind a header tile: each click opens the next one.
+function jumpNext(kind, dir) {
+  dir = dir || 1;
+  var list = kind === 'anom'
+    ? (D.anomalies || []).filter(function (a) { return a.run_id; })
+    : D.issues.filter(function (it) { return it.severity === kind; });
+  if (!list.length) return;
+  var i = (S.nav[kind] == null ? (dir > 0 ? -1 : 0) : S.nav[kind]) + dir;
+  i = ((i % list.length) + list.length) % list.length;
+  S.nav[kind] = i;
+  var it = list[i];
+  var ev = kind === 'anom' ? it.event_index : (it.evidence && it.evidence.length ? it.evidence[0] : (it.events && it.events.length ? it.events[0].i : null));
+  select({ type: 'run', runId: it.run_id }, { eventIndex: ev != null ? ev : null });
+  var tile = document.querySelector('#stats .tile[data-nav="' + kind + '"] .s');
+  if (tile) tile.textContent = (i + 1) + ' of ' + list.length + ' shown';
+}
+
+// ------------------------------------------------------------------ canvas
+function workflowsInLogOrder() {
+  var order = new Map();
+  D.workflows.forEach(function (w, i) { order.set(w.wf_id, { workflow: w, index: i, time: Infinity, eventIndex: Infinity }); });
+  EV.forEach(function (e) {
+    var run = RUN.get(e.run_id), item = run && order.get(run.wf_id); if (!item) return;
+    item.eventIndex = Math.min(item.eventIndex, e.i);
+    if (e.t != null && isFinite(e.t)) item.time = Math.min(item.time, e.t);
+  });
+  return Array.from(order.values()).sort(function (a, b) {
+    return (a.time - b.time) || (a.eventIndex - b.eventIndex) || (a.index - b.index);
+  }).map(function (item) { return item.workflow; });
+}
+function openWorkflow(wfId) {
+  if (!WF.has(wfId)) return;
+  S.wf = wfId; renderTabs(); select(null); autoFit();
+}
+function subWorkflowTarget(wfId, n) {
+  if (n.type !== 'sub_wf') return null;
+  var target = String((n.properties || {}).workflow_id || '').trim().toLowerCase();
+  if (WF.has(target)) return target;
+  // Variable-based references can be resolved from the recorded transition when it has one target.
+  var targets = new Set();
+  (D.jumps || []).forEach(function (jump) {
+    if (jump.from_wf === wfId && jump.from === n.id && WF.has(jump.to_wf)) targets.add(jump.to_wf);
+  });
+  return targets.size === 1 ? Array.from(targets)[0] : null;
+}
+var nodeClickTimer = null;
+function cancelNodeClick() { clearTimeout(nodeClickTimer); nodeClickTimer = null; }
+function renderTabs() {
+  var tabs = document.getElementById('wfTabs');
+  if (D.workflows.length <= 1) { tabs.innerHTML = '<span style="color:var(--ink-2)">' + esc(WF.get(S.wf).wf_name) + '</span>'; return; }
+  tabs.innerHTML = TAB_WORKFLOWS.map(function (w) {
+    var ran = w.nodes.some(function (n) { return n.n_runs; });
+    return '<button data-wf="' + esc(w.wf_id) + '" class="' + (w.wf_id === S.wf ? 'on' : '') + '" title="' + esc(w.wf_id) + '">' + esc(w.wf_name) + (ran ? '' : ' (not run)') + '</button>';
+  }).join('');
+  tabs.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () { openWorkflow(b.getAttribute('data-wf')); }); });
+}
+function selectedSplit() {
+  if (!S.sel) return null;
+  if (S.sel.type === 'split') return S.sel.id;
+  if (S.sel.type === 'run') { var r = RUN.get(S.sel.runId); return r ? r.split_id : null; }
+  return null;
+}
+// The highlighted route: every edge from the start of the job into the selected node, and none
+// after it. The split record's path carries the whole chain, parent splits included, so the route
+// does not begin at the branch point. Selecting a split keeps its entire branch.
+function routeEdgeKeys() {
+  if (!S.sel) return null;
+  var keys = new Set();
+  function walk(splitId, stopNodeId) {
+    var sp = SPLIT.get(splitId);
+    if (sp && sp.path && sp.path.length) {
+      for (var i = 1; i < sp.path.length; i++) {
+        var a = sp.path[i - 1], b = sp.path[i];
+        var wa = a.wf_id || D.main_wf_id, wb = b.wf_id || D.main_wf_id;
+        if (wa === wb) keys.add(wa + '|' + a.id + '|' + b.id);   // a jump between workflows draws no edge
+        if (stopNodeId && b.id === stopNodeId) return;           // the selected node: go no further
+      }
+      return;
+    }
+    // No recorded path (a branch still running): fall back to this split and its ancestors.
+    var ids = {}, cur = splitId, guard = 0;
+    while (cur && SPLIT.has(cur) && guard++ < 64) { ids[cur] = 1; cur = SPLIT.get(cur).parent; }
+    D.edges.forEach(function (e) {
+      if (e.splits.some(function (s) { return ids[s]; })) keys.add(e.wf_id + '|' + e.from + '|' + e.to);
+    });
+  }
+  if (S.sel.type === 'split') walk(S.sel.id, null);
+  else if (S.sel.type === 'run') { var r = RUN.get(S.sel.runId); if (r) walk(r.split_id, r.node_id); }
+  else if (S.sel.type === 'node') nodeRuns(S.sel.wf, S.sel.id).forEach(function (r) { walk(r.split_id, r.node_id); });
+  return keys.size ? keys : null;
+}
+function renderCanvas() {
+  var wf = WF.get(S.wf); if (!wf) return;
+  var W = wf.box_w, H = wf.box_h, k = W / 316;
+  var gGrid = document.getElementById('gGrid'), gEdges = document.getElementById('gEdges'), gTrav = document.getElementById('gTrav'), gNodes = document.getElementById('gNodes');
+  gGrid.innerHTML = ''; gEdges.innerHTML = ''; gTrav.innerHTML = ''; gNodes.innerHTML = '';
+  var byId = new Map(); wf.nodes.forEach(function (n) { byId.set(n.id, n); });
+  var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  wf.nodes.forEach(function (n) { minX = Math.min(minX, n.pos_x); minY = Math.min(minY, n.pos_y); maxX = Math.max(maxX, n.pos_x + W); maxY = Math.max(maxY, n.pos_y + H); });
+  if (!isFinite(minX)) { minX = minY = 0; maxX = maxY = 100; }
+  // editor grid: columns every 1.5*W, rows every 2/3*H (as in _helpers_ffastrans_manager_wf_canvas.au3)
+  if (S.grid) {
+    var px = W * 1.5, py = H / 3 * 2, pad = 400;
+    var gx0 = minX - pad, gx1 = maxX + pad, gy0 = minY - pad, gy1 = maxY + pad;
+    var ox = ((minX % px) + px) % px, oy = ((minY % py) + py) % py;
+    for (var x = gx0 - ((gx0 - ox) % px); x <= gx1; x += px) gGrid.appendChild(svgEl('line', { x1: x, y1: gy0, x2: x, y2: gy1 }));
+    for (var y = gy0 - ((gy0 - oy) % py); y <= gy1; y += py) gGrid.appendChild(svgEl('line', { x1: gx0, y1: y, x2: gx1, y2: y }));
+  }
+  // base connections
+  wf.nodes.forEach(function (n) {
+    n.outbounds.forEach(function (ob) {
+      var t = byId.get(ob.id); if (!t) return;
+      gEdges.appendChild(svgEl('line', { x1: n.pos_x + W, y1: n.pos_y + H / 2, x2: t.pos_x, y2: t.pos_y + H / 2, 'class': 'edge base', stroke: ob.connection === 'subhold' ? '#c08040' : '#646464', 'stroke-width': Math.max(1, W / 50) }));
+    });
+  });
+  // traversed connections: every glow first, then every line, so no halo washes over a line
+  var route = routeEdgeKeys();
+  var travLines = [];
+  D.edges.forEach(function (e) {
+    if (e.wf_id !== wf.wf_id) return;
+    var a = byId.get(e.from), b = byId.get(e.to); if (!a || !b) return;
+    var isSel = route && route.has(e.wf_id + '|' + e.from + '|' + e.to);
+    var cls = 'edge trav' + (isSel ? ' selsplit' : (route ? ' dim' : ''));
+    var geom = { x1: a.pos_x + W, y1: a.pos_y + H / 2, x2: b.pos_x, y2: b.pos_y + H / 2 };
+    if (!route || isSel) {   // dimmed edges get no glow
+      var halo = svgEl('line', geom); halo.setAttribute('class', cls + ' halo'); gTrav.appendChild(halo);
+    }
+    var line = svgEl('line', geom); line.setAttribute('class', cls);
+    line.appendChild(svgEl('title')).textContent = 'path taken by split ' + e.splits.join(', ');
+    travLines.push(line);
+  });
+  travLines.forEach(function (l) { gTrav.appendChild(l); });
+  // nodes
+  wf.nodes.forEach(function (n) {
+    var g = svgEl('g', { 'class': 'node ' + (n.n_runs ? '' : 'idle ') + (n.bypass ? 'bypass ' : '') + (S.showIdle ? '' : 'hidden ') + (isSelectedNode(wf.wf_id, n.id) ? 'sel' : ''), transform: 'translate(' + n.pos_x + ',' + n.pos_y + ')' });
+    g.setAttribute('data-id', n.id);
+    var fam = D.family_colors[n.family] || '#808080'; if (n.bypass) fam = desat(fam);
+    g.appendChild(svgEl('rect', { x: -3, y: -3, width: W + 6, height: H + 6, rx: 3, 'class': 'selring' }));
+    g.appendChild(svgEl('rect', { x: -3, y: -3, width: W + 6, height: H + 6, rx: 3, 'class': 'ring' }));
+    var clipId = 'clip-' + wf.wf_id.replace(/[^a-z0-9]/gi, '') + '-' + n.index;
+    var clip = svgEl('clipPath', { id: clipId }); clip.appendChild(svgEl('rect', { x: 0, y: 0, width: W, height: H })); g.appendChild(clip);
+    var body = svgEl('g', { 'clip-path': 'url(#' + clipId + ')' });
+    body.appendChild(svgEl('rect', { x: 0, y: 0, width: W, height: H, fill: '#b0b0b0' }));
+    body.appendChild(svgEl('rect', { x: 0, y: H - 9 * k, width: W, height: 20 * k, fill: '#646464' }));
+    body.appendChild(svgEl('rect', { x: 0, y: W / 8.5, width: W, height: 15 * k, fill: fam }));
+    body.appendChild(svgEl('rect', { x: 0, y: -4 * k, width: W, height: W / 7, fill: '#646464' }));
+    var titleFs = W / 10.5;
+    var title = svgEl('text', { x: W / 2, y: -4 * k + (W / 7) / 2, 'class': 'title', 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': titleFs });
+    var maxT = Math.floor((W - 6) / (titleFs * 0.55));
+    title.textContent = n.name.length > maxT ? n.name.slice(0, Math.max(1, maxT - 1)) + '\u2026' : n.name;
+    body.appendChild(title);
+    var badgeSpace = n.n_runs ? Math.min(22, H * 0.3) : 0;
+    var dy = W / 7.5 + W / 30, dw = W - W / 8, dh = H - dy - 9 * k - badgeSpace;
+    var descFs = W >= 100 ? 10 : Math.max(7, W / 10);
+    var text = n.description || '', cls = 'desc';
+    if (!text) { text = n.type_name; cls += ' typeonly'; }
+    var lines = wrapText(text, Math.max(4, Math.floor(dw / (descFs * 0.52))), Math.max(1, Math.floor(dh / (descFs * 1.15))));
+    var dt = svgEl('text', { x: W / 2, y: dy + descFs, 'class': cls, 'text-anchor': 'middle', 'font-size': descFs });
+    lines.forEach(function (ln, i) { var ts = svgEl('tspan', { x: W / 2, dy: i ? descFs * 1.15 : 0 }); ts.textContent = ln; dt.appendChild(ts); });
+    body.appendChild(dt);
+    var cw = W / 16, ch = W / 8, cy = H / 2 - W / 16;
+    if (n.family !== 'Monitors') {
+      var eo = String(n.execute_on || 'success').toLowerCase();
+      var inCol = eo === 'error' ? '#ff4040' : (eo === 'any' ? '#ffcf30' : '#40f840');
+      var inTxt = eo === 'error' ? '#bb3939' : (eo === 'any' ? '#bb8b29' : '#39bb39');
+      body.appendChild(svgEl('rect', { x: 0, y: cy, width: cw, height: ch, fill: inCol }));
+      if (n.initiation !== 'branch') { var it = svgEl('text', { x: cw / 2, y: cy + ch / 2, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': Math.max(6, W / 14), fill: inTxt, 'font-family': 'var(--sans)' }); it.textContent = '|'; body.appendChild(it); }
+    }
+    if (n.type !== 'sub_wf') body.appendChild(svgEl('rect', { x: W - cw + 1 * k, y: cy, width: cw + 2 * k, height: ch, fill: '#8080ff' }));
+    g.appendChild(body);
+    if (n.n_runs) {
+      var label = (STATE_ICON[n.state] ? STATE_ICON[n.state] + ' ' : '') + (n.total_is_lower_bound ? '\u2265 ' : '') + fmtDur(n.total_ms) + (n.n_runs > 1 ? ' \u00d7' + n.n_runs : '');
+      var bw = label.length * 6.2 + 12, bh = 16;
+      var bg = svgEl('g', { 'class': 'badge' });
+      bg.setAttribute('data-w', W); bg.setAttribute('data-bw', bw); bg.setAttribute('data-bh', bh);
+      bg.setAttribute('data-bottom', H - 9 * k - 3); bg.setAttribute('data-space', badgeSpace - 3);
+      bg.appendChild(svgEl('rect', { x: 0, y: 0, width: bw, height: bh, rx: 8, fill: STATE_COL[n.state] || 'var(--unknown)' }));
+      var bt = svgEl('text', { x: bw / 2, y: bh / 2 + 0.5, 'text-anchor': 'middle', 'dominant-baseline': 'central' }); bt.textContent = label; bg.appendChild(bt);
+      g.appendChild(bg);
+    }
+    g.addEventListener('click', function (ev) {
+      ev.stopPropagation(); if (dragMoved) return;
+      var rs = nodeRuns(wf.wf_id, n.id);
+      var sel = rs.length === 1 ? { type: 'run', runId: rs[0].run_id } : { type: 'node', wf: wf.wf_id, id: n.id };
+      cancelNodeClick();
+      // fromCanvas: the node is already under the pointer, so the view must not move.
+      if (subWorkflowTarget(wf.wf_id, n)) {
+        // Selection rebuilds the nodes, which would break the double-click. Wait for the second click.
+        if (ev.detail < 2) nodeClickTimer = setTimeout(function () { select(sel, { fromCanvas: true }); }, 500);
+      } else select(sel, { fromCanvas: true });
+    });
+    g.addEventListener('dblclick', function (ev) {
+      ev.stopPropagation(); if (dragMoved) return;
+      var target = subWorkflowTarget(wf.wf_id, n);
+      if (target) { ev.preventDefault(); cancelNodeClick(); openWorkflow(target); }
+    });
+    g.addEventListener('mousemove', function (ev) { showTip(ev, nodeTip(wf.wf_id, n)); });
+    g.addEventListener('mouseleave', hideTip);
+    gNodes.appendChild(g);
+  });
+  applyView();
+}
+function isSelectedNode(wf, id) { if (!S.sel) return false; if (S.sel.type === 'node' && S.sel.wf === wf && S.sel.id === id) return true; if (S.sel.type === 'run') { var r = RUN.get(S.sel.runId); return r && r.wf_id === wf && r.node_id === id; } return false; }
+function nodeTip(wf, n) {
+  var rs = nodeRuns(wf, n.id);
+  var target = subWorkflowTarget(wf, n);
+  var workflowHint = target ? '<div class="m">Double-click to open ' + esc(WF.get(target).wf_name) + '</div>' : '';
+  var h = '<b>' + esc(n.name) + '</b><span class="m">' + esc(n.type_name) + ' \u00b7 ' + esc(n.family) + (n.bypass ? ' \u00b7 bypassed' : '') + '</span>';
+  if (!rs.length) return h + '<div class="m">Did not run</div>' + workflowHint;
+  h += '<div><span class="dot bg-' + n.state + '"></span>' + esc(STATE_TXT[n.state]) + ' \u00b7 ' + (n.total_is_lower_bound ? '\u2265 ' : '') + fmtDur(n.total_ms) + (rs.length > 1 ? ' over ' + rs.length + ' runs' : '') + '</div>';
+  rs.slice(0, 6).forEach(function (r) { h += '<div class="m">split ' + esc(r.split_id) + ': ' + fmtClock(r.start) + ' \u2192 ' + fmtClock(r.end) + ' (' + fmtRunDur(r) + ', ' + r.n_events + ' events' + (r.n_errors ? ', ' + r.n_errors + ' errors' : '') + ')</div>'; });
+  if (rs.length > 6) h += '<div class="m">\u2026 and ' + (rs.length - 6) + ' more</div>';
+  return h + '<div class="m">Click for the log</div>' + workflowHint;
+}
+var tip = document.getElementById('tooltip');
+function showTip(ev, html) {
+  tip.innerHTML = html; tip.style.display = 'block';
+  var x = ev.clientX + 14, y = ev.clientY + 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  if (x + w > window.innerWidth - 8) x = Math.max(4, ev.clientX - w - 12);
+  if (y + h > window.innerHeight - 8) y = Math.max(4, ev.clientY - h - 12);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function hideTip() { tip.style.display = 'none'; }
+
+// pan / zoom
+var svg = document.getElementById('canvas'), gView = document.getElementById('view');
+function applyView() {
+  gView.setAttribute('transform', 'translate(' + view.x + ',' + view.y + ') scale(' + view.k + ')');
+  svg.classList.toggle('far', view.k < 0.5);
+  var desiredScale = Math.max(1, Math.min(3.5, 0.9 / view.k));
+  gView.querySelectorAll('.badge').forEach(function (b) {
+    var W = +b.getAttribute('data-w'), bw = +b.getAttribute('data-bw'), bh = +b.getAttribute('data-bh');
+    // Keep the whole badge in the reserved lower part of its node at every zoom level.
+    var s = Math.min(desiredScale, (W - 8) / bw, +b.getAttribute('data-space') / bh);
+    b.setAttribute('transform', 'translate(' + ((W - bw * s) / 2) + ',' + (+b.getAttribute('data-bottom') - bh * s) + ') scale(' + s + ')');
+  });
+  var z = document.getElementById('zoomLbl'); if (z) z.textContent = Math.round(view.k * 100) + '%';
+}
+function fitView(onlyRun) {
+  var wf = WF.get(S.wf); if (!wf || !wf.nodes.length) return 1;
+  var W = wf.box_w, H = wf.box_h, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  var ranOnly = (onlyRun === true || !S.showIdle) && wf.nodes.some(function (n) { return n.n_runs; });
+  wf.nodes.forEach(function (n) { if (ranOnly && !n.n_runs) return; minX = Math.min(minX, n.pos_x); minY = Math.min(minY, n.pos_y); maxX = Math.max(maxX, n.pos_x + W); maxY = Math.max(maxY, n.pos_y + H); });
+  if (!isFinite(minX)) return 1;
+  var r = svg.getBoundingClientRect(), pad = 30;
+  var k = Math.min((r.width - pad * 2) / (maxX - minX), (r.height - pad * 2) / (maxY - minY), 2.5);
+  if (!isFinite(k) || k <= 0) k = 1;
+  view.k = k; view.x = (r.width - (maxX - minX) * k) / 2 - minX * k; view.y = (r.height - (maxY - minY) * k) / 2 - minY * k;
+  applyView();
+  return k;
+}
+function autoFit() { var k = fitView(false); var wf = WF.get(S.wf); if (k < 0.7 && wf && wf.nodes.some(function (n) { return n.n_runs; })) fitView(true); }
+// Bring a node into view with the smallest movement that works, and only when it is really
+// outside. Never re-centre and never change the zoom: a jumping canvas loses the reader's place.
+// A click on the canvas skips this entirely, since the node is already under the pointer.
+function ensureVisible(wf, id) {
+  if (wf !== S.wf) return;
+  var n = nodeOf(wf, id), w = WF.get(wf); if (!n || !w) return;
+  var r = svg.getBoundingClientRect(), pad = 24;
+  var W = w.box_w * view.k, H = w.box_h * view.k;
+  var sx = n.pos_x * view.k + view.x, sy = n.pos_y * view.k + view.y;
+  var dx = 0, dy = 0;
+  // A node wider or taller than the view cannot fit: line up its top-left corner instead.
+  if (sx < pad) dx = pad - sx;
+  else if (sx + W > r.width - pad) dx = Math.max(r.width - pad - (sx + W), pad - sx);
+  if (sy < pad) dy = pad - sy;
+  else if (sy + H > r.height - pad) dy = Math.max(r.height - pad - (sy + H), pad - sy);
+  if (!dx && !dy) return;
+  view.x += dx; view.y += dy; applyView();
+}
+function zoomAt(cx, cy, f) { var nk = Math.min(6, Math.max(0.08, view.k * f)); f = nk / view.k; view.x = cx - (cx - view.x) * f; view.y = cy - (cy - view.y) * f; view.k = nk; applyView(); }
+svg.addEventListener('wheel', function (e) { e.preventDefault(); var r = svg.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
+var drag = null, dragMoved = false;
+svg.addEventListener('pointerdown', function (e) { if (e.button !== 0 || !e.isPrimary) return; drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; dragMoved = false; });
+svg.addEventListener('pointermove', function (e) {
+  if (!drag || !e.isPrimary) return;
+  var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!dragMoved && Math.abs(dx) + Math.abs(dy) <= 3) return;
+  // Capturing on pointerdown retargets a node's click to the canvas. Capture only a real pan.
+  if (!dragMoved) { dragMoved = true; cancelNodeClick(); svg.setPointerCapture(e.pointerId); svg.classList.add('panning'); hideTip(); }
+  view.x = drag.vx + dx; view.y = drag.vy + dy; applyView();
+});
+window.addEventListener('pointerup', function (e) { if (e.isPrimary) { drag = null; svg.classList.remove('panning'); } });
+svg.addEventListener('pointercancel', function () { drag = null; dragMoved = false; svg.classList.remove('panning'); });
+svg.addEventListener('click', function () { if (!dragMoved) select(null); });
+document.getElementById('btnFit').addEventListener('click', function () { fitView(false); });
+document.getElementById('btnFitRun').addEventListener('click', function () { fitView(true); });
+document.getElementById('btnZoomIn').addEventListener('click', function () { var r = svg.getBoundingClientRect(); zoomAt(r.width / 2, r.height / 2, 1.25); });
+document.getElementById('btnZoomOut').addEventListener('click', function () { var r = svg.getBoundingClientRect(); zoomAt(r.width / 2, r.height / 2, 0.8); });
+document.getElementById('btnGrid').addEventListener('click', function () { S.grid = !S.grid; this.classList.toggle('on', S.grid); renderCanvas(); });
+document.getElementById('btnIdle').addEventListener('click', function () { S.showIdle = !S.showIdle; this.classList.toggle('on', S.showIdle); renderCanvas(); });
+document.getElementById('btnLink').addEventListener('click', function () { updateHash(); copyText(location.href, this, 'Link copied'); });
+window.addEventListener('keydown', function (e) {
+  if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) { if (e.key === 'Escape') { e.target.blur(); } return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'f' || e.key === 'F') fitView(false);
+  else if (e.key === 'r' || e.key === 'R') fitView(true);
+  else if (e.key === '+' || e.key === '=') document.getElementById('btnZoomIn').click();
+  else if (e.key === '-') document.getElementById('btnZoomOut').click();
+  else if (e.key === 'Escape') select(null);
+  else if (e.key === '/') { var q = document.getElementById('evq'); if (q) { e.preventDefault(); q.focus(); q.select(); } }
+  else if (e.key === 'n' || e.key === 'p') { e.preventDefault(); stepFlagged(e.key === 'n' ? 1 : -1); }
+});
+// n / p: move through the flagged entries (errors, warnings, last-before-death, slow steps) of the list on screen
+function stepFlagged(dir) {
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#evlist .ev')).filter(function (el) {
+    return /\btype-error\b|\btype-warning\b|\bevidence\b|\bslow\b/.test(el.className) && !/\bbenign\b/.test(el.className);
+  });
+  if (!rows.length) return;
+  var cur = document.querySelector('#evlist .ev.cur'), idx = cur ? rows.indexOf(cur) : -1;
+  idx = idx < 0 ? (dir > 0 ? 0 : rows.length - 1) : ((idx + dir) % rows.length + rows.length) % rows.length;
+  document.querySelectorAll('#evlist .ev.cur').forEach(function (el) { el.classList.remove('cur'); });
+  var el = rows[idx]; el.classList.add('cur', 'open'); ensurePayload(el); el.scrollIntoView({ block: 'center' });
+  S.evFocus = Number(el.getAttribute('data-i')); updateHash();
+  var c = document.getElementById('evcount'); if (c) c.setAttribute('data-step', (idx + 1) + '/' + rows.length + ' flagged');
+  if (c) c.textContent = c.getAttribute('data-base') + ' · ' + (idx + 1) + '/' + rows.length + ' flagged';
+}
+
+// ------------------------------------------------------------------ resizable panes
+var workspace = document.getElementById('workspace'), main = document.getElementById('main');
+var panelSplitter = document.getElementById('panelSplitter'), timelineSplitter = document.getElementById('timelineSplitter');
+function paneMetrics(handle) {
+  var timeline = handle === timelineSplitter, stacked = window.matchMedia('(max-width: 980px)').matches;
+  var horizontal = timeline || stacked, container = timeline ? workspace : main;
+  var total = Math.max(0, (horizontal ? container.clientHeight : container.clientWidth) - 10);
+  var minimum = Math.min(timeline ? 86 : (stacked ? 140 : 260), total * 0.45);
+  var maximum = Math.max(minimum, total - Math.min(horizontal ? 160 : 200, total * 0.45));
+  var prop = timeline ? '--timeline-height' : (stacked ? '--panel-height' : '--panel-width');
+  var fallback = timeline ? Math.min(260, total * 0.36) : (stacked ? total * 0.5 : Math.min(470, total * 0.4));
+  var size = parseFloat(container.style.getPropertyValue(prop));
+  return { container: container, prop: prop, horizontal: horizontal, min: minimum, max: maximum, size: isNaN(size) ? fallback : size };
+}
+function setPaneSize(handle, size) {
+  var m = paneMetrics(handle), value = Math.max(m.min, Math.min(m.max, size == null ? m.size : size));
+  m.container.style.setProperty(m.prop, value + 'px');
+  handle.setAttribute('aria-orientation', m.horizontal ? 'horizontal' : 'vertical');
+  handle.setAttribute('aria-valuemin', Math.round(m.min)); handle.setAttribute('aria-valuemax', Math.round(m.max));
+  handle.setAttribute('aria-valuenow', Math.round(value));
+}
+function syncPanes() { if (S.tlOpen) setPaneSize(timelineSplitter); setPaneSize(panelSplitter); }
+function bindSplitter(handle) {
+  var resizing = null;
+  handle.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0 || !e.isPrimary) return;
+    e.preventDefault(); hideTip(); handle.focus({ preventScroll: true });
+    var m = paneMetrics(handle);
+    resizing = { pointerId: e.pointerId, horizontal: m.horizontal, start: m.horizontal ? e.clientY : e.clientX, size: m.size };
+    handle.setPointerCapture(e.pointerId); handle.classList.add('dragging');
+    document.body.style.setProperty('--resize-cursor', m.horizontal ? 'row-resize' : 'col-resize'); document.body.classList.add('resizing');
+  });
+  handle.addEventListener('pointermove', function (e) {
+    if (!resizing || e.pointerId !== resizing.pointerId) return;
+    setPaneSize(handle, resizing.size - ((resizing.horizontal ? e.clientY : e.clientX) - resizing.start));
+  });
+  function finish(e) {
+    if (!resizing || e.pointerId !== resizing.pointerId) return;
+    resizing = null; handle.classList.remove('dragging'); document.body.classList.remove('resizing');
+    if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId);
+  }
+  handle.addEventListener('pointerup', finish); handle.addEventListener('pointercancel', finish); handle.addEventListener('lostpointercapture', finish);
+  handle.addEventListener('keydown', function (e) {
+    var m = paneMetrics(handle), before = m.horizontal ? 'ArrowUp' : 'ArrowLeft', after = m.horizontal ? 'ArrowDown' : 'ArrowRight';
+    if (e.key !== before && e.key !== after && e.key !== 'Home' && e.key !== 'End') return;
+    e.preventDefault();
+    setPaneSize(handle, e.key === 'Home' ? m.min : (e.key === 'End' ? m.max : m.size + (e.key === before ? 1 : -1) * (e.shiftKey ? 50 : 10)));
+  });
+}
+bindSplitter(panelSplitter); bindSplitter(timelineSplitter);
+function setTimelineOpen(open) {
+  S.tlOpen = open; workspace.classList.toggle('tl-collapsed', !open);
+  document.getElementById('tlWrap').classList.toggle('collapsed', !open);
+  var toggle = document.getElementById('tlToggle'); if (toggle) toggle.textContent = open ? 'Hide' : 'Show';
+  syncPanes();
+}
+window.addEventListener('resize', function () { syncPanes(); renderTimeline(); });
+
+// ------------------------------------------------------------------ selection
+function select(sel, opts) {
+  opts = opts || {};
+  cancelNodeClick();
+  hideTip();
+  S.sel = sel;
+  var focusWf = null, focusId = null;
+  if (sel && sel.type === 'run') { var r = RUN.get(sel.runId); if (r) { focusWf = r.wf_id; focusId = r.node_id; } }
+  if (sel && sel.type === 'node') { focusWf = sel.wf; focusId = sel.id; }
+  if (focusWf && focusWf !== S.wf) { S.wf = focusWf; renderTabs(); renderCanvas(); fitView(true); }
+  if (!opts.keepFilters) { S.q = ''; S.errorsOnly = false; S.runOnly = !!(sel && sel.type === 'run'); }
+  S.evFocus = opts.eventIndex != null ? opts.eventIndex : null;
+  renderCanvas();
+  if (focusId && !opts.fromCanvas) ensureVisible(focusWf, focusId);
+  renderPanel();
+  panel.scrollTop = 0;
+  renderTimeline();
+  updateHash();
+  if (opts.eventIndex != null) revealEvent(opts.eventIndex);
+  else if (sel && (sel.type === 'node' || sel.type === 'run')) {
+    var logHeading = document.getElementById('logHeading');
+    if (logHeading) { logHeading.focus({ preventScroll: true }); logHeading.scrollIntoView({ block: 'start' }); }
+  }
+}
+function revealEvent(i) {
+  var el = document.querySelector('.ev[data-i="' + i + '"]'); if (!el) return;
+  document.querySelectorAll('#evlist .ev.cur').forEach(function (x) { x.classList.remove('cur'); });
+  el.classList.add('open', 'hl', 'cur'); ensurePayload(el); el.scrollIntoView({ block: 'center' });
+  S.evFocus = i; updateHash();
+}
+// light up the canvas node behind a card while the pointer rests on it
+function hoverNode(runId, on) {
+  var r = RUN.get(runId); if (!r || r.wf_id !== S.wf) return;
+  var g = document.querySelector('#gNodes g[data-id="' + r.node_id + '"]'); if (g) g.classList.toggle('hover', !!on);
+}
+
+// deep links: #node=<id>[&wf=<id>] | #run=<run id> | #split=<id> | &fit=run
+function updateHash() {
+  var p = [];
+  if (S.sel) {
+    if (S.sel.type === 'run') p.push('run=' + encodeURIComponent(S.sel.runId));
+    else if (S.sel.type === 'split') p.push('split=' + encodeURIComponent(S.sel.id));
+    else { p.push('node=' + encodeURIComponent(S.sel.id)); if (S.sel.wf !== D.main_wf_id) p.push('wf=' + encodeURIComponent(S.sel.wf)); }
+  } else if (S.wf !== D.main_wf_id) p.push('wf=' + encodeURIComponent(S.wf));
+  if (S.evFocus != null) p.push('ev=' + S.evFocus);
+  try { history.replaceState(null, '', p.length ? '#' + p.join('&') : location.pathname + location.search); } catch (e) { }
+}
+function applyHash() {
+  var h = location.hash.replace(/^#/, ''); if (!h) return false;
+  var p = {}; h.split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) p[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1)); });
+  if (p.wf && WF.has(p.wf) && p.wf !== S.wf) { S.wf = p.wf; renderTabs(); renderCanvas(); autoFit(); }
+  var evOpt = p.ev != null && EVBYI.has(Number(p.ev)) ? { eventIndex: Number(p.ev) } : {};
+  if (p.run && RUN.has(p.run)) select({ type: 'run', runId: p.run }, evOpt);
+  else if (p.split && SPLIT.has(p.split)) select({ type: 'split', id: p.split }, evOpt);
+  else if (p.node) { var wf = p.wf && WF.has(p.wf) ? p.wf : S.wf; if (nodeOf(wf, p.node)) select({ type: 'node', wf: wf, id: p.node }, evOpt); }
+  else if (evOpt.eventIndex != null) revealEvent(evOpt.eventIndex);
+  if (p.fit === 'run') { fitView(true); return true; }
+  if (p.fit === 'all') { fitView(false); return true; }
+  return false;
+}
+
+// ------------------------------------------------------------------ panel
+var panel = document.getElementById('panel');
+function renderPanel() {
+  if (!S.sel) return renderOverview();
+  if (S.sel.type === 'split') return renderSplit(SPLIT.get(S.sel.id));
+  var wf, id, runId = null;
+  if (S.sel.type === 'run') { var r = RUN.get(S.sel.runId); wf = r.wf_id; id = r.node_id; runId = r.run_id; } else { wf = S.sel.wf; id = S.sel.id; }
+  renderNode(wf, id, runId);
+}
+function backBtn() { return '<div class="back"><button id="btnBack">\u2190 Overview</button></div>'; }
+function bindCommon() {
+  var b = document.getElementById('btnBack'); if (b) b.addEventListener('click', function () { select(null); });
+  panel.querySelectorAll('[data-sel-run]').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.stopPropagation(); var ei = el.getAttribute('data-ev'); select({ type: 'run', runId: el.getAttribute('data-sel-run') }, { eventIndex: ei != null && ei !== '' ? Number(ei) : null }); });
+    el.addEventListener('mouseenter', function () { hoverNode(el.getAttribute('data-sel-run'), true); });
+    el.addEventListener('mouseleave', function () { hoverNode(el.getAttribute('data-sel-run'), false); });
+  });
+  panel.querySelectorAll('[data-sel-split]').forEach(function (el) { el.addEventListener('click', function (e) { e.stopPropagation(); select({ type: 'split', id: el.getAttribute('data-sel-split') }); }); });
+  panel.querySelectorAll('[data-sel-node]').forEach(function (el) { el.addEventListener('click', function (e) { e.stopPropagation(); select({ type: 'node', wf: el.getAttribute('data-wf'), id: el.getAttribute('data-sel-node') }); }); });
+  panel.querySelectorAll('[data-reveal]').forEach(function (el) { el.addEventListener('click', function (e) { e.stopPropagation(); var i = Number(el.getAttribute('data-reveal')); if (!document.querySelector('.ev[data-i="' + i + '"]')) { S.errorsOnly = false; S.q = ''; refreshList(); } revealEvent(i); }); });
+  bindEvents();
+}
+function kv(k, v) { return '<div class="k">' + k + '</div><div class="v">' + v + '</div>'; }
+function errText(err) { // "code -1: msg" without a dangling colon when the code is empty
+  if (!err) return '';
+  var code = err.code != null && String(err.code) !== '' ? String(err.code) : '';
+  var msg = err.msg != null && String(err.msg) !== '' ? String(err.msg) : '';
+  if (!code && !msg) return '';
+  return (code ? '(code ' + code + ') ' : '') + (msg || '(no message)');
+}
+function issueHtml(it) {
+  var sev = it.severity || 'error';
+  var evs = (it.events || []).map(function (e) {
+    return '<li><span class="t">' + esc(fmtRel(e.t)) + '</span><span class="link" data-reveal="' + e.i + '" title="show this log entry">' + esc(e.event) + '</span>' + (e.count > 1 ? '<span class="m">\u00d7' + e.count + '</span>' : '') + '<span class="line">' + esc(e.reason || e.status || e.line || '') + '</span></li>';
+  }).join('');
+  var r0 = RUN.get(it.run_id);
+  var headline = it.headline + (sev === 'error' && r0 && !r0.is_last ? ', the branch carried on' : '');
+  return '<div class="issue sev-' + esc(sev) + '" data-sel-run="' + esc(it.run_id) + '" data-ev="' + (it.evidence && it.evidence.length ? it.evidence[0] : '') + '">' +
+    '<div>' + stateBadge(sev) + ' <span class="m">' + esc(headline) + '</span> \u00b7 <b>' + esc(it.node_name || it.node_id || '?') + '</b> <span class="m">split ' + esc(it.split_id) + ' \u00b7 ' + esc(fmtClock(it.time)) + ' ' + esc(fmtRel(it.t)) + '</span></div>' +
+    (it.message ? '<div class="msg">' + esc(it.message) + '</div>' : '') +
+    (it.message_source ? '<div class="src">from ' + esc(it.message_source) + (it.record_result ? ' \u00b7 record result: ' + esc(it.record_result) : '') + '</div>' : '') +
+    (it.explain ? '<div class="explain">' + esc(it.explain) + '</div>' : '') +
+    (evs ? '<ul class="evs">' + evs + '</ul>' : '') + '</div>';
+}
+
+function summaryText() {
+  var j = D.job, o = outcome(), tb = D.time_breakdown || {}, out = [];
+  out.push('FFAStrans run: ' + (j.wf_name || '?') + ' | job ' + j.job_id + ' | ' + o.txt);
+  out.push('Started ' + fmtDate(j.start_time) + ', ended ' + fmtDate(j.end_time) + ' (' + fmtDur(j.duration_ms) + (tb.idle_ms >= 1000 ? ', ' + fmtDur(tb.idle_ms) + ' with no node active' : '') + ')');
+  if (j.source && j.source.original_file) out.push('Source: ' + j.source.original_file);
+  if (j.hosts && j.hosts.length) out.push('Host: ' + j.hosts.join(', ') + (j.build_version ? ' | build ' + j.build_version : ''));
+  if (D.issues.length) {
+    out.push(''); out.push('Issues (' + D.issues.length + '):');
+    D.issues.forEach(function (it) { out.push(' - [' + STATE_TXT[it.severity] + '] ' + it.headline + ': ' + (it.node_name || it.node_id) + ' (split ' + it.split_id + ', ' + fmtRel(it.t) + ')' + (it.message ? ' - ' + it.message.replace(/\s+/g, ' ') : '')); });
+  }
+  var notes = (D.anomalies || []).filter(function (a) { return a.severity === 'note'; });
+  if (notes.length) { out.push(''); out.push('Anomalies (' + notes.length + '):'); notes.forEach(function (a) { out.push(' - ' + a.title + (a.node_name ? ': ' + a.node_name + ' (split ' + a.split_id + ')' : '') + (a.detail ? ' - ' + a.detail : '')); }); }
+  if (tb.top_runs && tb.top_runs.length) { out.push(''); out.push('Longest node runs: ' + tb.top_runs.map(function (t) { return t.node_name + ' ' + (t.lower_bound ? '>= ' : '') + fmtDur(t.ms) + ' (split ' + t.split_id + ')'; }).join('; ')); }
+  out.push(''); out.push('Job folder: ' + D.job_dir);
+  return out.join('\n');
+}
+function copyText(txt, btn, done) {
+  try { navigator.clipboard.writeText(txt).then(function () { if (btn) { var old = btn.textContent; btn.textContent = done || 'Copied'; setTimeout(function () { btn.textContent = old; }, 1200); } }); } catch (x) { }
+}
+function timeBreakdownHtml() {
+  var tb = D.time_breakdown; if (!tb || !tb.job_ms) return '';
+  var h = '<h3>Where the time went</h3>';
+  var busyPct = Math.round(100 * tb.busy_ms / tb.job_ms), idlePct = Math.max(0, 100 - busyPct);
+  h += '<div class="m">' + esc(fmtDur(tb.job_ms)) + ' of job time: <b>' + busyPct + '%</b> with a node running, <b>' + idlePct + '%</b> with none (queueing, dispatch, holds between tickets).' + (D.summary.exact_timing ? '' : ' Node times are derived from the log, not measured.') + '</div>';
+  if (tb.run_total_ms > 0 && tb.by_family.length) {
+    h += '<div class="tbar" title="Time inside nodes, by node family (branches that ran in parallel add up)">' + tb.by_family.map(function (f) { return '<span style="width:' + (100 * f.ms / tb.run_total_ms).toFixed(2) + '%;background:' + (D.family_colors[f.family] || '#808080') + '" title="' + esc(f.family + ': ' + fmtDur(f.ms)) + '"></span>'; }).join('') + '</div>';
+    h += '<div class="m">' + tb.by_family.slice(0, 5).map(function (f) { return '<span class="swatch" style="background:' + (D.family_colors[f.family] || '#808080') + '"></span> ' + esc(f.family) + ' ' + esc(fmtDur(f.ms)); }).join(' · ') + '</div>';
+  }
+  if (tb.top_runs && tb.top_runs.length) {
+    var max = tb.top_runs[0].ms || 1;
+    h += '<ul class="tlist" style="margin-top:6px">' + tb.top_runs.map(function (t) {
+      return '<li data-sel-run="' + esc(t.run_id) + '"><span><span class="lab"><span class="dot bg-' + esc(t.state) + '"></span>' + esc(t.node_name) + ' <span class="m">split ' + esc(t.split_id) + '</span></span><div class="bar" style="width:' + (100 * t.ms / max).toFixed(1) + '%"></div></span><span class="n">' + (t.lower_bound ? '≥ ' : '') + esc(fmtDur(t.ms)) + '</span></li>';
+    }).join('') + '</ul>';
+  }
+  return h;
+}
+function anomalyHtml(a) {
+  var link = a.run_id ? ' data-sel-run="' + esc(a.run_id) + '" data-ev="' + (a.event_index != null ? a.event_index : '') + '"' : '';
+  return '<div class="anom ' + esc(a.severity) + '"' + link + '><b>' + esc(a.title) + '</b>' + (a.node_name ? ' · ' + esc(a.node_name) + ' <span class="m">split ' + esc(a.split_id) + (a.t != null ? ' · ' + esc(fmtRel(a.t)) : '') + '</span>' : '') + (a.detail ? '<div class="m">' + esc(a.detail) + '</div>' : '') + '</div>';
+}
+function renderOverview() {
+  var j = D.job, h = '<h2>Run overview<span class="h2tools"><button id="btnSummary" title="Copy a plain-text summary of this run (issues, anomalies, timing) for a ticket or a forum post">Copy summary</button></span></h2>';
+  h += '<div class="kv">' +
+    kv('Workflow', esc(j.wf_name) + ' <span class="mono" style="color:var(--muted)">' + esc(j.wf_id) + '</span>') +
+    kv('Job', '<span class="mono">' + esc(j.job_id) + '</span>') +
+    kv('Outcome', (function () { var o = outcome(); return '<span class="chip ' + o.cls + '">' + esc(o.txt) + '</span>'; })()) +
+    kv('Started', esc(fmtDate(j.start_time)) + (j.start_source !== 'job record' ? ' <span style="color:var(--muted)">(from ' + esc(j.start_source) + ')</span>' : '')) +
+    kv('Ended', esc(fmtDate(j.end_time))) + kv('Duration', esc(fmtDur(j.duration_ms))) +
+    (j.source && j.source.original_file ? kv('Source', '<span class="mono">' + esc(j.source.original_file) + '</span>') : '') +
+    (j.source && j.source.current_file && j.source.current_file !== j.source.original_file ? kv('Current file', '<span class="mono">' + esc(j.source.current_file) + '</span>') : '') +
+    (j.submit ? kv('Submitted', esc((j.submit.method || '') + ' by ' + (j.submit.user || '?') + '@' + (j.submit.client || '?') + ' ' + fmtDate(j.submit.time))) : '') +
+    (j.priority != null ? kv('Priority', esc(j.priority)) : '') +
+    kv('Job folder', '<span class="mono">' + esc(D.job_dir) + '</span>') +
+    '</div>';
+  if (D.warnings && D.warnings.length) h += '<h3>Generator warnings</h3>' + D.warnings.map(function (w) { return '<div class="warnbox">' + esc(w) + '</div>'; }).join('');
+  h += '<h3>Issues (' + D.issues.length + ')</h3>';
+  if (!D.issues.length) h += '<div class="empty">No branch failed and nothing was logged as an error' + (D.summary.n_benign_events ? ', apart from ' + D.summary.n_benign_events + ' informational \u201cnothing to evaluate\u201d entries from conditionals' : '') + '.</div>';
+  [['error', 'Nodes that failed'], ['aborted', 'Aborted by user'], ['cond_false', 'Conditionals that evaluated false (as designed)'], ['warn', 'Probe errors and warnings the job carried on from']].forEach(function (grp) {
+    var list = D.issues.filter(function (it) { return it.severity === grp[0]; });
+    if (!list.length) return;
+    h += '<div class="grp-title">' + grp[1] + ' (' + list.length + ')</div>';
+    list.forEach(function (it) { h += issueHtml(it); });
+  });
+  var notes = (D.anomalies || []).filter(function (a) { return a.severity === 'note'; }), infos = (D.anomalies || []).filter(function (a) { return a.severity !== 'note'; });
+  if (notes.length || infos.length) {
+    h += '<h3>Anomalies (' + notes.length + ')</h3>';
+    notes.forEach(function (a) { h += anomalyHtml(a); });
+    if (infos.length) h += '<details class="props" style="margin-top:4px"><summary>' + infos.length + ' expected but time-consuming (holds, silent runs)</summary>' + infos.map(anomalyHtml).join('') + '</details>';
+  }
+  h += timeBreakdownHtml();
+  h += '<h3>Splits (' + D.splits.length + ')</h3>' + splitTree();
+  if (D.jumps && D.jumps.length) {
+    h += '<h3>Sub-workflow transitions</h3>';
+    D.jumps.forEach(function (jp) { var a = nodeOf(jp.from_wf, jp.from), b = nodeOf(jp.to_wf, jp.to); h += '<div class="chain">split ' + esc(jp.split_id) + ': <span class="link" data-sel-node="' + esc(jp.from) + '" data-wf="' + esc(jp.from_wf) + '">' + esc(a ? a.name : jp.from) + '</span> (' + esc((WF.get(jp.from_wf) || {}).wf_name || jp.from_wf) + ') \u2192 <span class="link" data-sel-node="' + esc(jp.to) + '" data-wf="' + esc(jp.to_wf) + '">' + esc(b ? b.name : jp.to) + '</span> (' + esc((WF.get(jp.to_wf) || {}).wf_name || jp.to_wf) + ')</div>'; });
+  }
+  h += '<h3 id="logHeading" tabindex="-1">All log events (' + EV.length + ')</h3>' + eventTools() + '<div id="evlist">' + eventList(EV) + '</div>';
+  h += '<div style="margin-top:14px;color:var(--muted);font-size:11px">Generated ' + esc(D.generated) + ' by ' + esc(D.generator) + ' · keys: <span class="kbd">n</span>/<span class="kbd">p</span> next/previous flagged entry, <span class="kbd">/</span> filter, <span class="kbd">F</span>/<span class="kbd">R</span> fit all/run, <span class="kbd">Esc</span> back</div>';
+  panel.innerHTML = h; bindCommon();
+  var sb = document.getElementById('btnSummary'); if (sb) sb.addEventListener('click', function () { copyText(summaryText(), sb); });
+}
+function splitTree() {
+  var kids = new Map(); var roots = [];
+  D.splits.forEach(function (s) { if (s.parent && SPLIT.has(s.parent)) { if (!kids.has(s.parent)) kids.set(s.parent, []); kids.get(s.parent).push(s); } else roots.push(s); });
+  function row(s) {
+    var runs = s.runs.map(function (id) { return RUN.get(id); }).filter(Boolean);
+    var st = splitState(s);
+    var chain = runs.map(function (r) { return '<span class="cur">' + esc(r.node_name || r.node_type || r.node_id) + '</span>'; }).join(' \u2192 ');
+    var dur = (s.t0 != null && s.t1 != null) ? fmtDur(s.t1 - s.t0) : '\u2013';
+    var raw = s.result != null && s.result !== '' ? String(s.result) : '';
+    return '<div class="splitrow' + (S.sel && S.sel.type === 'split' && S.sel.id === s.split_id ? ' sel' : '') + '" data-sel-split="' + esc(s.split_id) + '"><div><b class="mono">' + esc(s.split_id) + '</b> ' + stateBadge(st) + ' <span class="m">' + esc(fmtClock(s.start)) + ' \u2192 ' + esc(fmtClock(s.end)) + ' \u00b7 ' + esc(dur) + (raw ? ' \u00b7 record: ' + esc(raw) : '') + (s.parent_source === 'split id' ? ' \u00b7 parent derived from id' : '') + '</span></div>' +
+      (chain ? '<div class="chain">' + chain + '</div>' : '<div class="chain empty">no nodes recorded for this split</div>') + '</div>';
+  }
+  function rec(list) { return '<ul class="tree">' + list.map(function (s) { return '<li>' + row(s) + (kids.has(s.split_id) ? rec(kids.get(s.split_id)) : '') + '</li>'; }).join('') + '</ul>'; }
+  return rec(roots);
+}
+function runCard(r, selected, withNode) {
+  var sp = SPLIT.get(r.split_id) || {};
+  var gaps = runGaps(r);
+  var h = '<div class="runcard' + (selected ? ' sel' : '') + '" data-sel-run="' + esc(r.run_id) + '">' +
+    '<div><b>' + (withNode ? esc(r.node_name || r.node_id) + ' \u00b7 ' : '') + 'split <span class="mono">' + esc(r.split_id) + '</span></b> ' + stateBadge(r.state) + ' <span class="m">' + esc(fmtClock(r.start)) + ' \u2192 ' + esc(fmtClock(r.end)) + ' \u00b7 <b>' + esc(fmtRunDur(r)) + '</b> \u00b7 ' + r.n_events + ' events' + (r.n_errors ? ', ' + r.n_errors + ' errors' : '') + (r.n_soft ? ', ' + r.n_soft + ' probe errors' : '') + (r.n_warnings ? ', ' + r.n_warnings + ' warnings' : '') + '</span></div>';
+  if (r.reasons && r.reasons.length) h += '<div class="m st-' + (r.state === 'ok' ? 'unknown' : r.state) + '">' + esc(r.reasons.join('; ')) + '</div>';
+  if (r.explain) h += '<div class="explain">' + esc(r.explain) + '</div>';
+  if (r.status_texts && r.status_texts.length) h += '<div class="m">Last status text: ' + esc(r.status_texts[r.status_texts.length - 1]) + '</div>';
+  if (r.is_last && sp.has_record) {
+    var et = errText(sp.error);
+    h += '<div class="m">Split ended here' + (sp.status_flag ? ' \u00b7 record flag: ' + esc(sp.status_flag) : '') + (sp.result != null && sp.result !== '' ? ' \u00b7 record result: ' + esc(sp.result) : '') + (et ? '<div class="st-' + (r.state === 'cond_false' ? 'cond_false' : (r.state === 'aborted' ? 'aborted' : 'error')) + '">' + esc(et) + '</div>' : '') + '</div>';
+  }
+  var timing = 'Timing: starts at ' + (ANCHOR_TXT[r.start_anchor] || r.start_anchor || '?') + '; ends at ' + (ANCHOR_TXT[r.end_anchor] || r.end_anchor || '?') + '.';
+  var parts = [];
+  if (gaps.longest && gaps.longest.gap >= 250) parts.push('Longest gap inside the run: ' + fmtDur(gaps.longest.gap) + ' after \u201c' + gaps.longest.from.event + '\u201d (' + fmtRel(gaps.longest.from.t) + ')' + (gaps.longest.from.current_status ? ' while \u201c' + gaps.longest.from.current_status + '\u201d' : ''));
+  if (gaps.handover != null && gaps.handover >= 250) parts.push('Then ' + fmtDur(gaps.handover) + ' passed before the next node of this split started');
+  if (gaps.tail != null && gaps.tail >= 250) parts.push('After its last entry it took ' + fmtDur(gaps.tail) + ' until the next node started (unlogged work such as encoding, then hand-over)');
+  if (gaps.head != null && gaps.head >= 250) parts.push('Before its first entry: ' + fmtDur(gaps.head) + ' attributed to this node');
+  h += '<div class="m" style="margin-top:3px">' + esc(timing) + (parts.length ? ' ' + esc(parts.join('. ') + '.') : '') + '</div>';
+  if (!r.from_path) h += '<div class="m">(not in the recorded path; reconstructed from the log)</div>';
+  return h + '</div>';
+}
+function predecessors(wf, n) {
+  return (n.inbounds || []).map(function (pid) { var p = nodeOf(wf, pid); if (!p) return null; var rs = nodeRuns(wf, pid); return { node: p, runs: rs }; }).filter(Boolean);
+}
+function renderNode(wf, id, runId) {
+  var n = nodeOf(wf, id), w = WF.get(wf);
+  if (!n) { panel.innerHTML = backBtn() + '<div class="empty">Unknown node ' + esc(id) + '</div>'; bindCommon(); return; }
+  var rs = nodeRuns(wf, id);
+  var h = backBtn() + '<h2><span class="swatch" style="background:' + esc(D.family_colors[n.family] || '#808080') + '"></span>' + esc(n.name) + ' ' + stateBadge(n.state) + '</h2>';
+  h += '<div class="kv">' + kv('Type', esc(n.type_name) + ' <span class="mono" style="color:var(--muted)">' + esc(n.type) + '</span>') + kv('Family', esc(n.family)) +
+    kv('Node id', '<span class="mono">' + esc(n.id) + '</span>') + kv('Workflow', esc(w.wf_name)) +
+    kv('Execute on', esc(n.execute_on)) + (n.bypass ? kv('Bypass', 'yes') : '') + (n.slots != null ? kv('Slots / group', esc(n.slots) + ' / ' + esc(n.hosts_group)) : '') +
+    (n.description ? kv('Description', esc(n.description)) : '') +
+    (rs.length ? kv('Time in node', esc((n.total_is_lower_bound ? '\u2265 ' : '') + fmtDur(n.total_ms)) + (rs.length > 1 ? ' over ' + rs.length + ' runs' : '')) : '') + '</div>';
+  if (n.properties) h += '<details class="props"><summary>Node properties (as configured)</summary><pre>' + esc(JSON.stringify(n.properties, null, 1)) + '</pre></details>';
+  var preds = predecessors(wf, n);
+  if (preds.length) {
+    h += '<div class="chain" style="margin-top:6px">Fed by: ' + preds.map(function (p) {
+      var st = p.node.state, txt = p.runs.length ? STATE_TXT[st] : 'did not run';
+      return '<span class="link" data-sel-node="' + esc(p.node.id) + '" data-wf="' + esc(wf) + '">' + esc(p.node.name) + '</span> <span class="st-' + st + '">(' + esc(txt) + ')</span>';
+    }).join(', ') + '</div>';
+  }
+  var outs = n.outbounds.map(function (ob) { var t = nodeOf(wf, ob.id); return t ? '<span class="link" data-sel-node="' + esc(t.id) + '" data-wf="' + esc(wf) + '">' + esc(t.name) + '</span>' : esc(ob.id); });
+  if (outs.length) h += '<div class="chain" style="margin-top:4px">Outbounds: ' + outs.join(', ') + '</div>';
+  if (!rs.length) {
+    h += '<h3>Runs</h3><div class="empty">This node did not run in this job.</div>';
+    var ranPreds = preds.filter(function (p) { return p.runs.length; });
+    var stopped = ranPreds.filter(function (p) { return p.node.state === 'error' || p.node.state === 'aborted' || p.node.state === 'cond_false'; });
+    if (!preds.length && n.family !== 'Monitors') h += '<div class="m">Nothing connects into it.</div>';
+    else if (!ranPreds.length && preds.length) h += '<div class="m">None of the nodes feeding it ran.</div>';
+    else if (stopped.length === ranPreds.length && stopped.length) h += '<div class="explain">Not reached: ' + stopped.map(function (p) { return '\u201c' + p.node.name + '\u201d ' + STATE_TXT[p.node.state].toLowerCase(); }).join(', ') + '.</div>';
+    panel.innerHTML = h; bindCommon(); return;
+  }
+  h += '<h3>Runs (' + rs.length + ')</h3>';
+  rs.forEach(function (r) { h += runCard(r, runId === r.run_id, false); });
+  var evs = [];
+  if (runId && S.runOnly) evs = runEvents(runId); else rs.forEach(function (r) { evs = evs.concat(runEvents(r.run_id)); });
+  var evHosts = []; evs.forEach(function (e) { if (e.host && evHosts.indexOf(e.host) < 0) evHosts.push(e.host); });
+  h += '<h3 id="logHeading" tabindex="-1">Log events (' + evs.length + ') ' + (evHosts.length ? ' @ ' + esc(evHosts.join(', ')) : '') + '</h3>' + eventTools(runId ? { runToggle: true } : null) + '<div id="evlist">' + eventList(evs) + '</div>';
+  panel.innerHTML = h; bindCommon();
+}
+
+function renderSplit(s) {
+  if (!s) { select(null); return; }
+  var runs = s.runs.map(function (id) { return RUN.get(id); }).filter(Boolean);
+  var st = splitState(s), et = errText(s.error);
+  var h = backBtn() + '<h2>Split <span class="mono">' + esc(s.split_id) + '</span> ' + stateBadge(st) + '</h2>';
+  h += '<div class="kv">' + kv('Parent split', s.parent ? '<span class="link" data-sel-split="' + esc(s.parent) + '">' + esc(s.parent) + '</span>' + (s.parent_source && s.parent_source !== 'path' ? ' <span style="color:var(--muted)">(from ' + esc(s.parent_source) + ')</span>' : '') : '(root)') +
+    kv('Record', s.has_record ? '<span class="mono">' + esc(s.record_file) + '</span>' : '<span class="st-warn">none yet (still running, or lost)</span>') +
+    kv('Timing', esc(fmtClock(s.start)) + ' \u2192 ' + esc(fmtClock(s.end)) + (s.t0 != null && s.t1 != null ? ' \u00b7 ' + esc(fmtDur(s.t1 - s.t0)) : '')) +
+    (s.result != null && s.result !== '' ? kv('Record result', esc(s.result)) : '') +
+    (s.status_flag ? kv('Record flag', esc(s.status_flag)) : (s.status != null && s.status !== '' ? kv('Last status', esc(s.status)) : '')) +
+    (et ? kv('Error', '<span class="st-' + (st === 'cond_false' ? 'cond_false' : (st === 'aborted' ? 'aborted' : 'error')) + '">' + esc(et) + '</span>') : '') +
+    (s.branch_pri ? kv('Priority branch', 'yes') : '') + (s.wf_name ? kv('Workflow', esc(s.wf_name)) : '') + '</div>';
+  var last = runs[runs.length - 1];
+  if (last && last.explain) h += '<div class="explain">' + esc(last.explain) + '</div>';
+  if (s.subholds && s.subholds.length) h += '<details class="props"><summary>Subholds</summary><pre>' + esc(JSON.stringify(s.subholds, null, 1)) + '</pre></details>';
+  if (s.variables && s.variables.length) h += '<details class="props"><summary>Variables (' + s.variables.length + ')</summary><pre>' + esc(JSON.stringify(s.variables, null, 1)) + '</pre></details>';
+  if (s.sources) h += '<details class="props"><summary>Sources</summary><pre>' + esc(JSON.stringify(s.sources, null, 1)) + '</pre></details>';
+  h += '<h3>Full path (' + s.path.length + ' nodes)</h3><div class="chain">' + s.path.map(function (p) { var wfid = p.wf_id || S.wf; var n = nodeOf(wfid, p.id); return '<span class="' + (p.split_id === s.split_id ? 'cur ' : '') + 'link" data-sel-node="' + esc(p.id) + '" data-wf="' + esc(wfid) + '" title="split ' + esc(p.split_id) + '">' + esc(n ? n.name : (p.name || p.id)) + '</span>' + (p.split_id !== s.split_id ? '<sup style="color:var(--muted)">' + esc(p.split_id) + '</sup>' : ''); }).join(' \u2192 ') + '</div>';
+  h += '<h3>Node runs in this split (' + runs.length + ')</h3>';
+  runs.forEach(function (r) { h += runCard(r, false, true); });
+  var evs = EV.filter(function (e) { return e.split_id === s.split_id; });
+  h += '<h3>Log events (' + evs.length + ')</h3>' + eventTools() + '<div id="evlist">' + eventList(evs) + '</div>';
+  panel.innerHTML = h; bindCommon();
+}
+
+// ------------------------------------------------------------------ event list
+function eventTools(o) {
+  o = o || {};
+  return '<div id="evtools"><input type="search" id="evq" placeholder="Filter events (text in event, status or payload)  /" value="' + esc(S.q) + '">' +
+    '<button id="evErr" class="' + (S.errorsOnly ? 'on' : '') + '" title="Error and warning entries, plus the last entry of a failed run">Errors only</button>' +
+    '<button id="evSlow" class="' + (S.slowOnly ? 'on' : '') + '" title="Entries that came 1 s or more after the previous entry of their run: the end of each silence (waiting, encoding, an external process)">Slow steps</button>' +
+    (o.runToggle ? '<button id="evRun" class="' + (S.runOnly ? 'on' : '') + '">This run only</button>' : '') + '<span id="evcount"></span></div>';
+}
+var EVCOUNT = { shown: 0, total: 0 };
+function eventFilter(list) {
+  var q = S.q.trim().toLowerCase();
+  return list.filter(function (e) {
+    if (S.errorsOnly && e.type !== 'error' && e.type !== 'warning' && !EVIDENCE.has(e.i)) return false;
+    if (S.errorsOnly && e.benign) return false;
+    if (S.slowOnly && !(e.gap != null && e.gap >= 1000)) return false;
+    if (!q) return true;
+    var hay = (e.event + ' ' + e.type + ' ' + (e.current_status || '') + ' ' + (e.node_type || '') + ' ' + e.split_id + ' ' + payloadText(e.data)).toLowerCase();
+    return hay.indexOf(q) >= 0;
+  });
+}
+function noMatchHtml(list) {
+  var runIds = new Set(); list.forEach(function (e) { if (e.run_id) runIds.add(e.run_id); });
+  var failed = Array.from(runIds).map(function (id) { return RUN.get(id); }).filter(function (r) { return r && (r.state === 'error' || r.state === 'aborted' || r.state === 'cond_false'); });
+  if (!S.errorsOnly || !failed.length) return '<div class="empty">No events match.</div>';
+  var h = '<div class="nomatch">No error-typed log entries here: FFAStrans kept the failure in the split record, not in the log.';
+  failed.forEach(function (r) {
+    var sp = SPLIT.get(r.split_id) || {}, et = errText(sp.error), lastEv = (r.evidence && r.evidence.length) ? r.evidence[0] : null;
+    h += '<div style="margin-top:4px"><b>' + esc(r.node_name || r.node_id) + '</b> (split ' + esc(r.split_id) + '): ' + (et ? '<span class="st-error">' + esc(et) + '</span>' : esc(STATE_TXT[r.state])) + (lastEv != null ? ' \u00b7 <span class="link" data-reveal="' + lastEv + '">show the last entry before the branch ended</span>' : '') + '</div>';
+  });
+  return h + '</div>';
+}
+function eventList(list) {
+  var f = eventFilter(list);
+  EVCOUNT = { shown: Math.min(f.length, S.evLimit), total: list.length, matched: f.length };
+  if (!f.length) return noMatchHtml(list);
+  var out = '', prevByRun = {}, prevT = null;
+  f.slice(0, S.evLimit).forEach(function (e) {
+    var ref = e.run_id && prevByRun[e.run_id] != null ? prevByRun[e.run_id] : prevT;
+    out += eventRow(e, ref);
+    if (e.t != null) { prevT = e.t; if (e.run_id) prevByRun[e.run_id] = e.t; }
+  });
+  if (f.length > S.evLimit) out += '<div class="more"><button id="evMore">Show ' + (f.length - S.evLimit) + ' more</button></div>';
+  return out;
+}
+function updateCount() {
+  var c = document.getElementById('evcount'); if (!c) return;
+  var txt = EVCOUNT.matched === EVCOUNT.total ? EVCOUNT.total + ' entries' : EVCOUNT.matched + ' of ' + EVCOUNT.total;
+  c.setAttribute('data-base', txt); c.textContent = txt;
+}
+function eventRow(e, refT) {
+  var r = e.run_id ? RUN.get(e.run_id) : null;
+  var name = r ? (r.node_name || r.node_type || '') : (e.node_type || (e.type === 'sys' ? 'system' : ''));
+  // the gap to the previous entry of the same run, measured on the whole log rather than on the filtered list
+  var delta = e.gap != null ? e.gap : ((e.t != null && refT != null) ? e.t - refT : null);
+  var slow = delta != null && delta >= 1000;
+  var cls = 'ev type-' + esc(e.type) + (e.benign ? ' benign' : '') + (e.soft ? ' soft' : '') + (EVIDENCE.has(e.i) ? ' evidence' : '') + (slow ? ' slow' : '') + (S.evFocus === e.i ? ' cur' : '');
+  // Qualifiers sit beside the event name, not in the pill, which has a fixed column to fit in.
+  var tags = (e.benign ? '<span class="tag" title="Logged as an error, but not a failure">info</span>' : '') +
+    (e.soft ? '<span class="tag probe" title="Media probe error (ffprobe/mediainfo/exiftool); the job carried on">probe</span>' : '') +
+    (EVIDENCE.has(e.i) ? '<span class="tag last" title="The last entry this node logged before the branch ended">last</span>' : '');
+  return '<div class="' + cls + '" data-i="' + e.i + '">' +
+    '<div class="row"><span class="t" title="' + esc(e.created) + '">' + esc(fmtRel(e.t)) + '</span><span class="c">' + esc(fmtClock(e.created)) + '</span><span class="d' + (slow ? ' big' : '') + '" title="time since the previous entry of this run">' + (delta != null ? '+' + fmtDur(delta) : '') + '</span><span class="ty" title="' + esc(e.type) + ' entry">' + esc(e.type) + '</span>' +
+    '<span><span class="n">' + esc(e.event) + '</span>' + tags + ' <span class="s">' + esc(name) + (e.split_id ? ' \u00b7 ' + esc(e.split_id) : '') + (e.current_status ? ' \u00b7 ' + esc(e.current_status) : '') + '</span>' + (e.context ? '<span class="ctx" title="context">' + esc(String(e.context).toLowerCase()) + '</span>' : '') + '</span></div>' +
+    '<div class="payload"></div></div>';
+}
+// escape payload lines, flag the ones that look like an error and mark the filter text
+function markLines(lines, truncated) {
+  var q = S.q.trim(), qre = q ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig') : null;
+  var out = lines.map(function (ln) {
+    var s = esc(ln);
+    if (qre) s = s.replace(qre, function (m) { return '<mark>' + m + '</mark>'; });
+    return FLAG_RE.test(ln) ? '<span class="hl-line">' + s + '</span>' : s;
+  }).join('\n');
+  return out + (truncated ? '\n\u2026' : '');
+}
+function ensurePayload(el) {
+  var p = el.querySelector('.payload'); if (!p || p.getAttribute('data-done')) return;
+  var e = EVBYI.get(Number(el.getAttribute('data-i'))); if (!e) return;
+  var meta = [];
+  if (e.node_id) meta.push('node ' + e.node_id); if (e.host) meta.push('host ' + e.host); if (e.pid != null) meta.push('pid ' + e.pid);
+  if (e.runame) meta.push(e.runame + (e.linenum != null ? ':' + e.linenum : '')); if (e.user) meta.push('user ' + e.user); if (e.context != null) meta.push('context ' + JSON.stringify(e.context));
+  var txt = payloadText(e.data);
+  var lines = txt.split('\n'); var long = lines.length > 60;
+  var h = '<div class="ptools"><span>' + esc(meta.join(' \u00b7 ')) + '</span><span style="flex:1"></span>' + (long ? '<button class="pmore">Show all ' + lines.length + ' lines</button>' : '') + '<button class="pcopy">Copy payload</button></div>';
+  var hint = '';
+  var r0 = e.run_id ? RUN.get(e.run_id) : null, sp0 = r0 ? SPLIT.get(r0.split_id) : null;
+  if (e.type === 'error' || e.type === 'warning') {
+    var benign = (D.benign_errors || []).filter(function (x) { return x[0] === e.node_type && x[1] === e.event; })[0];
+    if (benign) hint = 'Not a failure: ' + benign[2] + '.';
+    else if ((D.cond_false_events || []).some(function (x) { return x[0] === e.node_type && x[1] === e.event; })) hint = 'The condition evaluated false, so this branch ended here.';
+    else if (e.soft) hint = 'Media probe error: FFAStrans logs the probe input here and carries on; the reason, if any, is in the preceding \u201c' + e.event + '\u201d trace entry of this run.';
+    if (r0 && r0.is_last && sp0 && sp0.error && sp0.error.msg) hint += (hint ? ' ' : '') + 'Branch error message (from the split record): ' + sp0.error.msg;
+    else if (!hint && txt === '' && e.current_status) hint = 'The message is the status text of this entry; FFAStrans logs it there and leaves the payload empty.';
+    else if (!hint && txt === '') hint = 'FFAStrans keeps the error message in the split record, not in the log payload; this branch carried on without one.';
+  } else if (EVIDENCE.has(e.i)) {
+    hint = 'This is the last entry the node logged before the branch ended' + (sp0 && sp0.error && sp0.error.msg ? '. Branch error message (from the split record): ' + sp0.error.msg : '.');
+  }
+  if (hint) h += '<div class="hint">' + esc(hint) + '</div>';
+  h += '<pre>' + (txt === '' ? '<span class="empty">(empty payload)</span>' : markLines(long ? lines.slice(0, 60) : lines, long)) + '</pre>';
+  p.innerHTML = h; p.setAttribute('data-done', '1');
+  var pre = p.querySelector('pre'), first = pre.querySelector('mark, .hl-line');
+  if (first) setTimeout(function () { pre.scrollTop = Math.max(0, first.offsetTop - pre.offsetTop - 40); }, 0);
+  var more = p.querySelector('.pmore'); if (more) more.addEventListener('click', function (ev) { ev.stopPropagation(); pre.innerHTML = markLines(lines, false); more.remove(); });
+  p.querySelector('.pcopy').addEventListener('click', function (ev) { ev.stopPropagation(); var b = this; try { navigator.clipboard.writeText(txt).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy payload'; }, 1200); }); } catch (x) { } });
+  p.querySelector('pre').addEventListener('click', function (ev) { ev.stopPropagation(); });
+}
+function bindEvents() {
+  var list = document.getElementById('evlist'); if (!list) return;
+  list.addEventListener('click', function (ev) {
+    var el = ev.target.closest('.ev'); if (!el || ev.target.closest('button') || ev.target.closest('[data-reveal]')) return;
+    el.classList.toggle('open'); if (el.classList.contains('open')) ensurePayload(el);
+  });
+  var q = document.getElementById('evq'); if (q) q.addEventListener('input', function () { S.q = q.value; refreshList(); });
+  var er = document.getElementById('evErr'); if (er) er.addEventListener('click', function () { S.errorsOnly = !S.errorsOnly; er.classList.toggle('on', S.errorsOnly); refreshList(); });
+  var sl = document.getElementById('evSlow'); if (sl) sl.addEventListener('click', function () { S.slowOnly = !S.slowOnly; sl.classList.toggle('on', S.slowOnly); refreshList(); });
+  updateCount();
+  var ro = document.getElementById('evRun'); if (ro) ro.addEventListener('click', function () { S.runOnly = !S.runOnly; renderPanel(); var q2 = document.getElementById('evq'); if (q2) q2.focus(); });
+  bindMore();
+}
+function bindMore() {
+  var mo = document.getElementById('evMore'); if (mo) mo.addEventListener('click', function () { S.evLimit += 3000; refreshList(); });
+  panel.querySelectorAll('#evlist [data-reveal]').forEach(function (el) { el.addEventListener('click', function (e) { e.stopPropagation(); var i = Number(el.getAttribute('data-reveal')); S.errorsOnly = false; var er = document.getElementById('evErr'); if (er) er.classList.remove('on'); refreshList(); revealEvent(i); }); });
+}
+function currentEventSource() {
+  if (!S.sel) return EV;
+  if (S.sel.type === 'split') return EV.filter(function (e) { return e.split_id === S.sel.id; });
+  var runId = S.sel.type === 'run' ? S.sel.runId : null;
+  if (runId && S.runOnly) return runEvents(runId);
+  var r = runId ? RUN.get(runId) : null; var wf = r ? r.wf_id : S.sel.wf, id = r ? r.node_id : S.sel.id;
+  var evs = []; nodeRuns(wf, id).forEach(function (x) { evs = evs.concat(runEvents(x.run_id)); }); return evs;
+}
+function refreshList() { var list = document.getElementById('evlist'); if (!list) return; list.innerHTML = eventList(currentEventSource()); bindMore(); updateCount(); }
+
+// ------------------------------------------------------------------ timeline
+function niceStep(range, target) { var raw = range / target, p = Math.pow(10, Math.floor(Math.log10(raw))); var c = [1, 2, 2.5, 5, 10]; for (var i = 0; i < c.length; i++) if (c[i] * p >= raw) return c[i] * p; return 10 * p; }
+var TL = { tmin: 0, tmax: 0, labelW: 0, plotW: 0 };   // the last layout, for zooming around the pointer
+function renderTimeline() {
+  var svgT = document.getElementById('tl'), svgA = document.getElementById('tlAxis'), wrap = document.getElementById('tlScroll');
+  var runs = D.runs.filter(function (r) { return r.t0 != null; });
+  var head = document.getElementById('tlHead');
+  if (!runs.length) { head.innerHTML = '<b>Timeline</b> <span>no timed node runs</span>'; svgT.innerHTML = ''; svgA.innerHTML = ''; return; }
+  var tmin = 0, tmax = D.job.duration_ms || 0;
+  runs.forEach(function (r) { tmin = Math.min(tmin, r.t0); tmax = Math.max(tmax, r.t1 != null ? r.t1 : r.t0); });
+  if (tmax <= tmin) tmax = tmin + 1000;
+  var win = (S.tlWin && S.tlWin[1] > S.tlWin[0]) ? [Math.max(tmin, S.tlWin[0]), Math.min(tmax, S.tlWin[1])] : [tmin, tmax];
+  if (win[1] - win[0] < 50) win = [tmin, tmax];
+  var labelW = Math.min(300, Math.max(180, Math.floor(wrap.clientWidth * 0.28))), rowH = 18, axisH = 20, padR = 16;
+  var width = Math.max(320, wrap.clientWidth - 2), plotW = width - labelW - padR, right = labelW + plotW;
+  TL = { tmin: tmin, tmax: tmax, win: win, labelW: labelW, plotW: plotW };
+  var x = function (t) { return labelW + (t - win[0]) / (win[1] - win[0]) * plotW; };
+  var cx = function (px) { return Math.max(labelW, Math.min(right, px)); };
+  var rows = []; var lastSplit = null;
+  runs.forEach(function (r) { if (r.split_id !== lastSplit) { rows.push({ hdr: true, split: SPLIT.get(r.split_id), sid: r.split_id }); lastSplit = r.split_id; } rows.push({ run: r }); });
+  var height = rows.length * rowH + 6;
+  svgT.setAttribute('width', width); svgT.setAttribute('height', height); svgT.innerHTML = '';
+  svgA.setAttribute('width', width); svgA.setAttribute('height', axisH); svgA.innerHTML = '';
+  var defs = svgEl('defs'), pat = svgEl('pattern', { id: 'gapHatch', width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+  pat.appendChild(svgEl('rect', { x: 0, y: 0, width: 3, height: 6, fill: 'var(--muted)', opacity: 0.55 })); defs.appendChild(pat); svgT.appendChild(defs);
+  var step = niceStep(win[1] - win[0], Math.max(3, Math.floor(plotW / 90)));
+  for (var t = Math.ceil(win[0] / step) * step; t <= win[1] + 1e-6; t += step) {
+    svgT.appendChild(svgEl('line', { x1: x(t), y1: 0, x2: x(t), y2: height, 'class': 'tick' }));
+    svgA.appendChild(svgEl('line', { x1: x(t), y1: axisH - 5, x2: x(t), y2: axisH, 'class': 'tick' }));
+    var tx = svgEl('text', { x: x(t), y: 12, 'class': 'axis', 'text-anchor': 'middle' }); tx.textContent = (t / 1000).toFixed(step < 1000 ? (step < 100 ? 2 : 1) : 0) + ' s'; svgA.appendChild(tx);
+  }
+  var selRun = S.sel && S.sel.type === 'run' ? S.sel.runId : null;
+  var selSplit = selectedSplit();
+  rows.forEach(function (row, i) {
+    var y = i * rowH;
+    if (row.hdr) {
+      var s = row.split || { split_id: row.sid, has_record: false, runs: [] };
+      svgT.appendChild(svgEl('rect', { x: 0, y: y, width: width, height: rowH, 'class': 'band', style: selSplit === row.sid ? 'fill:var(--accent-soft)' : '' }));
+      var lb = svgEl('text', { x: 6, y: y + 12.5, 'class': 'lbl sp' });
+      lb.textContent = 'split ' + row.sid + (s.parent ? ' (from ' + s.parent + ')' : '') + ' \u00b7 ' + splitResultText(s);
+      lb.addEventListener('click', function () { select({ type: 'split', id: row.sid }); });
+      lb.addEventListener('mousemove', function (ev) { showTip(ev, '<b>split ' + esc(row.sid) + '</b><span class="m">' + esc(STATE_TXT[splitState(s)]) + (s.result != null && s.result !== '' ? ' \u00b7 record result: ' + esc(s.result) : '') + '</span>' + (s.error && s.error.msg ? '<div class="m">' + esc(s.error.msg) + '</div>' : '')); });
+      lb.addEventListener('mouseleave', hideTip);
+      svgT.appendChild(lb);
+      if (s.t0 != null && s.t1 != null && s.t1 >= win[0] && s.t0 <= win[1]) svgT.appendChild(svgEl('line', { x1: cx(x(s.t0)), y1: y + rowH - 2, x2: cx(x(s.t1)), y2: y + rowH - 2, 'class': 'spline', 'stroke-width': 2 }));
+      return;
+    }
+    var r = row.run, node = nodeOf(r.wf_id, r.node_id);
+    var name = (node ? node.name : (r.node_name || r.node_id));
+    var lb2 = svgEl('text', { x: 18, y: y + 12.5, 'class': 'lbl' });
+    var maxC = Math.floor((labelW - 30) / 6);
+    lb2.textContent = (STATE_ICON[r.state] ? STATE_ICON[r.state] + ' ' : '') + (name.length > maxC ? name.slice(0, maxC - 1) + '\u2026' : name);
+    lb2.addEventListener('click', function () { select({ type: 'run', runId: r.run_id }); });
+    lb2.addEventListener('mouseenter', function () { hoverNode(r.run_id, true); });
+    lb2.addEventListener('mouseleave', function () { hoverNode(r.run_id, false); });
+    svgT.appendChild(lb2);
+    var t1 = r.t1 != null ? r.t1 : r.t0;
+    if (t1 < win[0] || r.t0 > win[1]) return;              // outside the zoom window
+    var x0 = cx(x(r.t0)), x1 = cx(x(t1)); var bw = Math.max(3, x1 - x0);
+    // queue / dispatch time before this run, hatched in front of the bar
+    (SINKS_BY_RUN.get(r.run_id) || []).forEach(function (s) {
+      if (s.kind !== 'handover' || s.t == null) return;
+      var a = cx(x(s.t)), b = cx(x(s.t + s.ms)); if (b - a < 1) return;
+      svgT.appendChild(svgEl('rect', { x: a, y: y + 6, width: b - a, height: rowH - 12, 'class': 'gapfill' }));
+    });
+    var bar = svgEl('rect', { x: x0, y: y + 3, width: bw, height: rowH - 6, rx: 3, fill: STATE_COL[r.state] || 'var(--unknown)', 'class': 'bar' + (selRun === r.run_id ? ' sel' : ''), opacity: r.state === 'unknown' ? 0.6 : 0.9 });
+    svgT.appendChild(bar);
+    // waiting inside the run (hold, resources), hatched over the bar
+    (SINKS_BY_RUN.get(r.run_id) || []).forEach(function (s) {
+      if (s.kind !== 'wait' || s.t == null) return;
+      var a = cx(x(s.t)), b = cx(x(s.t + s.ms)); if (b - a < 1) return;
+      svgT.appendChild(svgEl('rect', { x: a, y: y + 4, width: b - a, height: rowH - 8, 'class': 'gapfill' }));
+    });
+    var sinks = (SINKS_BY_RUN.get(r.run_id) || []).filter(function (s) { return s.kind !== 'handover'; });
+    var tipHtml = '<b>' + esc(name) + '</b><span class="m">split ' + esc(r.split_id) + ' \u00b7 ' + esc(STATE_TXT[r.state]) + '</span><div class="m">' + esc(fmtClock(r.start)) + ' \u2192 ' + esc(fmtClock(r.end)) + ' \u00b7 ' + esc(fmtRunDur(r)) + '</div><div class="m">' + r.n_events + ' events' + (r.n_errors ? ', ' + r.n_errors + ' errors' : '') + '</div>' + (sinks.length ? '<div class="m">' + esc(fmtDur(sinks[0].ms) + ' ' + sinks[0].label) + '</div>' : '');
+    var hit = svgEl('rect', { x: x0 - 6, y: y, width: bw + 12, height: rowH, fill: 'transparent', style: 'cursor:pointer' });
+    hit.addEventListener('click', function () { select({ type: 'run', runId: r.run_id }); });
+    hit.addEventListener('mousemove', function (ev) { showTip(ev, tipHtml); });
+    hit.addEventListener('mouseenter', function () { hoverNode(r.run_id, true); });
+    hit.addEventListener('mouseleave', function () { hideTip(); hoverNode(r.run_id, false); });
+    svgT.appendChild(hit);
+    runEvents(r.run_id).forEach(function (e) {
+      if (e.t == null || e.t < win[0] || e.t > win[1]) return;
+      if (e.type === 'error' && !e.benign) svgT.appendChild(svgEl('line', { x1: x(e.t), y1: y + 1, x2: x(e.t), y2: y + rowH - 1, 'class': e.soft ? 'softtick' : 'errtick' }));
+      else if (e.type === 'warning') svgT.appendChild(svgEl('line', { x1: x(e.t), y1: y + 1, x2: x(e.t), y2: y + rowH - 1, 'class': 'softtick' }));
+      else if (EVIDENCE.has(e.i)) svgT.appendChild(svgEl('line', { x1: x(e.t), y1: y + 1, x2: x(e.t), y2: y + rowH - 1, 'class': 'evtick' }));
+    });
+  });
+  var zoomed = win[0] > tmin || win[1] < tmax;
+  var selSp = selSplit ? SPLIT.get(selSplit) : null, canFit = selSp && selSp.t0 != null && selSp.t1 != null && selSp.t1 > selSp.t0;
+  head.innerHTML = '<b>Timeline</b> <span>' + runs.length + ' node runs across ' + D.splits.length + ' splits, in start order \u00b7 ' + (zoomed ? esc(fmtRel(win[0]) + ' to ' + fmtRel(win[1])) + ' of ' : '') + esc(fmtDur(tmax - tmin)) + (D.summary.exact_timing ? '' : ' \u00b7 durations derived from the log') + '</span><span class="spacer"></span>' +
+    (canFit ? '<button id="tlFitSplit" title="Zoom the time axis to the selected split">Fit split ' + esc(selSplit) + '</button>' : '') +
+    (zoomed ? '<button id="tlReset" title="Show the whole job again (double-click the plot does the same)">Reset zoom</button>' : '') +
+    '<button id="tlToggle">' + (S.tlOpen ? 'Hide' : 'Show') + '</button>';
+  document.getElementById('tlToggle').addEventListener('click', function () { setTimelineOpen(!S.tlOpen); });
+  var fs = document.getElementById('tlFitSplit'); if (fs) fs.addEventListener('click', function () { var pad = (selSp.t1 - selSp.t0) * 0.05; S.tlWin = [selSp.t0 - pad, selSp.t1 + pad]; renderTimeline(); });
+  var rz = document.getElementById('tlReset'); if (rz) rz.addEventListener('click', function () { S.tlWin = null; renderTimeline(); });
+  document.getElementById('tlWrap').classList.toggle('collapsed', !S.tlOpen);
+}
+// Ctrl+wheel zooms the time axis around the pointer; double-click resets
+(function () {
+  var wrap = document.getElementById('tlScroll');
+  wrap.addEventListener('wheel', function (e) {
+    if (!(e.ctrlKey || e.metaKey) || !TL.plotW) return;
+    e.preventDefault();
+    var rect = wrap.getBoundingClientRect(), px = e.clientX - rect.left + wrap.scrollLeft;
+    var frac = Math.max(0, Math.min(1, (px - TL.labelW) / TL.plotW));
+    var win = TL.win, span = win[1] - win[0], f = e.deltaY < 0 ? 1 / 1.25 : 1.25;
+    var nspan = Math.max(50, Math.min(TL.tmax - TL.tmin, span * f));
+    var at = win[0] + frac * span, a = at - frac * nspan, b = a + nspan;
+    if (a < TL.tmin) { a = TL.tmin; b = a + nspan; } if (b > TL.tmax) { b = TL.tmax; a = b - nspan; }
+    S.tlWin = (nspan >= TL.tmax - TL.tmin - 1) ? null : [a, b];
+    renderTimeline();
+  }, { passive: false });
+  wrap.addEventListener('dblclick', function (e) { if (S.tlWin) { S.tlWin = null; renderTimeline(); } });
+})();
+
+// ------------------------------------------------------------------ legend
+function renderLegend() {
+  var fams = ['Monitors', 'Decoders', 'Analyzers', 'Filters', 'Encoders', 'Deliveries', 'Others', 'Operations', 'Workflows'];
+  var h = '<div class="grp"><b>Node family</b>' + fams.map(function (f) { return '<span class="item"><span class="swatch" style="background:' + D.family_colors[f] + '"></span>' + (f === 'Workflows' ? 'Sub-workflow' : f) + '</span>'; }).join('') + '</div>';
+  h += '<div class="grp"><b>Run result</b><span class="item m">on the node badge:</span>' + ['ok', 'error', 'cond_false', 'warn', 'aborted', 'unknown'].map(function (s) { return '<span class="item"><span class="pill" style="background:' + STATE_COL[s] + '">' + STATE_ICON[s] + '</span>' + STATE_TXT[s] + '</span>'; }).join('') + '<span class="item"><span class="ring" style="border-color:transparent;background:#b0b0b0;opacity:.4"></span>Did not run (dimmed, no badge)</span><span class="item"><span class="ring" style="border-color:var(--ink);box-shadow:0 0 0 2px var(--accent-soft)"></span>Selected</span></div>';
+  h += '<div class="grp"><b>Connector</b><span class="item"><span class="swatch" style="background:#40f840"></span>execute on success</span><span class="item"><span class="swatch" style="background:#ff4040"></span>on error</span><span class="item"><span class="swatch" style="background:#ffcf30"></span>on any</span><span class="item"><span class="swatch" style="background:#8080ff"></span>output</span><span class="item"><span class="lineswatch" style="border-color:#646464"></span>connection</span><span class="item"><span class="lineswatch" style="border-color:#c08040"></span>sub-hold connection</span><span class="item"><span class="lineswatch" style="border-color:var(--accent)"></span>path taken (thick: every route into the selection)</span></div>';
+  h += '<div class="grp"><b>Timeline</b><span class="item"><span class="lineswatch" style="border-color:var(--critical);width:3px;border-top-width:10px;transform:rotate(90deg)"></span>error entry</span><span class="item"><span class="lineswatch" style="border-color:var(--serious);width:3px;border-top-width:10px;transform:rotate(90deg)"></span>probe error / warning</span><span class="item"><span class="lineswatch" style="border-color:var(--critical);border-top-style:dashed;width:3px;border-top-width:10px;transform:rotate(90deg)"></span>last entry before a branch died</span><span class="item"><span class="swatch" style="background:repeating-linear-gradient(135deg,var(--surface-2) 0 3px,var(--muted) 3px 5px)"></span>waiting (hold, resources) or queue time</span><span class="item"><span class="kbd">Ctrl</span>+wheel zooms, double-click resets</span></div>';
+  document.getElementById('legend').innerHTML = h;
+}
+
+// ------------------------------------------------------------------ boot
+renderHeader(); renderTabs(); renderLegend(); renderCanvas(); renderPanel(); renderTimeline();
+syncPanes();
+autoFit();
+applyHash();
+var canvasSize = { width: svg.clientWidth, height: svg.clientHeight }, timelineWidth = document.getElementById('tlScroll').clientWidth;
+if (window.ResizeObserver) {
+  var resizeFrame = null;
+  var paneObserver = new ResizeObserver(function () {
+    if (resizeFrame != null) return;
+    resizeFrame = requestAnimationFrame(function () {
+      resizeFrame = null; syncPanes();
+      var width = svg.clientWidth, height = svg.clientHeight;
+      view.x += (width - canvasSize.width) / 2; view.y += (height - canvasSize.height) / 2;
+      canvasSize = { width: width, height: height }; applyView();
+      var nextWidth = document.getElementById('tlScroll').clientWidth;
+      if (nextWidth !== timelineWidth) { timelineWidth = nextWidth; renderTimeline(); }
+    });
+  });
+  [workspace, main, svg, document.getElementById('tlScroll')].forEach(function (el) { paneObserver.observe(el); });
+}
+window.addEventListener('hashchange', function () { applyHash(); });
+window.__runviz_ready = true;
+})();
+</script>
+</body>
+</html>
