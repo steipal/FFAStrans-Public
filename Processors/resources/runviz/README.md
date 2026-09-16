@@ -43,12 +43,16 @@ When several jobs are rendered into a directory an `index.html` is written with 
 
 ## What the page shows
 
-* **Canvas** - the workflow exactly as laid out in the FFAStrans editor: same node positions, box size
-  (`variable.wf_size`, aspect 1.6), title bar, family colour bar, in/out connectors (green = execute on success,
-  red = on error, yellow = on any), description area, straight connection lines and the editor grid. Nodes that did
-  not run are dimmed. Nodes that ran carry a badge inside the lower part of the node: the run result as an icon and
-  colour, plus the time spent in them (`xN` when a node ran in several splits, `>=` when the figure is a lower
-  bound). The outline around a node marks the selection, nothing else. The path the job took is drawn as thin glowing
+* **Canvas** - the workflow as laid out in the FFAStrans editor (same node positions and box size, `variable.wf_size`
+  with aspect 1.6, straight connection lines and the editor grid), with the nodes drawn as the FFAStransX workflow
+  manager draws them: a dark box with a title bar (bold when the node asks for extra slots or a host group), a
+  family colour strip and the description. The input connector's colour is the execute-on condition (green = on
+  success, red = on error, yellow = on any) and its shape the initiation (triangle = from a connection, square = when
+  a branch ends, two bars = when the last branch ends); the blue tab on the right is the output. Bypassed nodes are
+  darkened and nodes that did not run are dimmed. Nodes that ran carry a badge inside the lower part of the node: the
+  run result as an icon and colour, plus the time spent in them (`xN` when a node ran in several splits, `>=` when the
+  figure is a lower bound). The white edge and glow around a node mark the selection or the node under the pointer,
+  nothing else. The path the job took is drawn as thin glowing
   blue lines. Selecting a node brightens every route that led into it, starting at the job's first node and following the parent
   splits, and stops at the node; a node reached by several branches shows all of them. Selecting one run shows only
   that run's route, and selecting a split keeps its whole branch. Everything else the job traversed is dimmed. Sub-workflows get their own tab. The page opens fitted to the nodes that ran; drag to pan,
