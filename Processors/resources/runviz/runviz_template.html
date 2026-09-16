@@ -25,6 +25,7 @@
   --critical: #d03b3b;
   --aborted: #6b7c93;
   --unknown: #898781;
+  --node-edge: var(--accent);   /* edge and glow of the selected node; white on the dark canvas, as in FFAStransX */
   --mono: ui-monospace, "Cascadia Mono", Consolas, "Segoe UI Mono", Menlo, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -33,14 +34,14 @@
     color-scheme: dark;
     --page: #0d0d0d; --surface: #1a1a19; --surface-2: #242423; --canvas: #202020;
     --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781; --hair: #2c2c2a; --border: rgba(255,255,255,0.10);
-    --accent: #3987e5; --accent-soft: rgba(57,135,229,0.22); --warning-ink: #fab219; --aborted: #8a9bb3;
+    --accent: #3987e5; --accent-soft: rgba(57,135,229,0.22); --warning-ink: #fab219; --aborted: #8a9bb3; --node-edge: #ffffff;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --page: #0d0d0d; --surface: #1a1a19; --surface-2: #242423; --canvas: #202020;
   --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781; --hair: #2c2c2a; --border: rgba(255,255,255,0.10);
-  --accent: #3987e5; --accent-soft: rgba(57,135,229,0.22); --warning-ink: #fab219; --aborted: #8a9bb3;
+  --accent: #3987e5; --accent-soft: rgba(57,135,229,0.22); --warning-ink: #fab219; --aborted: #8a9bb3; --node-edge: #ffffff;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -54,6 +55,7 @@ a { color: var(--accent); }
 
 #app { height: 100vh; display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 8px; padding: 8px 12px; }
 #hdr { display: flex; align-items: flex-start; gap: 8px 16px; min-width: 0; }
+#logo { flex: none; display: block; width: 40px; height: 40px; }
 #jobInfo { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; overflow-wrap: anywhere; }
 #hdr h1 { font-size: 17px; margin: 0; font-weight: 600; }
 #hdr .sub { color: var(--ink-2); }
@@ -205,7 +207,10 @@ details.props pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywh
 #legend .grp { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 #legend .grp b { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; }
 #legend .item { display: inline-flex; align-items: center; gap: 4px; }
-#legend .ring { display: inline-block; width: 12px; height: 9px; border-radius: 2px; border: 2px solid; }
+#legend .mini { display: inline-block; width: 16px; height: 11px; border: 1px solid #111111; border-radius: 4px 0 4px 0; background: linear-gradient(#525252 0 4px, #9a9a9a 4px 5px, #333333 5px); }
+#legend .mini.sel { border-color: var(--node-edge); box-shadow: 0 0 4px var(--node-edge); }
+#legend .porticon { display: block; flex-shrink: 0; }
+#legend .outtab { display: inline-block; width: 3px; height: 10px; background: #2080ff; clip-path: polygon(0 0, 100% 25%, 100% 75%, 0 100%); }
 #legend .pill { display: inline-block; min-width: 15px; padding: 0 4px; border-radius: 7px; color: #fff; font-size: 10px; font-weight: 600; line-height: 14px; text-align: center; }
 .lineswatch { display: inline-block; width: 18px; border-top: 3px solid; }
 #jsError { display: none; color: #fff; background: var(--critical); padding: 8px 12px; border-radius: 6px; white-space: pre-wrap; }
@@ -232,27 +237,35 @@ details.props pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywh
 .ev pre mark { background: rgba(250,178,25,.55); color: inherit; padding: 0 1px; }
 .ev.cur { box-shadow: inset 3px 0 0 var(--accent); }
 #evcount { color: var(--muted); font-size: 11px; white-space: nowrap; flex-basis: 100%; }
-.node.hover .selring { display: block; opacity: .25; }
 #tl .gapfill { fill: url(#gapHatch); pointer-events: none; }
 #tl .winfill { fill: var(--accent-soft); }
 .kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
 .h2tools { margin-left: auto; display: flex; gap: 6px; }
 .h2tools button { font-size: 11px; padding: 2px 7px; }
 
-/* node boxes (SVG) */
+/* node boxes (SVG), drawn like the FFAStransX workflow manager (Canvas/Node.tsx); sizes are in its node pixels */
 .node { cursor: pointer; }
 .node.idle { opacity: .38; }
 .node.idle.hidden { display: none; }
-.node .title { fill: #ffffff; font-family: var(--sans); }
-.node.bypass .title { fill: #444444; }
-.node .desc { fill: #303030; font-family: var(--sans); }
-.node.bypass .desc { fill: #666666; }
-.node .desc.typeonly { fill: #5a5a5a; font-style: italic; }
-/* The ring marks the selection only: the run result is carried by the badge. */
-.node .ring { fill: none; stroke: none; stroke-width: 3; vector-effect: non-scaling-stroke; }
-.node .selring { fill: none; stroke: var(--accent); stroke-width: 9; opacity: .45; vector-effect: non-scaling-stroke; display: none; }
-.node.sel .selring { display: block; }
-.node.sel .ring { stroke: var(--ink); }
+.node .frame { fill: #2d2d30; stroke: #111111; stroke-width: 1; }
+.node .titlebar { fill: #525252; }
+.node .nbody { fill: #333333; }
+.node .title { fill: #e0e0e0; font-family: var(--sans); font-size: 10px; }
+.node .title.strong { font-weight: 700; }
+.node .desc { fill: #cccccc; font-family: var(--sans); font-size: 9px; }
+.node .desc.typeonly { fill: #9a9a9a; font-style: italic; }
+.node.bypass .title { fill: #a8a8a8; }
+.node.bypass .desc { fill: #a6a6a6; }
+.node .veil { fill: rgba(12,12,16,0.42); }
+.node.bypass .port { opacity: .55; }
+/* box-shadow 2px 2px 5px rgba(0,0,0,.5) without a blur filter, which every pan and zoom would repaint per node */
+.node .shadow { fill: #000000; fill-opacity: .26; stroke: #000000; stroke-opacity: .12; stroke-width: 6; pointer-events: none; }
+/* Selected, or under the pointer here or in the panel and timeline: a white edge with a glow in place of the drop
+   shadow. It marks nothing else: the run result is carried by the badge. */
+.node .ring { fill: none; stroke: var(--node-edge); stroke-width: 2; vector-effect: non-scaling-stroke; display: none; }
+.node .glow { fill: var(--node-edge); opacity: .4; pointer-events: none; display: none; }
+.node.sel .ring, .node.sel .glow, .node.hover .ring, .node.hover .glow, .node:hover .ring, .node:hover .glow { display: block; }
+.node.sel .shadow, .node.hover .shadow, .node:hover .shadow { display: none; }
 .node .badge text { fill: #fff; font-family: var(--sans); font-size: 10px; font-weight: 600; }
 .edge { fill: none; }
 /* A traversed edge is a thin line with a wider, faint copy under it for the glow. Both use
@@ -268,7 +281,7 @@ details.props pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywh
 @media (max-width: 980px) {
   #app { height: auto; }
   #hdr { flex-wrap: wrap; }
-  #jobInfo, #stats { flex-basis: 100%; }
+  #stats { flex-basis: 100%; }
   #workspace { height: calc(100vh + 220px); min-height: 680px; }
   #main { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) 10px var(--panel-height, 320px); }
   #panelSplitter { cursor: row-resize; }
@@ -279,7 +292,11 @@ details.props pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywh
 <body>
 <div id="jsError"></div>
 <div id="app">
-  <header id="hdr"><div id="jobInfo"></div><div id="stats"></div></header>
+  <header id="hdr">
+    <!-- Processors/resources/icons/ffastrans.ico: its 256 px image scaled to 96 px, embedded so every report is self-contained -->
+    <img id="logo" alt="FFAStrans" width="40" height="40" src="data:image/png;base64,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">
+    <div id="jobInfo"></div><div id="stats"></div>
+  </header>
   <div id="workspace">
   <main id="main">
     <section id="canvasWrap">
@@ -296,6 +313,10 @@ details.props pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywh
         <button id="btnLink" title="Copy a link to the current selection">Copy link</button>
       </div>
       <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- the glow of a selected node in FFAStransX: box-shadow 0 0 8px -->
+          <filter id="nodeGlow" x="-30%" y="-40%" width="160%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
+        </defs>
         <g id="view"><g id="gGrid" class="grid"></g><g id="gEdges"></g><g id="gTrav"></g><g id="gNodes"></g></g>
       </svg>
     </section>
@@ -339,6 +360,17 @@ var EVIDENCE = new Set(); D.runs.forEach(function (r) { (r.evidence || []).forEa
 var STATE_COL = { ok: 'var(--good)', error: 'var(--critical)', cond_false: 'var(--warning)', warn: 'var(--serious)', aborted: 'var(--aborted)', unknown: 'var(--unknown)', idle: 'transparent' };
 var STATE_TXT = { ok: 'OK', error: 'Error', cond_false: 'Condition false', warn: 'Warning (carried on)', aborted: 'Aborted', unknown: 'Unknown', idle: 'Did not run' };
 var STATE_ICON = { ok: '\u2713', error: '!', cond_false: '\u2717', warn: '\u26a0', aborted: '\u25a0', unknown: '?', idle: '' };
+// The node box of the FFAStransX workflow manager (Canvas/Node.tsx) in its own pixels: 115 wide, a 20 px title bar
+// and a 3 px family strip above the body (so the body starts at 24), 6 px body padding, a 10 px title and a 9 px
+// description on 1.25 lines. Each workflow scales it to its box size, as FFAStransX scales imported positions.
+var NODE_BOX = { w: 115, bodyTop: 24, pad: 6, titleFs: 10, descFs: 9, lineH: 11.25 };
+// Input connector (InputPortIcon.tsx): the colour is the execute-on condition, the shape the initiation.
+var PORT_COL = { success: '#40f840', error: '#f04040', any: '#f0d040' };
+var PORT_SHAPE = {
+  node: '<path d="M2 1L9 7L2 13Z"/>',
+  branch: '<rect x="0.5" y="2.5" width="9" height="9" rx="1.5"/>',
+  final: '<path d="M0.5 1.5H4V12.5H0.5ZM6 1.5H9.5V12.5H6Z"/>'
+};
 var ANCHOR_TXT = {
   node_start: 'its logged \u201cnode start\u201d (exact)',
   node_end: 'its logged \u201cnode end\u201d (exact)',
@@ -379,28 +411,45 @@ function payloadText(data) {
   if (typeof data === 'string') return data.replace(/\r\n/g, '\n');
   try { return JSON.stringify(data, null, 1); } catch (e) { return String(data); }
 }
-function desat(hex) { // FFAStrans bypass colour: halve the distance from 128 per channel
-  var v = parseInt(hex.slice(1), 16); var out = '#';
-  [16, 8, 0].forEach(function (sh) { var c = (v >> sh) & 255; var d = c - 128; d = d > 0 ? d / 2 : (d < 0 ? -(Math.abs(d) / 2) : 0); out += ('0' + Math.round(d + 128).toString(16)).slice(-2); });
-  return out;
-}
 function nodeKey(wf, id) { return wf + '|' + id; }
 function nodeOf(wf, id) { return NODE.get(nodeKey(wf, id)); }
 function svgEl(tag, attrs) { var el = document.createElementNS('http://www.w3.org/2000/svg', tag); if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
-function wrapText(text, maxChars, maxLines) {
-  var lines = []; var paras = String(text).split(/\r?\n/);
-  for (var p = 0; p < paras.length && lines.length < maxLines; p++) {
-    var words = paras[p].split(/\s+/).filter(Boolean); var cur = '';
-    if (!words.length) { continue; }
-    words.forEach(function (w) {
-      if (lines.length >= maxLines) return;
-      if ((cur + ' ' + w).trim().length <= maxChars) { cur = (cur + ' ' + w).trim(); }
-      else { if (cur) lines.push(cur); cur = w.length > maxChars ? w.slice(0, maxChars - 1) + '\u2026' : w; }
+// A rectangle with rounded top-left and bottom-right corners: the node shape (border-radius 12px 0 12px 0).
+function nodeShape(x0, y0, x1, y1, tl, br) {
+  return 'M' + x0 + ',' + (y0 + tl) + (tl ? 'A' + tl + ',' + tl + ' 0 0 1 ' + (x0 + tl) + ',' + y0 : '') + 'H' + x1 +
+    'V' + (y1 - br) + (br ? 'A' + br + ',' + br + ' 0 0 1 ' + (x1 - br) + ',' + y1 : '') + 'H' + x0 + 'Z';
+}
+// FFAStransX sets the title in bold when a node asks for more than one slot or for a host group.
+function hasSchedulingOverride(n) {
+  var slots = Number(n.slots), group = Number(n.hosts_group);
+  return (isFinite(slots) && Math.round(slots) > 1) || (isFinite(group) && Math.round(group) > 0);
+}
+// Node text is measured in the page font, so a title ends in an ellipsis where the title bar ends and a description
+// wraps where its line is full, as the HTML node does.
+var measureCtx = document.createElement('canvas').getContext('2d');
+var SANS = getComputedStyle(document.documentElement).getPropertyValue('--sans').trim() || 'sans-serif';
+function textWidth(s, font) { measureCtx.font = font; return measureCtx.measureText(s).width; }
+function fitText(s, maxW, font, cut) { // cut: the text goes on, so end in an ellipsis even when it fits
+  s = String(s);
+  if (!cut && textWidth(s, font) <= maxW) return s;
+  var lo = 0, hi = s.length;
+  while (lo < hi) { var m = (lo + hi + 1) >> 1; if (textWidth(s.slice(0, m) + '\u2026', font) <= maxW) lo = m; else hi = m - 1; }
+  return s.slice(0, lo).replace(/\s+$/, '') + '\u2026';
+}
+function wrapText(text, maxW, maxLines, font) { // line breaks are kept (white-space: pre-wrap)
+  var lines = [];
+  String(text).replace(/\s+$/, '').split(/\r?\n/).some(function (para) {
+    var cur = '';
+    para.split(/\s+/).filter(Boolean).forEach(function (w) {
+      var next = cur ? cur + ' ' + w : w;
+      if (cur && textWidth(next, font) > maxW) { lines.push(cur); cur = w; } else cur = next;
     });
-    if (cur && lines.length < maxLines) lines.push(cur);
-  }
-  if (lines.length >= maxLines && paras.join(' ').length > lines.join(' ').length) lines[maxLines - 1] = lines[maxLines - 1].slice(0, Math.max(1, maxChars - 1)) + '\u2026';
-  return lines;
+    lines.push(cur);
+    return lines.length > maxLines;
+  });
+  var cut = lines.length > maxLines;
+  lines = lines.slice(0, maxLines);
+  return lines.map(function (ln, i) { return fitText(ln, maxW, font, cut && i === lines.length - 1); });
 }
 function nodeRuns(wf, id) { return NODE_RUNS.get(nodeKey(wf, id)) || []; }
 function runEvents(runId) { return EVBYRUN.get(runId) || []; }
@@ -578,7 +627,7 @@ function routeEdgeKeys() {
 }
 function renderCanvas() {
   var wf = WF.get(S.wf); if (!wf) return;
-  var W = wf.box_w, H = wf.box_h, k = W / 316;
+  var W = wf.box_w, H = wf.box_h;
   var gGrid = document.getElementById('gGrid'), gEdges = document.getElementById('gEdges'), gTrav = document.getElementById('gTrav'), gNodes = document.getElementById('gNodes');
   gGrid.innerHTML = ''; gEdges.innerHTML = ''; gTrav.innerHTML = ''; gNodes.innerHTML = '';
   var byId = new Map(); wf.nodes.forEach(function (n) { byId.set(n.id, n); });
@@ -617,50 +666,52 @@ function renderCanvas() {
     travLines.push(line);
   });
   travLines.forEach(function (l) { gTrav.appendChild(l); });
-  // nodes
+  // nodes, drawn in FFAStransX node pixels (NODE_BOX) and scaled by u to this workflow's box
+  var bx = NODE_BOX.w, u = W / bx, h = H / u, cy = h / 2, lineH = NODE_BOX.lineH;
+  var outer = nodeShape(0, 0, bx, h, 12, 12), inner = nodeShape(1, 1, bx - 1, h - 1, 11, 11);
+  var textTop = NODE_BOX.bodyTop + NODE_BOX.pad, textW = bx - 2 - 2 * NODE_BOX.pad;
+  var descLines = Math.max(1, Math.floor((h - 1 - NODE_BOX.pad - textTop) / lineH));
+  // A node that ran gives its last description line to the badge, which sits 3 px above the bottom edge.
+  var badgeTop = textTop + (descLines - 1) * lineH + 1, badgeBottom = h - 4;
   wf.nodes.forEach(function (n) {
     var g = svgEl('g', { 'class': 'node ' + (n.n_runs ? '' : 'idle ') + (n.bypass ? 'bypass ' : '') + (S.showIdle ? '' : 'hidden ') + (isSelectedNode(wf.wf_id, n.id) ? 'sel' : ''), transform: 'translate(' + n.pos_x + ',' + n.pos_y + ')' });
     g.setAttribute('data-id', n.id);
-    var fam = D.family_colors[n.family] || '#808080'; if (n.bypass) fam = desat(fam);
-    g.appendChild(svgEl('rect', { x: -3, y: -3, width: W + 6, height: H + 6, rx: 3, 'class': 'selring' }));
-    g.appendChild(svgEl('rect', { x: -3, y: -3, width: W + 6, height: H + 6, rx: 3, 'class': 'ring' }));
-    var clipId = 'clip-' + wf.wf_id.replace(/[^a-z0-9]/gi, '') + '-' + n.index;
-    var clip = svgEl('clipPath', { id: clipId }); clip.appendChild(svgEl('rect', { x: 0, y: 0, width: W, height: H })); g.appendChild(clip);
-    var body = svgEl('g', { 'clip-path': 'url(#' + clipId + ')' });
-    body.appendChild(svgEl('rect', { x: 0, y: 0, width: W, height: H, fill: '#b0b0b0' }));
-    body.appendChild(svgEl('rect', { x: 0, y: H - 9 * k, width: W, height: 20 * k, fill: '#646464' }));
-    body.appendChild(svgEl('rect', { x: 0, y: W / 8.5, width: W, height: 15 * k, fill: fam }));
-    body.appendChild(svgEl('rect', { x: 0, y: -4 * k, width: W, height: W / 7, fill: '#646464' }));
-    var titleFs = W / 10.5;
-    var title = svgEl('text', { x: W / 2, y: -4 * k + (W / 7) / 2, 'class': 'title', 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': titleFs });
-    var maxT = Math.floor((W - 6) / (titleFs * 0.55));
-    title.textContent = n.name.length > maxT ? n.name.slice(0, Math.max(1, maxT - 1)) + '\u2026' : n.name;
-    body.appendChild(title);
-    var badgeSpace = n.n_runs ? Math.min(22, H * 0.3) : 0;
-    var dy = W / 7.5 + W / 30, dw = W - W / 8, dh = H - dy - 9 * k - badgeSpace;
-    var descFs = W >= 100 ? 10 : Math.max(7, W / 10);
+    var box = svgEl('g', { transform: 'scale(' + u + ')' });
+    box.appendChild(svgEl('path', { d: outer, 'class': 'shadow', transform: 'translate(2,2)' }));
+    box.appendChild(svgEl('path', { d: outer, 'class': 'glow', filter: 'url(#nodeGlow)' }));
+    box.appendChild(svgEl('path', { d: nodeShape(0.5, 0.5, bx - 0.5, h - 0.5, 11.5, 11.5), 'class': 'frame' }));
+    box.appendChild(svgEl('path', { d: nodeShape(1, 1, bx - 1, NODE_BOX.bodyTop - 3, 11, 0), 'class': 'titlebar' }));
+    box.appendChild(svgEl('rect', { x: 1, y: NODE_BOX.bodyTop - 3, width: bx - 2, height: 3, fill: D.family_colors[n.family] || '#808080' }));
+    box.appendChild(svgEl('path', { d: nodeShape(1, NODE_BOX.bodyTop, bx - 1, h - 1, 0, 11), 'class': 'nbody' }));
+    var strong = hasSchedulingOverride(n);
+    var title = svgEl('text', { x: bx / 2, y: (NODE_BOX.bodyTop - 2) / 2, 'class': 'title' + (strong ? ' strong' : ''), 'text-anchor': 'middle', 'dominant-baseline': 'central' });
+    title.textContent = fitText(n.name, bx - 10, (strong ? '700 ' : '') + NODE_BOX.titleFs + 'px ' + SANS);
+    box.appendChild(title);
     var text = n.description || '', cls = 'desc';
-    if (!text) { text = n.type_name; cls += ' typeonly'; }
-    var lines = wrapText(text, Math.max(4, Math.floor(dw / (descFs * 0.52))), Math.max(1, Math.floor(dh / (descFs * 1.15))));
-    var dt = svgEl('text', { x: W / 2, y: dy + descFs, 'class': cls, 'text-anchor': 'middle', 'font-size': descFs });
-    lines.forEach(function (ln, i) { var ts = svgEl('tspan', { x: W / 2, dy: i ? descFs * 1.15 : 0 }); ts.textContent = ln; dt.appendChild(ts); });
-    body.appendChild(dt);
-    var cw = W / 16, ch = W / 8, cy = H / 2 - W / 16;
+    if (!text.trim()) { text = n.type_name; cls += ' typeonly'; }
+    var font = (cls === 'desc' ? '' : 'italic ') + NODE_BOX.descFs + 'px ' + SANS;
+    var dt = svgEl('text', { 'class': cls, 'text-anchor': 'middle' });
+    wrapText(text, textW, n.n_runs ? Math.max(1, descLines - 1) : descLines, font).forEach(function (ln, i) {
+      // absolute baselines: an empty line has no glyph to carry a dy
+      if (ln) { var ts = svgEl('tspan', { x: bx / 2, y: textTop + (i + 0.5) * lineH + NODE_BOX.descFs * 0.35 }); ts.textContent = ln; dt.appendChild(ts); }
+    });
+    box.appendChild(dt);
+    if (n.bypass) box.appendChild(svgEl('path', { d: inner, 'class': 'veil' }));
+    box.appendChild(svgEl('path', { d: inner, 'class': 'ring' }));
+    box.appendChild(svgEl('path', { d: 'M' + (bx - 2.5) + ',' + (cy - 5) + 'l3,2.5v5l-3,2.5Z', 'class': 'port', fill: '#2080ff' }));
     if (n.family !== 'Monitors') {
-      var eo = String(n.execute_on || 'success').toLowerCase();
-      var inCol = eo === 'error' ? '#ff4040' : (eo === 'any' ? '#ffcf30' : '#40f840');
-      var inTxt = eo === 'error' ? '#bb3939' : (eo === 'any' ? '#bb8b29' : '#39bb39');
-      body.appendChild(svgEl('rect', { x: 0, y: cy, width: cw, height: ch, fill: inCol }));
-      if (n.initiation !== 'branch') { var it = svgEl('text', { x: cw / 2, y: cy + ch / 2, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': Math.max(6, W / 14), fill: inTxt, 'font-family': 'var(--sans)' }); it.textContent = '|'; body.appendChild(it); }
+      var port = svgEl('g', { 'class': 'port', transform: 'translate(-4,' + (cy - 7) + ')', stroke: '#252526', 'stroke-linejoin': 'round',
+        fill: PORT_COL[String(n.execute_on || '').trim().toLowerCase()] || PORT_COL.success });
+      port.innerHTML = PORT_SHAPE[String(n.initiation || '').trim().toLowerCase()] || PORT_SHAPE.node;
+      box.appendChild(port);
     }
-    if (n.type !== 'sub_wf') body.appendChild(svgEl('rect', { x: W - cw + 1 * k, y: cy, width: cw + 2 * k, height: ch, fill: '#8080ff' }));
-    g.appendChild(body);
+    g.appendChild(box);
     if (n.n_runs) {
       var label = (STATE_ICON[n.state] ? STATE_ICON[n.state] + ' ' : '') + (n.total_is_lower_bound ? '\u2265 ' : '') + fmtDur(n.total_ms) + (n.n_runs > 1 ? ' \u00d7' + n.n_runs : '');
       var bw = label.length * 6.2 + 12, bh = 16;
       var bg = svgEl('g', { 'class': 'badge' });
       bg.setAttribute('data-w', W); bg.setAttribute('data-bw', bw); bg.setAttribute('data-bh', bh);
-      bg.setAttribute('data-bottom', H - 9 * k - 3); bg.setAttribute('data-space', badgeSpace - 3);
+      bg.setAttribute('data-bottom', badgeBottom * u); bg.setAttribute('data-space', (badgeBottom - badgeTop) * u);
       bg.appendChild(svgEl('rect', { x: 0, y: 0, width: bw, height: bh, rx: 8, fill: STATE_COL[n.state] || 'var(--unknown)' }));
       var bt = svgEl('text', { x: bw / 2, y: bh / 2 + 0.5, 'text-anchor': 'middle', 'dominant-baseline': 'central' }); bt.textContent = label; bg.appendChild(bt);
       g.appendChild(bg);
@@ -1404,8 +1455,10 @@ function renderTimeline() {
 function renderLegend() {
   var fams = ['Monitors', 'Decoders', 'Analyzers', 'Filters', 'Encoders', 'Deliveries', 'Others', 'Operations', 'Workflows'];
   var h = '<div class="grp"><b>Node family</b>' + fams.map(function (f) { return '<span class="item"><span class="swatch" style="background:' + D.family_colors[f] + '"></span>' + (f === 'Workflows' ? 'Sub-workflow' : f) + '</span>'; }).join('') + '</div>';
-  h += '<div class="grp"><b>Run result</b><span class="item m">on the node badge:</span>' + ['ok', 'error', 'cond_false', 'warn', 'aborted', 'unknown'].map(function (s) { return '<span class="item"><span class="pill" style="background:' + STATE_COL[s] + '">' + STATE_ICON[s] + '</span>' + STATE_TXT[s] + '</span>'; }).join('') + '<span class="item"><span class="ring" style="border-color:transparent;background:#b0b0b0;opacity:.4"></span>Did not run (dimmed, no badge)</span><span class="item"><span class="ring" style="border-color:var(--ink);box-shadow:0 0 0 2px var(--accent-soft)"></span>Selected</span></div>';
-  h += '<div class="grp"><b>Connector</b><span class="item"><span class="swatch" style="background:#40f840"></span>execute on success</span><span class="item"><span class="swatch" style="background:#ff4040"></span>on error</span><span class="item"><span class="swatch" style="background:#ffcf30"></span>on any</span><span class="item"><span class="swatch" style="background:#8080ff"></span>output</span><span class="item"><span class="lineswatch" style="border-color:#646464"></span>connection</span><span class="item"><span class="lineswatch" style="border-color:#c08040"></span>sub-hold connection</span><span class="item"><span class="lineswatch" style="border-color:var(--accent)"></span>path taken (thick: every route into the selection)</span></div>';
+  h += '<div class="grp"><b>Run result</b><span class="item m">on the node badge:</span>' + ['ok', 'error', 'cond_false', 'warn', 'aborted', 'unknown'].map(function (s) { return '<span class="item"><span class="pill" style="background:' + STATE_COL[s] + '">' + STATE_ICON[s] + '</span>' + STATE_TXT[s] + '</span>'; }).join('') + '<span class="item"><span class="mini" style="opacity:.38"></span>Did not run (dimmed, no badge)</span><span class="item"><span class="mini sel"></span>Selected</span></div>';
+  var port = function (shape, col) { return '<svg class="porticon" width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><g fill="' + col + '" stroke="#252526" stroke-linejoin="round">' + PORT_SHAPE[shape] + '</g></svg>'; };
+  h += '<div class="grp"><b>Connector</b><span class="item">' + port('node', PORT_COL.success) + 'execute on success</span><span class="item">' + port('node', PORT_COL.error) + 'on error</span><span class="item">' + port('node', PORT_COL.any) + 'on any</span>' +
+    '<span class="item">' + port('branch', '#9a9a9a') + 'runs when a branch ends</span><span class="item">' + port('final', '#9a9a9a') + 'runs when the last branch ends</span><span class="item"><span class="outtab"></span>output</span><span class="item"><span class="lineswatch" style="border-color:#646464"></span>connection</span><span class="item"><span class="lineswatch" style="border-color:#c08040"></span>sub-hold connection</span><span class="item"><span class="lineswatch" style="border-color:var(--accent)"></span>path taken (thick: every route into the selection)</span></div>';
   h += '<div class="grp"><b>Timeline</b><span class="item"><span class="lineswatch" style="border-color:var(--critical);width:3px;border-top-width:10px;transform:rotate(90deg)"></span>error entry</span><span class="item"><span class="lineswatch" style="border-color:var(--serious);width:3px;border-top-width:10px;transform:rotate(90deg)"></span>probe error / warning</span><span class="item"><span class="lineswatch" style="border-color:var(--critical);border-top-style:dashed;width:3px;border-top-width:10px;transform:rotate(90deg)"></span>last entry before a branch died</span><span class="item"><span class="swatch" style="background:repeating-linear-gradient(135deg,var(--surface-2) 0 3px,var(--muted) 3px 5px)"></span>waiting (hold, resources) or queue time</span><span class="item"><span class="kbd">Ctrl</span>+wheel zooms, double-click resets</span></div>';
   document.getElementById('legend').innerHTML = h;
 }
