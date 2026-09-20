@@ -56,6 +56,17 @@
             margin-right: 15px;
         }
 
+        .header-versions {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+            white-space: pre-line;
+        }
+
         .status-badge {
             position: absolute;
             /* Position relative to header */
@@ -128,6 +139,62 @@
         .pagination-controls button[aria-pressed="true"] {
             background-color: var(--accent);
             border-color: var(--accent);
+        }
+
+        .history-filter {
+            width: 240px;
+            padding: 4px 8px;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font: inherit;
+            font-size: 0.9rem;
+        }
+
+        .history-filter::placeholder {
+            color: var(--text-muted);
+        }
+
+        .history-filter:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .history-filter.filter-active {
+            border-color: var(--accent);
+        }
+
+        #history-panel .section-header,
+        #history-panel .pagination-controls {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .history-state-filters {
+            display: flex;
+            gap: 5px;
+        }
+
+        .history-state-filters button {
+            margin-left: 0;
+            color: var(--state-color);
+        }
+
+        .history-state-filters button[data-history-state="0"] { --state-color: var(--error); }
+        .history-state-filters button[data-history-state="2"] { --state-color: var(--aborted); }
+        .history-state-filters button[data-history-state="1"] { --state-color: var(--success); }
+
+        .history-state-filters button[aria-pressed="true"],
+        .history-state-filters button[aria-pressed="true"]:hover {
+            background-color: var(--state-color);
+            border-color: var(--state-color);
+            color: var(--bg-dark);
+        }
+
+        .history-state-filters button:focus-visible {
+            outline: 2px solid var(--text-main);
+            outline-offset: 2px;
         }
 
         .progress-bar-container {
@@ -452,6 +519,7 @@
 <body>
 
     <header>
+        <div id="header-versions" class="header-versions"></div>
         <img class="header-logo" src="icons/ffastrans.ico" alt="FFAStrans logo" />
         <h1 id="header-title">FFAStrans status monitor</h1>
         <div id="connection-status" class="status-badge">Connecting...</div>
@@ -485,6 +553,17 @@
             <div class="section-header">
                 <div class="section-title">History</div>
                 <div class="pagination-controls">
+                    <input id="history-filter" class="history-filter" type="search" placeholder="Filter history..."
+                        aria-label="Filter history" title="Matches workflow, file, result or start time. Space-separated terms must all match."
+                        autocomplete="off" spellcheck="false">
+                    <div class="history-state-filters" role="group" aria-label="Filter history by state">
+                        <button type="button" data-history-state="0" aria-pressed="false"
+                            title="Filter this page to errors. Grouped jobs match any split. No states selected shows all.">Errors</button>
+                        <button type="button" data-history-state="2" aria-pressed="false"
+                            title="Filter this page to aborted entries. Grouped jobs match any split. No states selected shows all.">Abort</button>
+                        <button type="button" data-history-state="1" aria-pressed="false"
+                            title="Filter this page to successful entries. Grouped jobs match any split. No states selected shows all.">Success</button>
+                    </div>
                     <button id="history-grouping-btn" type="button" aria-pressed="true" title="Group finished splits by job ID">Group jobs: On</button>
                     <button id="history-latest-btn" style="display: none;">Latest</button>
                     <button id="history-older-btn">Older</button>
@@ -532,6 +611,12 @@
         const expandedHistoryJobs = new Set();
         let contextRow = null;
         let toastTimer = 0;
+        // The last page served by the API, kept so the filters can re-render it
+        // without another request. The filters only see this page.
+        let lastHistoryPage = null;
+        let historyFilterTerms = [];
+        const historyFilterStates = new Set();
+        let historyFilterTimer = 0;
 
         const els = {
             activeBody: document.getElementById('active-body'),
@@ -539,12 +624,15 @@
             historyBody: document.getElementById('history-body'),
             status: document.getElementById('connection-status'),
             headerTitle: document.getElementById('header-title'),
+            headerVersions: document.getElementById('header-versions'),
             historyGroupingBtn: document.getElementById('history-grouping-btn'),
             contextMenu: document.getElementById('context-menu'),
             toast: document.getElementById('toast'),
             historyOlderBtn: document.getElementById('history-older-btn'),
             historyLatestBtn: document.getElementById('history-latest-btn'),
-            historyPageInfo: document.getElementById('history-page-info')
+            historyPageInfo: document.getElementById('history-page-info'),
+            historyFilter: document.getElementById('history-filter'),
+            historyStateButtons: document.querySelectorAll('[data-history-state]')
         };
 
         /**
@@ -742,12 +830,51 @@
             const currentHash = JSON.stringify([start, grouped, history]);
             if (currentHash === lastHistoryHash) return;
 
-            const itemCount = renderHistory(history);
-            updatePaginationControls(itemCount);
+            lastHistoryPage = history;
+            renderFilteredHistory();
             lastHistoryHash = currentHash;
         }
 
-        function renderHistory(history) {
+        function renderFilteredHistory() {
+            if (!lastHistoryPage) return;
+            const entries = lastHistoryPage.filter(Boolean);
+            // Paging counts jobs when grouped and splits otherwise.
+            const pageCount = historyGroupingEnabled
+                ? new Set(entries.map(entry => entry.job_id)).size
+                : entries.length;
+
+            let visible = entries;
+            if (historyFiltersActive()) {
+                if (historyGroupingEnabled) {
+                    // Keep a matching job whole so its summary row stays accurate.
+                    const matchedJobs = new Set(entries.filter(historyEntryMatches).map(entry => entry.job_id));
+                    visible = entries.filter(entry => matchedJobs.has(entry.job_id));
+                } else {
+                    visible = entries.filter(historyEntryMatches);
+                }
+            }
+
+            const shownCount = renderHistory(visible,
+                historyFiltersActive() && entries.length ? 'No history matches the filter' : 'No history found');
+            updatePaginationControls(pageCount, shownCount);
+        }
+
+        function historyFiltersActive() {
+            return historyFilterTerms.length > 0 || historyFilterStates.size > 0;
+        }
+
+        function historyEntryMatches(entry) {
+            if (historyFilterStates.size && !historyFilterStates.has(entry.state)) return false;
+            const text = [
+                entry.workflow,
+                entry.source,
+                entry.result,
+                entry.start_time ? new Date(entry.start_time).toLocaleString() : ''
+            ].filter(Boolean).join('\n').toLowerCase();
+            return historyFilterTerms.every(term => text.includes(term));
+        }
+
+        function renderHistory(history, emptyMessage = 'No history found') {
             // A history row can be reused for a different split or retry state.
             if (els.historyBody.contains(contextRow)) closeContextMenu();
             if (renderedHistoryGrouping !== historyGroupingEnabled) {
@@ -788,7 +915,11 @@
             if (jobs.size === 0) {
                 els.historyBody.innerHTML = '';
                 const row = document.createElement('tr');
-                row.innerHTML = '<td colspan="5" class="empty-msg">No history found</td>';
+                const cell = document.createElement('td');
+                cell.colSpan = 5;
+                cell.className = 'empty-msg';
+                cell.textContent = emptyMessage;
+                row.appendChild(cell);
                 els.historyBody.appendChild(row);
                 return 0;
             }
@@ -942,14 +1073,16 @@
                 .map(v => String(v).padStart(2, '0')).join(':');
         }
 
-        function updatePaginationControls(currentBatchSize) {
+        function updatePaginationControls(currentBatchSize, shownCount = currentBatchSize) {
             const startRange = historyStartIndex + 1;
             const endRange = historyStartIndex + currentBatchSize;
-            
+            const unit = historyGroupingEnabled ? 'jobs' : 'splits';
+
             if(currentBatchSize === 0) {
                 els.historyPageInfo.textContent = '0 - 0';
+            } else if (historyFiltersActive()) {
+                els.historyPageInfo.textContent = `${shownCount} of ${unit} ${startRange} - ${endRange} match`;
             } else {
-                const unit = historyGroupingEnabled ? 'jobs' : 'splits';
                 els.historyPageInfo.textContent = `Showing ${unit} ${startRange} - ${endRange}`;
             }
 
@@ -962,11 +1095,17 @@
                 const res = await fetch(`${API_BASE}/about`);
                 if (!res.ok) return;
                 const data = await res.json();
-                if (data?.about?.general?.environment_name) {
-                    els.headerTitle.textContent += ` @ ${data.about.general.environment_name}`;
+                const general = data?.about?.general;
+                if (general?.environment_name) {
+                    els.headerTitle.textContent += ` @ ${general.environment_name}`;
                 }
+                const versions = general?.versions;
+                els.headerVersions.textContent = [
+                    versions?.service ? `Service: ${versions.service}` : '',
+                    versions?.queuer ? `Queuer: ${versions.queuer}` : ''
+                ].filter(Boolean).join('\n');
             } catch (error) {
-                console.error('Could not fetch environment name:', error);
+                console.error('Could not fetch monitor header information:', error);
             }
         }
 
@@ -1369,6 +1508,28 @@
             // Job and split pages use different offsets, so return to latest.
             historyStartIndex = 0;
             fetchHistory();
+        });
+
+        els.historyStateButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const state = Number(button.dataset.historyState);
+                if (historyFilterStates.has(state)) historyFilterStates.delete(state);
+                else historyFilterStates.add(state);
+                button.setAttribute('aria-pressed', String(historyFilterStates.has(state)));
+                closeContextMenu();
+                renderFilteredHistory();
+            });
+        });
+
+        els.historyFilter.addEventListener('input', () => {
+            clearTimeout(historyFilterTimer);
+            // Debounced: a large page of grouped rows is not free to rebuild.
+            historyFilterTimer = setTimeout(() => {
+                historyFilterTerms = els.historyFilter.value.toLowerCase().split(/\s+/).filter(Boolean);
+                els.historyFilter.classList.toggle('filter-active', historyFilterTerms.length > 0);
+                closeContextMenu();
+                renderFilteredHistory();
+            }, 150);
         });
 
         els.historyOlderBtn.addEventListener('click', () => {

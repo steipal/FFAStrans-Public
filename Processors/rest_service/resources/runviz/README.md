@@ -7,12 +7,16 @@ behind every node.
 Works with job folders from **FFAStrans 1.4.x and 1.5.x** (see *Version differences* below).
 No third-party packages are needed. Python 3.8 or newer.
 
+The script and its `runviz_template.html` live in this repository and ship with the REST API, which runs them for
+`GET /api/v2/jobs/{job_id}/details` (see [../../../docs/job-details.md](../../../docs/job-details.md)). They stay a
+plain standalone pair: keep them together in one folder and the command line below works from any checkout.
+
 ## Usage
 
 ```
-python tools/runviz/ffas_runviz.py <job_folder> [-o out.html] [--open]
-python tools/runviz/ffas_runviz.py <job_folder_1> <job_folder_2> ... -o <out_dir>
-python tools/runviz/ffas_runviz.py Processors/db/cache/jobs -o <out_dir>       # every job + index.html
+python src/resources/runviz/ffas_runviz.py <job_folder> [-o out.html] [--open]
+python src/resources/runviz/ffas_runviz.py <job_folder_1> <job_folder_2> ... -o <out_dir>
+python src/resources/runviz/ffas_runviz.py <FFAStrans>/Processors/db/cache/jobs -o <out_dir>   # every job + index.html
 ```
 
 A job folder is `Processors/db/cache/jobs/<job_id>/`. You can also point at any file inside it

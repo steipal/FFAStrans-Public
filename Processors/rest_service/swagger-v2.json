@@ -80,8 +80,9 @@
 						"enum": [
 							"enabled",
 							"disabled",
-							"start_requested"
-						]
+							"running"
+						],
+						"description": "Legacy marker state: running means the workflow is marked to run."
 					},
 					"status_source": {
 						"type": "string",
@@ -90,17 +91,7 @@
 						],
 						"nullable": false
 					},
-					"runner_state": {
-						"type": "string",
-						"enum": [
-							"unknown"
-						],
-						"nullable": false
-					},
 					"disabled": {
-						"type": "boolean"
-					},
-					"start_requested": {
 						"type": "boolean"
 					},
 					"action": {
@@ -118,9 +109,7 @@
 					"wf_id",
 					"status",
 					"status_source",
-					"runner_state",
 					"disabled",
-					"start_requested",
 					"action"
 				],
 				"type": "object",
@@ -469,8 +458,10 @@
 							"resume",
 							"abort",
 							"priority",
-							"retry"
-						]
+							"retry",
+							"retry_fail"
+						],
+						"description": "retry_fail is the legacy name for a retry of the split in split_id."
 					},
 					"value": {
 						"type": "number",
@@ -779,7 +770,7 @@
 						}
 					}
 				},
-				"description": "Retrieves workflows and requested monitor state. Runner health is unknown;\nstart_requested means that the shared start marker exists.",
+				"description": "Retrieves workflows and requested monitor state. The legacy status running\nindicates a shared start marker, without verifying runner health or job execution.",
 				"tags": [
 					"Workflows"
 				],
@@ -862,7 +853,7 @@
 						}
 					}
 				},
-				"description": "Retrieves requested monitor states from shared markers. These states do\nnot report runner health or whether submitted jobs are executing.",
+				"description": "Retrieves requested monitor states from shared markers. The legacy status\nrunning means marked to run, without verifying runner health or job execution.",
 				"tags": [
 					"Workflows"
 				],
@@ -1458,7 +1449,7 @@
 						"description": "Archive Restoration Timed Out"
 					}
 				},
-				"description": "Retrieves observed job state, active monitor rows, ticket counts and the\nsaved manifest. Archived jobs are restored on demand. Running means a\nclaimed ticket; control_requests are requests, not completion acknowledgments.",
+				"description": "Retrieves observed job state, active monitor rows, ticket counts and the\r\nsaved manifest. Archived jobs are restored on demand. Running means a\r\nclaimed ticket; control_requests are requests, not completion acknowledgments.",
 				"tags": [
 					"Jobs"
 				],
@@ -1512,7 +1503,7 @@
 						"description": "Archive Restoration Timed Out"
 					}
 				},
-				"description": "Sends a control action to a job (e.g., pause, resume, abort).\nRetry returns the accepted job identity: a new job for a restart, or the\nexisting job and split for a failed-node retry. Other actions have no body.",
+				"description": "Sends a control action to a job (e.g., pause, resume, abort).\r\nRetry returns the accepted job identity: a new job for a restart, or the\r\nexisting job and split for a failed-node retry. Other actions have no body.",
 				"tags": [
 					"Jobs"
 				],
@@ -1540,6 +1531,36 @@
 						}
 					}
 				}
+			},
+			"delete": {
+				"operationId": "AbortJob",
+				"responses": {
+					"202": {
+						"description": "Accepted"
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Not Found"
+					}
+				},
+				"description": "Aborts a job. This is the legacy spelling of the abort action; the\r\nrequest is queued for the core exactly as that action queues it.",
+				"tags": [
+					"Jobs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"description": "The GUID of the job to abort.",
+						"in": "path",
+						"name": "job_id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/api/v2/jobvars/{job_id}": {
