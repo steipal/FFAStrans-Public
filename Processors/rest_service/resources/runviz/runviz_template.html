@@ -513,6 +513,7 @@ function renderHeader() {
   var tb = D.time_breakdown || {};
   var tiles = [
     ['Total time', fmtDur(j.duration_ms), '', tb.job_ms && tb.idle_ms >= 1000 ? fmtDur(tb.idle_ms) + ' with no node active' : (j.start_source !== 'job record' ? 'start from ' + j.start_source : ''), null],
+    ['Total processing', fmtDur(tb.run_total_ms), '', 'sum of node runtimes', null],
     ['Nodes run', s.n_nodes_run + ' / ' + s.n_nodes, '', '', null],
     ['Node runs', s.n_runs, '', '', null],
     ['Splits', s.n_splits, '', 'branches', null],
