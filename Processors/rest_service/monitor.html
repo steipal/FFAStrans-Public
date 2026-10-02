@@ -594,15 +594,16 @@
 
     <script>
         // --- Configuration ---
-        // Relative to this page (served at <base>/monitor) so the dashboard works
-        // unchanged when the service is mounted behind a reverse proxy at any base path.
+        // Relative to this page (served at <base>/monitor/) so the dashboard works
+        // unchanged behind a reverse proxy, even one that forwards only /monitor/.
         const API_BASE = 'api/v2';
         const POLL_INTERVAL_MS = 2000;
 
         // --- State Management ---
         let lastHistoryHash = '';
         let historyStartIndex = 0;
-        const HISTORY_PAGE_SIZE = 250;
+        const pageSize = Number(new URLSearchParams(window.location.search).get('pageSize'));
+        const HISTORY_PAGE_SIZE = Number.isSafeInteger(pageSize) && pageSize > 0 ? pageSize : 1000;
         let latestActiveRequest = 0;
         let latestHistoryRequest = 0;
         let historyGroupingEnabled = true;
