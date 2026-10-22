@@ -180,6 +180,16 @@
 					"discovery": {
 						"type": "string"
 					},
+					"total": {
+						"type": "number",
+						"format": "double",
+						"description": "Jobs when grouped by job, otherwise entries, in the whole log."
+					},
+					"matched": {
+						"type": "number",
+						"format": "double",
+						"description": "How many of those match filter and state; equal to total without them."
+					},
 					"history": {
 						"items": {
 							"$ref": "#/components/schemas/HistoryEntry"
@@ -189,6 +199,8 @@
 				},
 				"required": [
 					"discovery",
+					"total",
+					"matched",
 					"history"
 				],
 				"type": "object",
@@ -1159,6 +1171,28 @@
 						"schema": {
 							"default": false,
 							"type": "boolean"
+						}
+					},
+					{
+						"description": "Space-separated terms that must all appear, ignoring case, in an entry's log line:\nworkflow, start and end time (such as 2026-07-02T10:31), source, result, job and split ID.\nThe whole log is searched and start/count page through the matches. A grouped job\nmatches when any of its splits does and is returned with all of them.",
+						"in": "query",
+						"name": "filter",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"description": "Only entries in these states (0 error, 1 success, 2 aborted). Repeat for several.",
+						"in": "query",
+						"name": "state",
+						"required": false,
+						"schema": {
+							"type": "array",
+							"items": {
+								"type": "number",
+								"format": "double"
+							}
 						}
 					}
 				]

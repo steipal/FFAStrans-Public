@@ -170,7 +170,7 @@ body.resizing, body.resizing * { cursor: var(--resize-cursor) !important; user-s
 .ev .s { color: var(--ink-2); }
 .ev .payload { display: none; margin: 4px 0 2px 0; }
 .ev.open .payload { display: block; }
-.ev pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; background: var(--surface-2); border: 1px solid var(--hair); border-radius: 6px; padding: 6px 8px; max-height: 420px; overflow: auto; }
+.ev pre, .ev .jv { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; background: var(--surface-2); border: 1px solid var(--hair); border-radius: 6px; padding: 6px 8px; max-height: 420px; overflow: auto; }
 .ev .ptools { display: flex; gap: 6px; margin-bottom: 4px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
 .ev .ptools button { padding: 1px 7px; font-size: 11px; }
 .ev .hint { font-size: 12px; color: var(--ink-2); margin: 2px 0 4px; }
@@ -179,8 +179,27 @@ body.resizing, body.resizing * { cursor: var(--resize-cursor) !important; user-s
 .warnbox { border: 1px solid var(--serious); border-radius: 6px; padding: 6px 8px; margin: 6px 0; font-size: 12px; background: rgba(236,131,90,.08); }
 .empty { color: var(--muted); font-style: italic; }
 .nomatch { border: 1px dashed var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; color: var(--ink-2); }
-details.props summary { cursor: pointer; color: var(--accent); font-size: 12px; }
-details.props pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border-radius: 6px; padding: 6px; max-height: 300px; overflow: auto; }
+details.props { position: relative; }
+details.props > summary { cursor: pointer; color: var(--accent); font-size: 12px; }
+details.props > .jmode { position: absolute; top: 0; right: 0; padding: 1px 7px; font-size: 11px; }
+details.props pre, details.props .jv { margin: 6px 0; font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border-radius: 6px; padding: 6px; max-height: 300px; overflow: auto; }
+/* JSON as nested key/value tables: a string shows as it is, without quotes or escapes, so it reads and copies as is;
+   the colour tells a number or true/false (accent) and null or an empty list (muted) from a string. */
+.jv { font-family: var(--mono); }
+.jv table { border-collapse: separate; border-spacing: 0; width: 100%; }
+.jv th, .jv td { padding: 1px 0; vertical-align: top; text-align: left; font-weight: normal; }
+.jv tr + tr > * { border-top: 1px solid var(--hair); }
+.jv th { width: 1%; padding-right: 12px; color: var(--muted); white-space: nowrap; }
+.jv td { position: relative; }
+.jv details > table { border-left: 1px solid var(--hair); padding-left: 8px; }
+.jv summary { color: var(--muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; contain: inline-size; }  /* a long preview must not widen the table */
+.jv .jp { margin-left: 8px; color: var(--ink-2); }
+.jv details[open] > summary > .jp { display: none; }
+.jv .jn { color: var(--accent); }
+.jv .jz { color: var(--muted); font-style: italic; }
+.jv .js:empty::before { content: '""'; color: var(--muted); }
+.jv .jcopy { position: absolute; top: 0; right: 0; padding: 0 5px; font-size: 10px; visibility: hidden; }
+.jv tr:hover > td > .jcopy, .jv summary:hover > .jcopy { visibility: visible; }
 
 #tlWrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
 #tlHead { display: flex; flex-shrink: 0; gap: 10px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--hair); font-size: 12px; color: var(--ink-2); }
@@ -233,8 +252,8 @@ details.props pre { font-size: 11px; white-space: pre-wrap; overflow-wrap: anywh
 .tlist .n { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
 .ev .ctx { font-size: 10px; color: var(--muted); border: 1px solid var(--hair); border-radius: 4px; padding: 0 4px; margin-left: 4px; white-space: nowrap; }
 .ev.slow .d { color: var(--serious); font-weight: 600; }
-.ev pre .hl-line { background: rgba(208,59,59,.14); display: inline-block; width: 100%; }
-.ev pre mark { background: rgba(250,178,25,.55); color: inherit; padding: 0 1px; }
+.ev .hl-line { background: rgba(208,59,59,.14); display: inline-block; width: 100%; }
+.ev mark { background: rgba(250,178,25,.55); color: inherit; padding: 0 1px; }
 .ev.cur { box-shadow: inset 3px 0 0 var(--accent); }
 #evcount { color: var(--muted); font-size: 11px; white-space: nowrap; flex-basis: 100%; }
 #tl .gapfill { fill: url(#gapHatch); pointer-events: none; }
@@ -384,7 +403,7 @@ var ANCHOR_TXT = {
   own_last: 'its own last entry (the next node logged nothing, so this is a lower bound)'
 };
 
-var S = { wf: D.main_wf_id, sel: null, showIdle: true, grid: false, q: '', errorsOnly: false, slowOnly: false, runOnly: false, evLimit: 1500, tlOpen: true, evFocus: null, tlWin: null, nav: {} };
+var S = { wf: D.main_wf_id, sel: null, showIdle: true, grid: false, q: '', errorsOnly: false, slowOnly: false, runOnly: false, evLimit: 1500, tlOpen: true, evFocus: null, tlWin: null, nav: {}, jsonRaw: false };
 var SINKS = D.time_sinks || [];
 var SINKS_BY_RUN = new Map(); SINKS.forEach(function (s) { if (s.run_id) { if (!SINKS_BY_RUN.has(s.run_id)) SINKS_BY_RUN.set(s.run_id, []); SINKS_BY_RUN.get(s.run_id).push(s); } });
 var FLAG_RE = /\b(error|failed|failure|invalid|not found|no such|cannot|can't|could not|denied|permission|refused|timed? ?out|exception|unable|missing|corrupt|abort)/i;
@@ -1149,7 +1168,7 @@ function renderNode(wf, id, runId) {
     kv('Execute on', esc(n.execute_on)) + (n.bypass ? kv('Bypass', 'yes') : '') + (n.slots != null ? kv('Slots / group', esc(n.slots) + ' / ' + esc(n.hosts_group)) : '') +
     (n.description ? kv('Description', esc(n.description)) : '') +
     (rs.length ? kv('Time in node', esc((n.total_is_lower_bound ? '\u2265 ' : '') + fmtDur(n.total_ms)) + (rs.length > 1 ? ' over ' + rs.length + ' runs' : '')) : '') + '</div>';
-  if (n.properties) h += '<details class="props"><summary>Node properties (as configured)</summary><pre>' + esc(JSON.stringify(n.properties, null, 1)) + '</pre></details>';
+  if (n.properties) h += jsonDetails('Node properties (as configured)', n.properties);
   var preds = predecessors(wf, n);
   if (preds.length) {
     h += '<div class="chain" style="margin-top:6px">Fed by: ' + preds.map(function (p) {
@@ -1191,9 +1210,9 @@ function renderSplit(s) {
     (s.branch_pri ? kv('Priority branch', 'yes') : '') + (s.wf_name ? kv('Workflow', esc(s.wf_name)) : '') + '</div>';
   var last = runs[runs.length - 1];
   if (last && last.explain) h += '<div class="explain">' + esc(last.explain) + '</div>';
-  if (s.subholds && s.subholds.length) h += '<details class="props"><summary>Subholds</summary><pre>' + esc(JSON.stringify(s.subholds, null, 1)) + '</pre></details>';
-  if (s.variables && s.variables.length) h += '<details class="props"><summary>Variables (' + s.variables.length + ')</summary><pre>' + esc(JSON.stringify(s.variables, null, 1)) + '</pre></details>';
-  if (s.sources) h += '<details class="props"><summary>Sources</summary><pre>' + esc(JSON.stringify(s.sources, null, 1)) + '</pre></details>';
+  if (s.subholds && s.subholds.length) h += jsonDetails('Subholds', s.subholds);
+  if (s.variables && s.variables.length) h += jsonDetails('Variables (' + s.variables.length + ')', s.variables);
+  if (s.sources) h += jsonDetails('Sources', s.sources);
   h += '<h3>Full path (' + s.path.length + ' nodes)</h3><div class="chain">' + s.path.map(function (p) { var wfid = p.wf_id || S.wf; var n = nodeOf(wfid, p.id); return '<span class="' + (p.split_id === s.split_id ? 'cur ' : '') + 'link" data-sel-node="' + esc(p.id) + '" data-wf="' + esc(wfid) + '" title="split ' + esc(p.split_id) + '">' + esc(n ? n.name : (p.name || p.id)) + '</span>' + (p.split_id !== s.split_id ? '<sup style="color:var(--muted)">' + esc(p.split_id) + '</sup>' : ''); }).join(' \u2192 ') + '</div>';
   h += '<h3>Node runs in this split (' + runs.length + ')</h3>';
   runs.forEach(function (r) { h += runCard(r, false, true); });
@@ -1269,23 +1288,86 @@ function eventRow(e, refT) {
 }
 // escape payload lines, flag the ones that look like an error and mark the filter text
 function markLines(lines, truncated) {
-  var q = S.q.trim(), qre = q ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig') : null;
   var out = lines.map(function (ln) {
-    var s = esc(ln);
-    if (qre) s = s.replace(qre, function (m) { return '<mark>' + m + '</mark>'; });
+    var s = markText(ln);
     return FLAG_RE.test(ln) ? '<span class="hl-line">' + s + '</span>' : s;
   }).join('\n');
   return out + (truncated ? '\n\u2026' : '');
 }
+function markText(s) { // escape, and mark the filter text
+  var q = S.q.trim();
+  return q ? esc(s).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig'), function (m) { return '<mark>' + m + '</mark>'; }) : esc(s);
+}
+// open the folded tables that hold a filter match or an error-looking line, and scroll to the first one
+function revealMarks(box) {
+  var hits = box.querySelectorAll('mark, .hl-line');
+  hits.forEach(function (m) { for (var d = m.closest('details'); d && box.contains(d); d = d.parentElement.closest('details')) d.open = true; });
+  if (hits.length) setTimeout(function () { box.scrollTop += hits[0].getBoundingClientRect().top - box.getBoundingClientRect().top - 40; }, 0);
+}
+
+// ------------------------------------------------------------------ JSON boxes
+// JSON shown as nested key/value tables. Nested values with more than 30 leaves start folded; their summary line
+// previews the first entries. The JSON button (S.jsonRaw) switches every box between the table and the JSON text.
+var JV = [];   // { data, mark } behind each box, by its data-jv index; mark: mark the filter text and error lines
+function jsonView(data, mark) { return jsonBox(JV.push({ data: data, mark: mark }) - 1); }
+function jsonBox(id) {
+  var v = JV[id], txt = payloadText(v.data);
+  if (S.jsonRaw) return '<pre data-jv="' + id + '">' + (v.mark ? markLines(txt.split('\n')) : esc(txt)) + '</pre>';
+  return '<div class="jv" data-jv="' + id + '">' + jsonValue(v.data, v.mark, true).h + '</div>';
+}
+function jsonModeBtn() { return '<button class="jmode' + (S.jsonRaw ? ' on' : '') + '" title="Show the JSON text instead of the table">JSON</button>'; }
+function jsonDetails(title, data) { return '<details class="props"><summary>' + title + '</summary>' + jsonModeBtn() + jsonView(data, false) + '</details>'; }
+// One value as html (h) and the number of leaves it holds (n). Error-looking lines are flagged in values only:
+// keys such as ErrorDetectionType or an empty "error" field are not failures.
+function jsonValue(x, mark, root) {
+  var text = mark ? markText : esc;
+  if (x === null) return { h: '<span class="jz">null</span>', n: 1 };
+  if (typeof x === 'string') return { h: '<span class="js">' + (mark ? markLines(x.split('\n')) : esc(x)) + '</span>', n: 1 };
+  if (typeof x !== 'object') return { h: '<span class="jn">' + text(String(x)) + '</span>', n: 1 };
+  var arr = Array.isArray(x), keys = Object.keys(x);
+  if (!keys.length) return { h: '<span class="jz">' + (arr ? '[]' : '{}') + '</span>', n: 1 };
+  // a list of numbers or true/false stays on one line
+  if (arr && x.every(function (y) { return y === null || (typeof y !== 'object' && typeof y !== 'string'); })) return { h: '[' + x.map(function (y) { return jsonValue(y, mark).h; }).join(', ') + ']', n: 1 };
+  var n = 0, rows = keys.map(function (k) {
+    var c = jsonValue(x[k], mark); n += c.n;
+    return '<tr data-k="' + esc(k) + '"><th>' + (arr ? k : text(k)) + '</th><td>' + c.h + (c.folds ? '' : '<button class="jcopy">copy</button>') + '</td></tr>';
+  }).join('');
+  if (root) return { h: '<table>' + rows + '</table>', n: n };
+  return { h: '<details' + (n > 30 ? '' : ' open') + '><summary>' + (arr ? '[' + keys.length + ']' : '{' + keys.length + '}') + '<span class="jp">' + esc(jsonPreview(x)) + '</span><button class="jcopy">copy</button></summary><table>' + rows + '</table></details>', n: n, folds: true };
+}
+function jsonPreview(x) {
+  return Object.keys(x).slice(0, 8).map(function (k) {
+    var y = x[k], s = y !== null && typeof y === 'object' ? (Array.isArray(y) ? '[\u2026]' : '{\u2026}') : String(y).split('\n')[0];
+    return Array.isArray(x) ? s : k + ': ' + s;
+  }).join(', ');
+}
+function setJsonRaw(raw) {
+  S.jsonRaw = raw;
+  panel.querySelectorAll('.jmode').forEach(function (b) { b.classList.toggle('on', raw); });
+  panel.querySelectorAll('[data-jv]').forEach(function (el) {
+    var id = el.getAttribute('data-jv'); el.outerHTML = jsonBox(id);
+    if (JV[id].mark) revealMarks(panel.querySelector('[data-jv="' + id + '"]'));
+  });
+}
+// a copy button puts its row's value on the clipboard: a string exactly as it is, anything else as JSON
+panel.addEventListener('click', function (ev) {
+  var b = ev.target.closest('.jmode, .jcopy'); if (!b) return;
+  if (b.classList.contains('jmode')) return setJsonRaw(!S.jsonRaw);
+  var box = b.closest('[data-jv]'), keys = [];
+  for (var tr = b.closest('tr'); tr && box.contains(tr); tr = tr.parentElement.closest('tr')) keys.unshift(tr.getAttribute('data-k'));
+  var x = keys.reduce(function (o, k) { return o[k]; }, JV[box.getAttribute('data-jv')].data);
+  copyText(typeof x === 'string' ? x : JSON.stringify(x, null, 1), b, 'copied');
+});
+
 function ensurePayload(el) {
   var p = el.querySelector('.payload'); if (!p || p.getAttribute('data-done')) return;
   var e = EVBYI.get(Number(el.getAttribute('data-i'))); if (!e) return;
   var meta = [];
   if (e.node_id) meta.push('node ' + e.node_id); if (e.host) meta.push('host ' + e.host); if (e.pid != null) meta.push('pid ' + e.pid);
   if (e.runame) meta.push(e.runame + (e.linenum != null ? ':' + e.linenum : '')); if (e.user) meta.push('user ' + e.user); if (e.context != null) meta.push('context ' + JSON.stringify(e.context));
-  var txt = payloadText(e.data);
-  var lines = txt.split('\n'); var long = lines.length > 60;
-  var h = '<div class="ptools"><span>' + esc(meta.join(' \u00b7 ')) + '</span><span style="flex:1"></span>' + (long ? '<button class="pmore">Show all ' + lines.length + ' lines</button>' : '') + '<button class="pcopy">Copy payload</button></div>';
+  var txt = payloadText(e.data), json = e.data !== null && typeof e.data === 'object';
+  var lines = txt.split('\n'); var long = !json && lines.length > 60;
+  var h = '<div class="ptools"><span>' + esc(meta.join(' \u00b7 ')) + '</span><span style="flex:1"></span>' + (long ? '<button class="pmore">Show all ' + lines.length + ' lines</button>' : '') + (json ? jsonModeBtn() : '') + '<button class="pcopy">Copy payload</button></div>';
   var hint = '';
   var r0 = e.run_id ? RUN.get(e.run_id) : null, sp0 = r0 ? SPLIT.get(r0.split_id) : null;
   if (e.type === 'error' || e.type === 'warning') {
@@ -1300,18 +1382,18 @@ function ensurePayload(el) {
     hint = 'This is the last entry the node logged before the branch ended' + (sp0 && sp0.error && sp0.error.msg ? '. Branch error message (from the split record): ' + sp0.error.msg : '.');
   }
   if (hint) h += '<div class="hint">' + esc(hint) + '</div>';
-  h += '<pre>' + (txt === '' ? '<span class="empty">(empty payload)</span>' : markLines(long ? lines.slice(0, 60) : lines, long)) + '</pre>';
+  h += json ? jsonView(e.data, true) : '<pre>' + (txt === '' ? '<span class="empty">(empty payload)</span>' : markLines(long ? lines.slice(0, 60) : lines, long)) + '</pre>';
   p.innerHTML = h; p.setAttribute('data-done', '1');
-  var pre = p.querySelector('pre'), first = pre.querySelector('mark, .hl-line');
-  if (first) setTimeout(function () { pre.scrollTop = Math.max(0, first.offsetTop - pre.offsetTop - 40); }, 0);
-  var more = p.querySelector('.pmore'); if (more) more.addEventListener('click', function (ev) { ev.stopPropagation(); pre.innerHTML = markLines(lines, false); more.remove(); });
+  var box = p.querySelector('pre, .jv');
+  revealMarks(box);
+  var more = p.querySelector('.pmore'); if (more) more.addEventListener('click', function (ev) { ev.stopPropagation(); box.innerHTML = markLines(lines, false); more.remove(); });
   p.querySelector('.pcopy').addEventListener('click', function (ev) { ev.stopPropagation(); var b = this; try { navigator.clipboard.writeText(txt).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy payload'; }, 1200); }); } catch (x) { } });
-  p.querySelector('pre').addEventListener('click', function (ev) { ev.stopPropagation(); });
 }
 function bindEvents() {
   var list = document.getElementById('evlist'); if (!list) return;
   list.addEventListener('click', function (ev) {
-    var el = ev.target.closest('.ev'); if (!el || ev.target.closest('button') || ev.target.closest('[data-reveal]')) return;
+    // clicks inside the payload select text or fold a nested value; they do not close the entry
+    var el = ev.target.closest('.ev'); if (!el || ev.target.closest('button') || ev.target.closest('[data-reveal]') || ev.target.closest('pre, .jv')) return;
     el.classList.toggle('open'); if (el.classList.contains('open')) ensurePayload(el);
   });
   var q = document.getElementById('evq'); if (q) q.addEventListener('input', function () { S.q = q.value; refreshList(); });

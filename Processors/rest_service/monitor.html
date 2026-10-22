@@ -554,15 +554,15 @@
                 <div class="section-title">History</div>
                 <div class="pagination-controls">
                     <input id="history-filter" class="history-filter" type="search" placeholder="Filter history..."
-                        aria-label="Filter history" title="Matches workflow, file, result or start time. Space-separated terms must all match."
+                        aria-label="Filter history" title="Searches the whole history: workflow, file, result, job ID and start or end time, written as 2026-07-02T10:31. Space-separated terms must all match."
                         autocomplete="off" spellcheck="false">
                     <div class="history-state-filters" role="group" aria-label="Filter history by state">
                         <button type="button" data-history-state="0" aria-pressed="false"
-                            title="Filter this page to errors. Grouped jobs match any split. No states selected shows all.">Errors</button>
+                            title="Show errors from the whole history. Grouped jobs match any split. No states selected shows all.">Errors</button>
                         <button type="button" data-history-state="2" aria-pressed="false"
-                            title="Filter this page to aborted entries. Grouped jobs match any split. No states selected shows all.">Abort</button>
+                            title="Show aborted entries from the whole history. Grouped jobs match any split. No states selected shows all.">Abort</button>
                         <button type="button" data-history-state="1" aria-pressed="false"
-                            title="Filter this page to successful entries. Grouped jobs match any split. No states selected shows all.">Success</button>
+                            title="Show successful entries from the whole history. Grouped jobs match any split. No states selected shows all.">Success</button>
                     </div>
                     <button id="history-grouping-btn" type="button" aria-pressed="true" title="Group finished splits by job ID">Group jobs: On</button>
                     <button id="history-latest-btn" style="display: none;">Latest</button>
@@ -612,10 +612,9 @@
         const expandedHistoryJobs = new Set();
         let contextRow = null;
         let toastTimer = 0;
-        // The last page served by the API, kept so the filters can re-render it
-        // without another request. The filters only see this page.
-        let lastHistoryPage = null;
-        let historyFilterTerms = [];
+        // Sent with each history request. The server filters the whole log, so
+        // the pages hold matches only.
+        let historyFilterText = '';
         const historyFilterStates = new Set();
         let historyFilterTimer = 0;
 
@@ -817,62 +816,33 @@
          */
         async function fetchHistory() {
             const requestId = ++latestHistoryRequest;
-            const start = historyStartIndex;
-            const grouped = historyGroupingEnabled;
-            const res = await fetch(`${API_BASE}/history?count=${HISTORY_PAGE_SIZE}&start=${start}&group_by_job=${grouped}`);
+            const query = new URLSearchParams({
+                count: HISTORY_PAGE_SIZE,
+                start: historyStartIndex,
+                group_by_job: historyGroupingEnabled
+            });
+            if (historyFilterText) query.set('filter', historyFilterText);
+            historyFilterStates.forEach(state => query.append('state', state));
+            const res = await fetch(`${API_BASE}/history?${query}`);
             if (!res.ok) throw new Error('Failed to fetch history');
 
             const data = await res.json();
-            // Ignore a response superseded by pagination or a newer refresh.
+            // Ignore a response superseded by pagination, a filter or a newer refresh.
             if (requestId !== latestHistoryRequest) return;
             const history = data.history || [];
 
             // Simple hash check to avoid unnecessary repaints of static history
-            const currentHash = JSON.stringify([start, grouped, history]);
+            const currentHash = JSON.stringify([String(query), data.total, data.matched, history]);
             if (currentHash === lastHistoryHash) return;
 
-            lastHistoryPage = history;
-            renderFilteredHistory();
+            const itemCount = renderHistory(history,
+                historyFiltersActive() ? 'No history matches the filter' : 'No history found');
+            updatePaginationControls(itemCount, data.matched, data.total);
             lastHistoryHash = currentHash;
         }
 
-        function renderFilteredHistory() {
-            if (!lastHistoryPage) return;
-            const entries = lastHistoryPage.filter(Boolean);
-            // Paging counts jobs when grouped and splits otherwise.
-            const pageCount = historyGroupingEnabled
-                ? new Set(entries.map(entry => entry.job_id)).size
-                : entries.length;
-
-            let visible = entries;
-            if (historyFiltersActive()) {
-                if (historyGroupingEnabled) {
-                    // Keep a matching job whole so its summary row stays accurate.
-                    const matchedJobs = new Set(entries.filter(historyEntryMatches).map(entry => entry.job_id));
-                    visible = entries.filter(entry => matchedJobs.has(entry.job_id));
-                } else {
-                    visible = entries.filter(historyEntryMatches);
-                }
-            }
-
-            const shownCount = renderHistory(visible,
-                historyFiltersActive() && entries.length ? 'No history matches the filter' : 'No history found');
-            updatePaginationControls(pageCount, shownCount);
-        }
-
         function historyFiltersActive() {
-            return historyFilterTerms.length > 0 || historyFilterStates.size > 0;
-        }
-
-        function historyEntryMatches(entry) {
-            if (historyFilterStates.size && !historyFilterStates.has(entry.state)) return false;
-            const text = [
-                entry.workflow,
-                entry.source,
-                entry.result,
-                entry.start_time ? new Date(entry.start_time).toLocaleString() : ''
-            ].filter(Boolean).join('\n').toLowerCase();
-            return historyFilterTerms.every(term => text.includes(term));
+            return historyFilterText !== '' || historyFilterStates.size > 0;
         }
 
         function renderHistory(history, emptyMessage = 'No history found') {
@@ -1074,21 +1044,22 @@
                 .map(v => String(v).padStart(2, '0')).join(':');
         }
 
-        function updatePaginationControls(currentBatchSize, shownCount = currentBatchSize) {
-            const startRange = historyStartIndex + 1;
-            const endRange = historyStartIndex + currentBatchSize;
+        // Counts are of jobs or splits, like the page: matched is everything the
+        // filters let through, total the whole log (the same without filters).
+        function updatePaginationControls(currentBatchSize, matched, total) {
+            const startRange = (historyStartIndex + 1).toLocaleString();
+            const endRange = (historyStartIndex + currentBatchSize).toLocaleString();
             const unit = historyGroupingEnabled ? 'jobs' : 'splits';
+            const filteredFrom = historyFiltersActive() ? ` (filtered from ${total.toLocaleString()})` : '';
 
             if(currentBatchSize === 0) {
-                els.historyPageInfo.textContent = '0 - 0';
-            } else if (historyFiltersActive()) {
-                els.historyPageInfo.textContent = `${shownCount} of ${unit} ${startRange} - ${endRange} match`;
+                els.historyPageInfo.textContent = `${matched.toLocaleString()} ${unit}${filteredFrom}`;
             } else {
-                els.historyPageInfo.textContent = `Showing ${unit} ${startRange} - ${endRange}`;
+                els.historyPageInfo.textContent = `Showing ${unit} ${startRange} - ${endRange} of ${matched.toLocaleString()}${filteredFrom}`;
             }
 
             els.historyLatestBtn.style.display = historyStartIndex > 0 ? 'inline-block' : 'none';
-            els.historyOlderBtn.disabled = currentBatchSize < HISTORY_PAGE_SIZE;
+            els.historyOlderBtn.disabled = historyStartIndex + currentBatchSize >= matched;
         }
 
         async function fetchAndSetEnvironmentName() {
@@ -1518,18 +1489,23 @@
                 else historyFilterStates.add(state);
                 button.setAttribute('aria-pressed', String(historyFilterStates.has(state)));
                 closeContextMenu();
-                renderFilteredHistory();
+                // Matches have pages of their own, so start at the newest.
+                historyStartIndex = 0;
+                fetchHistory();
             });
         });
 
         els.historyFilter.addEventListener('input', () => {
             clearTimeout(historyFilterTimer);
-            // Debounced: a large page of grouped rows is not free to rebuild.
+            // Debounced: each change searches the whole log on the server.
             historyFilterTimer = setTimeout(() => {
-                historyFilterTerms = els.historyFilter.value.toLowerCase().split(/\s+/).filter(Boolean);
-                els.historyFilter.classList.toggle('filter-active', historyFilterTerms.length > 0);
+                const text = els.historyFilter.value.trim();
+                if (text === historyFilterText) return;
+                historyFilterText = text;
+                els.historyFilter.classList.toggle('filter-active', text !== '');
                 closeContextMenu();
-                renderFilteredHistory();
+                historyStartIndex = 0;
+                fetchHistory();
             }, 150);
         });
 

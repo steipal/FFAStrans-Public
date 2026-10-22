@@ -71,6 +71,11 @@ When several jobs are rendered into a directory an `index.html` is written with 
   where it came from, and the error entries of that run. Then the split tree and the full log. Click a node, a split,
   a timeline bar or an issue card to see its details and only its log entries. Every log entry expands to its payload
   (ffprobe JSON, AviSynth script, ffmpeg report, command line, ...). The filter box searches inside payloads too.
+  JSON payloads, node properties and split details show as nested key/value tables. Strings appear exactly as they
+  are, without quotes or escape characters, so a path, a command line or an ffmpeg report reads and copies as is
+  (hover a row for its copy button); numbers and true/false are blue, null and empty values grey. A nested part
+  holding more than 30 values starts folded, with a preview of its first fields. The `JSON` button switches every box
+  to the JSON text and back.
   The `?` button in the header explains the terms.
 * **Timeline** (bottom) - one bar per node run, grouped by split in start order, on the job's time axis. Ticks mark
   error entries (red), probe errors and warnings (orange) and the last entry before a branch died (dashed).
@@ -97,7 +102,8 @@ canvas and overview stack, and their divider adjusts their heights.
 * **Log list**: *Errors only* keeps error and warning entries plus the last entry of a failed run; *Slow steps* keeps
   entries that came 1 s or more after the previous entry of their run, which is the end of every silence (encoding,
   a probe, a hold). The Δ column is that gap. Inside an expanded payload, lines that look like an error are
-  highlighted and the pane scrolls to the first one; the filter text is marked too.
+  highlighted (in a table only in values, so keys such as `ErrorDetectionType` do not count), folded values holding
+  them open, and the pane scrolls to the first one; the filter text is marked too.
 * **Keyboard**: `n` / `p` step through the flagged entries of the list on screen (errors, warnings, last-before-death,
   slow steps), `/` focuses the filter, `F` / `R` fit the canvas, `Esc` goes back to the overview.
 * **Copy summary** (overview) puts a plain-text digest of the run on the clipboard: outcome, issues with messages,
