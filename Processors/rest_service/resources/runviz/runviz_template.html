@@ -118,8 +118,8 @@ body.resizing, body.resizing * { cursor: var(--resize-cursor) !important; user-s
 .kv .v { overflow-wrap: anywhere; }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); vertical-align: -1px; }
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
-.st-ok { color: var(--good); } .st-error { color: var(--critical); } .st-cond_false { color: var(--warning-ink); } .st-warn { color: var(--serious); } .st-aborted { color: var(--aborted); } .st-unknown, .st-idle { color: var(--muted); }
-.bg-ok { background: var(--good); } .bg-error { background: var(--critical); } .bg-cond_false { background: var(--warning); } .bg-warn { background: var(--serious); } .bg-aborted { background: var(--aborted); } .bg-unknown, .bg-idle { background: var(--unknown); }
+.st-ok { color: var(--good); } .st-error { color: var(--critical); } .st-cond_false { color: var(--warning-ink); } .st-warn { color: var(--serious); } .st-aborted { color: var(--aborted); } .st-dispelled, .st-unknown, .st-idle { color: var(--muted); }
+.bg-ok { background: var(--good); } .bg-error { background: var(--critical); } .bg-cond_false { background: var(--warning); } .bg-warn { background: var(--serious); } .bg-aborted { background: var(--aborted); } .bg-dispelled, .bg-unknown, .bg-idle { background: var(--unknown); }
 
 .issue, .runcard, .splitrow { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin: 4px 0; background: var(--surface-2); cursor: pointer; }
 .issue:hover, .runcard:hover, .splitrow:hover { border-color: var(--accent); }
@@ -376,9 +376,9 @@ var EVBYRUN = new Map(); EV.forEach(function (e) { if (e.run_id) { if (!EVBYRUN.
 var NODE_RUNS = new Map(); D.runs.forEach(function (r) { var k = r.wf_id + '|' + r.node_id; if (!NODE_RUNS.has(k)) NODE_RUNS.set(k, []); NODE_RUNS.get(k).push(r); });
 var TAB_WORKFLOWS = workflowsInLogOrder();
 var EVIDENCE = new Set(); D.runs.forEach(function (r) { (r.evidence || []).forEach(function (i) { EVIDENCE.add(i); }); });
-var STATE_COL = { ok: 'var(--good)', error: 'var(--critical)', cond_false: 'var(--warning)', warn: 'var(--serious)', aborted: 'var(--aborted)', unknown: 'var(--unknown)', idle: 'transparent' };
-var STATE_TXT = { ok: 'OK', error: 'Error', cond_false: 'Condition false', warn: 'Warning (carried on)', aborted: 'Aborted', unknown: 'Unknown', idle: 'Did not run' };
-var STATE_ICON = { ok: '\u2713', error: '!', cond_false: '\u2717', warn: '\u26a0', aborted: '\u25a0', unknown: '?', idle: '' };
+var STATE_COL = { ok: 'var(--good)', error: 'var(--critical)', cond_false: 'var(--warning)', warn: 'var(--serious)', aborted: 'var(--aborted)', dispelled: 'var(--muted)', unknown: 'var(--unknown)', idle: 'transparent' };
+var STATE_TXT = { ok: 'OK', error: 'Error', cond_false: 'Condition false', warn: 'Warning (carried on)', aborted: 'Aborted', dispelled: 'Dispelled', unknown: 'Unknown', idle: 'Did not run' };
+var STATE_ICON = { ok: '\u2713', error: '!', cond_false: '\u2717', warn: '\u26a0', aborted: '\u25a0', dispelled: '\u2013', unknown: '?', idle: '' };
 // The node box of the FFAStransX workflow manager (Canvas/Node.tsx) in its own pixels: 115 wide, a 20 px title bar
 // and a 3 px family strip above the body (so the body starts at 24), 6 px body padding, a 10 px title and a 9 px
 // description on 1.25 lines. Each workflow scales it to its box size, as FFAStransX scales imported positions.
@@ -1143,7 +1143,7 @@ function runCard(r, selected, withNode) {
   if (r.status_texts && r.status_texts.length) h += '<div class="m">Last status text: ' + esc(r.status_texts[r.status_texts.length - 1]) + '</div>';
   if (r.is_last && sp.has_record) {
     var et = errText(sp.error);
-    h += '<div class="m">Split ended here' + (sp.status_flag ? ' \u00b7 record flag: ' + esc(sp.status_flag) : '') + (sp.result != null && sp.result !== '' ? ' \u00b7 record result: ' + esc(sp.result) : '') + (et ? '<div class="st-' + (r.state === 'cond_false' ? 'cond_false' : (r.state === 'aborted' ? 'aborted' : 'error')) + '">' + esc(et) + '</div>' : '') + '</div>';
+    h += '<div class="m">Split ended here' + (sp.status_flag ? ' \u00b7 record flag: ' + esc(sp.status_flag) : '') + (sp.result != null && sp.result !== '' ? ' \u00b7 record result: ' + esc(sp.result) : '') + (et ? '<div class="st-' + (r.state === 'cond_false' || r.state === 'dispelled' ? r.state : (r.state === 'aborted' ? 'aborted' : 'error')) + '">' + esc(et) + '</div>' : '') + '</div>';
   }
   var timing = 'Timing: starts at ' + (ANCHOR_TXT[r.start_anchor] || r.start_anchor || '?') + '; ends at ' + (ANCHOR_TXT[r.end_anchor] || r.end_anchor || '?') + '.';
   var parts = [];
@@ -1181,7 +1181,7 @@ function renderNode(wf, id, runId) {
   if (!rs.length) {
     h += '<h3>Runs</h3><div class="empty">This node did not run in this job.</div>';
     var ranPreds = preds.filter(function (p) { return p.runs.length; });
-    var stopped = ranPreds.filter(function (p) { return p.node.state === 'error' || p.node.state === 'aborted' || p.node.state === 'cond_false'; });
+    var stopped = ranPreds.filter(function (p) { return p.node.state === 'error' || p.node.state === 'aborted' || p.node.state === 'cond_false' || p.node.state === 'dispelled'; });
     if (!preds.length && n.family !== 'Monitors') h += '<div class="m">Nothing connects into it.</div>';
     else if (!ranPreds.length && preds.length) h += '<div class="m">None of the nodes feeding it ran.</div>';
     else if (stopped.length === ranPreds.length && stopped.length) h += '<div class="explain">Not reached: ' + stopped.map(function (p) { return '\u201c' + p.node.name + '\u201d ' + STATE_TXT[p.node.state].toLowerCase(); }).join(', ') + '.</div>';
@@ -1206,7 +1206,7 @@ function renderSplit(s) {
     kv('Timing', esc(fmtClock(s.start)) + ' \u2192 ' + esc(fmtClock(s.end)) + (s.t0 != null && s.t1 != null ? ' \u00b7 ' + esc(fmtDur(s.t1 - s.t0)) : '')) +
     (s.result != null && s.result !== '' ? kv('Record result', esc(s.result)) : '') +
     (s.status_flag ? kv('Record flag', esc(s.status_flag)) : (s.status != null && s.status !== '' ? kv('Last status', esc(s.status)) : '')) +
-    (et ? kv('Error', '<span class="st-' + (st === 'cond_false' ? 'cond_false' : (st === 'aborted' ? 'aborted' : 'error')) + '">' + esc(et) + '</span>') : '') +
+    (et ? kv('Error', '<span class="st-' + (st === 'cond_false' || st === 'dispelled' ? st : (st === 'aborted' ? 'aborted' : 'error')) + '">' + esc(et) + '</span>') : '') +
     (s.branch_pri ? kv('Priority branch', 'yes') : '') + (s.wf_name ? kv('Workflow', esc(s.wf_name)) : '') + '</div>';
   var last = runs[runs.length - 1];
   if (last && last.explain) h += '<div class="explain">' + esc(last.explain) + '</div>';
@@ -1538,7 +1538,7 @@ function renderTimeline() {
 function renderLegend() {
   var fams = ['Monitors', 'Decoders', 'Analyzers', 'Filters', 'Encoders', 'Deliveries', 'Others', 'Operations', 'Workflows'];
   var h = '<div class="grp"><b>Node family</b>' + fams.map(function (f) { return '<span class="item"><span class="swatch" style="background:' + D.family_colors[f] + '"></span>' + (f === 'Workflows' ? 'Sub-workflow' : f) + '</span>'; }).join('') + '</div>';
-  h += '<div class="grp"><b>Run result</b><span class="item m">on the node badge:</span>' + ['ok', 'error', 'cond_false', 'warn', 'aborted', 'unknown'].map(function (s) { return '<span class="item"><span class="pill" style="background:' + STATE_COL[s] + '">' + STATE_ICON[s] + '</span>' + STATE_TXT[s] + '</span>'; }).join('') + '<span class="item"><span class="mini" style="opacity:.38"></span>Did not run (dimmed, no badge)</span><span class="item"><span class="mini sel"></span>Selected</span></div>';
+  h += '<div class="grp"><b>Run result</b><span class="item m">on the node badge:</span>' + ['ok', 'dispelled', 'error', 'cond_false', 'warn', 'aborted', 'unknown'].map(function (s) { return '<span class="item"><span class="pill" style="background:' + STATE_COL[s] + '">' + STATE_ICON[s] + '</span>' + STATE_TXT[s] + '</span>'; }).join('') + '<span class="item"><span class="mini" style="opacity:.38"></span>Did not run (dimmed, no badge)</span><span class="item"><span class="mini sel"></span>Selected</span></div>';
   var port = function (shape, col) { return '<svg class="porticon" width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><g fill="' + col + '" stroke="#252526" stroke-linejoin="round">' + PORT_SHAPE[shape] + '</g></svg>'; };
   h += '<div class="grp"><b>Connector</b><span class="item">' + port('node', PORT_COL.success) + 'execute on success</span><span class="item">' + port('node', PORT_COL.error) + 'on error</span><span class="item">' + port('node', PORT_COL.any) + 'on any</span>' +
     '<span class="item">' + port('branch', '#9a9a9a') + 'runs when a branch ends</span><span class="item">' + port('final', '#9a9a9a') + 'runs when the last branch ends</span><span class="item"><span class="outtab"></span>output</span><span class="item"><span class="lineswatch" style="border-color:#646464"></span>connection</span><span class="item"><span class="lineswatch" style="border-color:#c08040"></span>sub-hold connection</span><span class="item"><span class="lineswatch" style="border-color:var(--accent)"></span>path taken (thick: every route into the selection)</span></div>';

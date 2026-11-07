@@ -895,7 +895,8 @@ def build_model(job_dir, extra_wf_dirs):
         rec_err_code = as_text(rec_err.get("code")).strip() if rec_err else ""
         rec_result = as_text((rec or {}).get("result")).strip()
         rec_status = as_text((rec or {}).get("status")).strip()
-        aborted = rec is not None and (rec_result.lower() == "abort" or rec_status == "2" or rec_err_code in ABORT_CODES)
+        record_aborted = rec_result.lower() == "abort" or rec_status == "2" or (rec or {}).get("state") == 2
+        aborted = rec is not None and (record_aborted or rec_err_code in ABORT_CODES)
         for r in split_runs:
             evs = r["evs"]
             ntype = r["node_type"] or ""
@@ -903,6 +904,19 @@ def build_model(job_dir, extra_wf_dirs):
             end_status = as_text((r.get("end_payload") or {}).get("status")).strip().lower()
             end_error = first_line(as_text((r.get("end_payload") or {}).get("error")), 240)
             end_code = as_text((r.get("end_payload") or {}).get("code")).strip()
+            # Final node outcomes override configuration and older conditional markers.
+            terminal_record = r["is_last"] and rec is not None and rec.get("_folder") in ("finished", "failed")
+            dispelled = (r.get("end_payload") or {}).get("dispel")
+            if not isinstance(dispelled, bool) and terminal_record:
+                dispelled = rec.get("dispel")
+            if not isinstance(dispelled, bool):
+                dispelled = next((e["data"]["dispel"] for e in reversed(evs)
+                                  if e["node_id"] == r["node_id"] and e["event"] == "conditional"
+                                  and isinstance(e["data"], dict) and isinstance(e["data"].get("dispel"), bool)), None)
+            if not isinstance(dispelled, bool) and terminal_record:
+                options = rec.get("options")
+                option = options.get("dispel_branch") if isinstance(options, dict) else None
+                dispelled = option.get("value") if isinstance(option, dict) else None
             benign = [e for e in evs if e["type"] == "error" and (ntype, e["event"]) in BENIGN_ERRORS]
             condf = [e for e in evs if e["type"] == "error" and (ntype, e["event"]) in COND_FALSE_EVENTS]
             soft = [e for e in evs if e["type"] == "error" and e["event"] in SOFT_ERROR_EVENTS]
@@ -910,15 +924,16 @@ def build_model(job_dir, extra_wf_dirs):
             warns = [e for e in evs if e["type"] == "warning"]
             state, reasons, explain = "ok", [], None
             ended_in_error = r["is_last"] and rec is not None and (rec_result.lower() == "error" or bool(rec_err_msg))
-            if end_status == "abort":
+            if end_status == "abort" or (terminal_record and (record_aborted or (not end_status and aborted))):
                 state = "aborted"
-                reasons.append("this node was stopped by a job abort" + (": " + end_error if end_error else ""))
+                abort_error = end_error or (rec_err_msg if terminal_record else "")
+                reasons.append("this node was stopped by a job abort" + (": " + abort_error if abort_error else ""))
+            elif dispelled is True:
+                state = "dispelled"
+                reasons.append("this branch was deliberately dispelled; subsequent nodes do not run")
             elif end_status and end_status not in ("ok", "success", "finished", "done"):
                 state = "error"
                 reasons.append("the node ended with status '%s'" % end_status + (": " + end_error if end_error else ""))
-            elif r["is_last"] and aborted:
-                state = "aborted"
-                reasons.append("the job was aborted here" + (": " + rec_err_msg if rec_err_msg else ""))
             elif ended_in_error:
                 state = "error"
                 if rec_err_msg:
@@ -1068,7 +1083,7 @@ def build_model(job_dir, extra_wf_dirs):
             r["wf_id"] = wf["wf_id"]
         warnings.add("node %s (%s) ran in split %s but is not in workflow %s" % (nid, ntype, rs[0]["split_id"], wf["wf_name"]))
 
-    state_rank = {"idle": 0, "unknown": 1, "ok": 2, "warn": 3, "cond_false": 4, "aborted": 5, "error": 6}
+    state_rank = {"idle": 0, "unknown": 1, "ok": 2, "dispelled": 3, "warn": 4, "cond_false": 5, "aborted": 6, "error": 7}
     for wf_id, wf in workflows.items():
         for n in wf["nodes"]:
             rs = node_runs.get((wf_id, n["id"])) or []
