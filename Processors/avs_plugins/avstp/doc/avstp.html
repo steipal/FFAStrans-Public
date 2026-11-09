@@ -1,0 +1,481 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en' xml:lang='en' xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>AVSTP&nbsp;&mdash;&nbsp;Avisynth Thread Pool</title>
+<link rel="stylesheet" type="text/css" href="avisynth.css" />
+</head>
+
+<body><div class="global">
+
+<h1>AVSTP&nbsp;&mdash;&nbsp;Avisynth Thread Pool</h1>
+
+<h2>Abstract</h2>
+
+<p>
+<b>Author: </b>Firesledge (aka Cretindesalpes)<br />
+<b>Additional fix by </b>Ferenc Pintér<br />
+<b>Version: </b>1.0.4.1<br />
+<b>Download: </b><a href="https://github.com/pinterf/AVSTP/releases">AVSTP releases on pinterf's github repo</a><br />
+<b>Download: </b><a href="http://ldesoras.free.fr/prod.html#src_avstp">http://ldesoras.free.fr/prod.html#src_avstp</a><br />
+<b>Category: </b>Multi-threading support, development tools<br />
+&nbsp;
+</p>
+
+<p>AVSTP is a programming library for Avisynth plug-in developers.
+It helps supporting native multi-threading in plug-ins.
+It works by sharing a thread pool between multiple plug-ins, so the number of threads stays low whatever the number of instantiated plug-ins.
+This helps saving resources, especially when working in an Avisynth MT environment.
+This documentation is mostly targeted to plug-ins developpers, but contains installation instructions for Avisynth users too.</p>
+
+
+
+<h2>Table of contents</h2>
+
+<ul>
+<li><a href="#using">Using AVSTP</a></li>
+<li><a href="#prog">Programming with AVSTP</a></li>
+<li><a href="#simple">Simple use</a></li>
+<li><a href="#complex">Complex tasks</a></li>
+<li><a href="#api">API reference</a></li>
+<li><a href="#changelog">Change log</a></li>
+</ul>
+
+
+
+<h2><a id="using"></a>Using AVSTP</h2>
+
+<p>From the Avisynth user point of view, an AVSTP-enabled plug-in requires the <code>avstp.dll</code> file to be installed.
+Put it in the usual <code>AviSynth 2.5\plugins\</code> directory, or load it manually with <code>LoadPlugin("path\avstp.dll")</code> in your script.
+The dll is shared between all plug-ins using AVSTP, so keep only one <code>avstp.dll</code> file in your plug-in set.
+If you’re updating from a previous version, make sure that Avisynth will get access only to the latest one.</p>
+
+<p>If a plug-in requiring AVSTP cannot find the dll file, it could crash, emit an error, or fall back gracefully on a single-threaded mode, depending on its design and implementation.
+There is no mandatory or pre-defined behaviour for such a case.</p>
+
+<p>The number of threads is automatically set to the number of available logical processors.
+The thread count can also be controlled via an Avisynth function, so multi-threading can be disabled globally if not desired.</p>
+
+<h3><a id="avstpsetthreads"></a>avstp_set_threads</h3>
+
+<p><pre class="proto">avstp_set_threads (var c, int n)</pre></p>
+
+<p>This function sets the global number of AVSTP threads running in the Avisynth process.
+The call is optional.
+When <var>n</var> is set to 1, AVSTP is monothreaded.
+When <var>n</var> is set to 0, AVSTP uses the number of detected logical processors, which is the default when the function is not called.
+To work smootly, calling the function only once is prefered, at the end of the main script, just before returning the final clip.
+Behaviour is unspecified if it is called multiple times, or from the Avisynth runtime system (<code>ScriptClip</code>, <code>ConditionalFilter</code>, etc.)
+The <var>c</var> parameter is ignored and is defined only to make the function work as desired when applied on a clip.</p>
+
+<p>Implementation note: the number of additional instantiated threads is equal to <var>n</var> &minus;&nbsp;1.
+Actually, the main program thread is used as a worker thread too, making the total number of working threads equal to <var>n</var>.
+This is because the tasks are supposed to be globally synchronious, not totally asynchronious like with a generic thread pool system.</p>
+
+
+
+<h2><a id="prog"></a>Programming with AVSTP</h2>
+
+<h3><a id="progconcept"></a>Concept</h3>
+
+<p>AVSTP provides plug-ins with a thread pool, an object that can perform tasks asynchroniously.
+This means you just need to split the main task into several smaller tasks able to work in parallel, send them all to the thread pool and wait for their completion.
+The thread pool will handle the job queue and dispatch the tasks to the available worker threads.</p>
+
+<h3><a id="progcontent"></a>Source code content</h3>
+
+<p>The <code>src</code> directory contains the following items:</p>
+
+<ul>
+<li><code>avstp</code>: source code to build <code>avstp.dll</code></li>
+<li><code>avstp_example</code>: a simple Avisynth plugin (average of two clips) showing how to use the AVSTP helpers.</li>
+<li><code>common</code>: miscellaneous C++ helper classes and wrappers on the top of the main AVSTP API.</li>
+</ul>
+
+<h3><a id="progoverview"></a>Overview</h3>
+
+<p>If you use the main API, add <code>avstp.lib</code> to your project, or load the dll manually on startup to resolve the <code>avstp_*</code> symbols.
+<code>avstp.h</code> should be the only included file you’ll need for the basic operations.</p>
+
+<p>If your programming language is C++, you can also use the <code>AvstpWrapper</code> singleton class to take care of finding the library, loading it and resolve the symbols.
+It will use a single-threaded mode if the library cannot be found.
+This method is recommended to access the API.</p>
+
+<p><code>MTSlicer</code> is a simple class for easily splitting a frame into horizontal bands, each processed by a thread.
+This method is suited to a majority of plug-ins.
+See the next section for more information.
+Another class, <code>MTFlowGraphSched</code>, can handle a simple graph of dependencies between tasks.</p>
+
+<p>Also, the <code>conc</code> namespace offers a set of tools for dealing with data in a concurrent environment while minimizing the locks.
+More specifically, lock-free pools of objects are useful to handle temporary recyclable storage for the threaded tasks.
+See <code>ObjPool</code> and <code>ObjFactoryInterface</code>.</p>
+
+<p>C++ code requires a compiler supporting C++11 or above.</p>
+
+<p>A typical use of the low-level API looks like this:</p>
+<ul>
+<li>Call <code>avstp_create_dispatcher()</code> at the beginning of a frame to process, or do it once in the filter constructor</li>
+<li>Process the frame using this dispatcher</li>
+<li>Call <code>avstp_destroy_dispatcher()</code> when done (or in the destructor).</li>
+</ul>
+
+<p>Each threaded operation looks like this:</p>
+<ul>
+<li>Initialise the tasks with the source data</li>
+<li>Call <code>avstp_enqueue_task()</code> on all these tasks</li>
+<li>Call <code>avstp_wait_completion()</code> to wait for synchronisation.</li>
+</ul>
+
+<p>A task is made of two entities:</p>
+<ul>
+<li>A static function performing the task</li>
+<li>A pointer on your private data structure.</li>
+</ul>
+
+<h3><a id="prognotes"></a>Notes</h3>
+
+<ul><li>It’s important to always have in mind that the tasks launched in parallel can be started and finished in any order.
+A task could even be completed before <code>avstp_enqueue_task()</code> returns.
+Actually this is the case when AVSTP works in single-threaded mode.</li></ul>
+
+<ul><li>Be very careful when sharing data between tasks.
+Avoid multiple tasks writing at the same location.
+It will cause inconsistencies and kill performances.</li></ul>
+
+<ul><li>Don’t call waiting functions (mutex, disk I/O…) from a task.
+The thread would stall, wasting CPU time.
+For maximum performances, the tasks should only perform number crunching.
+Use separate threads to perform blocking opeations.</li></ul>
+
+<ul><li>If you want to make your plug-in compatible with MT mode 1, that is multiple threads accessing simultaneously a single filter instance, create the dispatcher dynamically.
+Do not store it in the class members, nor any other temporary resource.
+Otherwise you’ll be limited to modes 2 and above (but nobody expects plug-ins to run in mode 1 anyway…)</li></ul>
+
+<ul><li>Dispatchers are not destroyed, they are stored for further recycling.
+This guarantees that creations and destructions of dispatchers are almost free of overhead after the first run.</li></ul>
+
+<ul><li>AVSTP low-level API use locks only in the internal thread pool construction, when setting the number of threads and when the communication system runs out of free message cells.
+There shouldn’t be any memory allocation excepted in these cases.</li></ul>
+
+<ul><li><span style="color:#FF0000; font-weight:bold;">If you’re going to use floating point data</span>, always start the task with an <code>_mm_empty()</code> instruction.
+Indeed there is not guarantee on the state of the FP/MMX registers,
+since the thread could have been previously used by other tasks using the MMX instruction set without restoring the registers.
+And if you’re using the MMX instruction set, it is a nice practice to always call <code>_mm_empty()</code> before leaving a task.</li></ul>
+
+
+
+<h2><a id="simple"></a>Simple use</h2>
+
+<p>Most filters can work by computing independently single pixels or small blocks of the destination frame.
+These filters can be multithreaded by splitting the frame into as many horizontal bands as there are threads.
+This is similar to the <code>MT()</code> function, but much more flexible because the processing functions can access the whole input frames, not just a window corresponding to the rendered band.</p>
+
+<p>Filters that require first a global evaluation (for example computing the average luma of the input) don’t fall directly into this category, but may be easily transformed to fit the concept.
+For example, you can use a <code>conc::AtomicInt&lt;int64_t&gt;</code> to store the global luma sum, which will be updated at the end of each band processing.
+Then use a second pass of band splitting to do the actual process using the calculated average.
+For more complex data patitioning and merging, you can use the <a href="http://en.wikipedia.org/wiki/MapReduce">map/reduce</a> concept.</p>
+
+<h3>A sliced-frame example</h3>
+
+<p>Here is a step-by-step guide to build a multi-threaded filter with the <code>MTSlicer</code> class.
+We’ll assume you’re alreay familiar with single-threaded Avisynth filter programming.
+The following code is taken from the <code>avstp_example</code> project, which is a plug-in averaging the two input clips.</p>
+
+<h4>Declarations</h4>
+
+<p>First, the include files.
+There are the usual <code>Windows.h</code> and <code>avisynth.h</code>, more the AVSTP-related files.
+Nothing fancy here, excepted the NOMINMAX definition, to put before the Windows header inclusion.
+Indeed, Windows <code>min</code> and <code>max</code> macro definitions interfere with the standard <code>std::min</code> and <code>std::max</code> template functions contained in <code>&lt;algorithm&gt;</code>.
+The latter functions are used in the library.</p>
+
+<pre class="src">#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "Windows.h"
+#include "avisynth.h"
+#include "avstp.h"
+#include "MTSlicer.h"
+</pre>
+
+<p>In the filter class definition, we’ll have to declare a structure containing data that all the tasks may need.
+We’ll put here mainly the current frame structure information.
+You can put any data related to the current frame (input and output).
+However <code>_this_ptr</code> is a mandatory member and must be declared as a pointer to your filter class.</p>
+
+<pre class="src">   class TaskDataGlobal
+   {
+   public:
+      AvstpAverage * _this_ptr;
+      ::BYTE *       _dst_ptr;
+      const ::BYTE * _sr1_ptr;
+      const ::BYTE * _sr2_ptr;
+      int            _stride_dst;
+      int            _stride_sr1;
+      int            _stride_sr2;
+      int            _w;
+   };
+</pre>
+
+<p>Separating the global frame data from the main filter class is MT-mode-1-safe.
+If compatibility with MT mode 2 is enough for your needs, just put everything as members of your Avisynth filter class.
+In this case, you can omit <code>_this_ptr</code>.</p>
+
+<p>Then, we typedef the slicer, for easy later use.
+The first template parameter is your filter class (actually the same as pointed by the <code>_this_ptr</code>).
+The second one the data structure common to all slices.</p>
+
+<pre class="src">
+   typedef  MTSlicer &lt;AvstpAverage, TaskDataGlobal&gt; Slicer;
+</pre>
+
+<p>Averaging frames can be on a plane basis: all planes are independant from each other.
+Instead of starting N threads for a plane, waiting for their completion and starting again for the other planes, we can send all the tasks simultaneously and finally wait for the completion only once.
+However, this requires multiple common structures, as the data for each plane are different.
+A second consequence is that it also requires several slicers, because plane heights may be different (luma vs chroma).
+So we bundle a <code>TaskDataGlobal</code> with a <code>Slicer</code> for easier access and storage.</p>
+
+<pre class="src">   class PlaneProc
+   {
+   public:
+      TaskDataGlobal _tdg;
+      Slicer         _slicer;
+   };
+</pre>
+
+<p>Then we declare our main processing function.
+This is a simple member function that is fed with a specific structure containing the top and bottom lines to process as well as a pointer to the global structure.
+The function code is be described below.</p>
+
+<pre class="src">   void           process_subplane (Slicer::TaskData &amp;td);
+</pre>
+
+<h4>Functions</h4>
+
+<p>The <code>GetFrame()</code> function.
+First, we loop on planes to fill the structure and call <code>start()</code> on the slicer.</p>
+
+<p>The <code>height</code> parameter is used by the slicer to generates the line numbers for each slice.
+Generally, you may want to set it to the current plane height in pixels, because dividing the frame horizontally has a greater cache efficiency.
+However, it really can be any unit you want.
+For example, if you’re processing the frame by blocks, it’s better to count block rows instead of pixel rows, because you’re sure that the frame will be sliced correctly.
+If the blocks are huge in size (low number of blocks), you can count an absolute number of blocks to be sure that the frame will be equally sliced.</p>
+
+<p>The second parameter is the global data to attach, and the third one the processing function.
+Note the funky way to get a pointer on a member function.</p>
+
+<p>Don’t forget to initialise <code>_this_ptr</code>, too.</p>
+
+<p>In the second part, we loop on the slicers to wait for their respective task completion.
+The loop exits only when all the tasks are finished.</p>
+
+<pre class="src">::PVideoFrame __stdcall   AvstpAverage::GetFrame (int n, ::IScriptEnvironment *env_ptr)
+{
+   ::PVideoFrame  fsr1_sptr = _src1_sptr-&gt;GetFrame (n, env_ptr);
+   ::PVideoFrame  fsr2_sptr = _src2_sptr-&gt;GetFrame (n, env_ptr);
+   ::PVideoFrame  fdst_sptr = env_ptr-&gt;NewVideoFrame (vi);
+
+   // Sets one slicer per plane, because planes may have different
+   // heights (YV12). We could have done it differently and handle
+   // the chroma subsampling from the plane processing function,
+   // but it would have been less trivial to deal with.
+   PlaneProc      pproc_arr [3];
+   for (int p = 0; p &lt; _nbr_planes; ++p)
+   {
+      static const int  plane_id_arr [3] = { PLANAR_Y, PLANAR_U, PLANAR_V };
+      const int      plane_id = plane_id_arr [p];
+      PlaneProc &amp;    pproc    = pproc_arr [p];
+
+      // Collects the source and destination plane information
+      pproc._tdg._this_ptr   = this;
+      pproc._tdg._dst_ptr    = fdst_sptr-&gt;GetWritePtr (plane_id);
+      pproc._tdg._sr1_ptr    = fsr1_sptr-&gt;GetReadPtr (plane_id);
+      pproc._tdg._sr2_ptr    = fsr2_sptr-&gt;GetReadPtr (plane_id);
+      pproc._tdg._stride_dst = fdst_sptr-&gt;GetPitch (plane_id);
+      pproc._tdg._stride_sr1 = fsr1_sptr-&gt;GetPitch (plane_id);
+      pproc._tdg._stride_sr2 = fsr2_sptr-&gt;GetPitch (plane_id);
+      pproc._tdg._w          =   (vi.IsPlanar ())
+                               ? fdst_sptr-&gt;GetRowSize (plane_id)
+                               : vi.RowSize ();
+      const int height       = fdst_sptr-&gt;GetHeight (plane_id);
+
+      // Setup and run the tasks. We need to provide the slicer with
+      // the plane height so it can generate coherent top and bottom
+      // row indexes for each slice.
+      pproc._slicer.start (height, pproc._tdg, &amp;AvstpAverage::process_subplane);
+   }
+
+   // Waits for all the tasks to terminate
+   for (int p = 0; p &lt; _nbr_planes; ++p)
+   {
+      pproc_arr [p]._slicer.wait ();
+   }
+
+   return (fdst_sptr);
+}
+</pre>
+
+<p>Finally, the processing function.
+The <code>td</code> structure contains data specific to the slice.
+It’s private to the slice, not shared.
+<code>td._y_beg</code> is the first row to process.
+Important: the interval is half-open, so <code>td._y_end</code> is not the last row, it’s the row after the last one.
+Therefore <code>td._y_end - td._y_beg</code> gives the number of lines to process.<p>
+
+<pre class="src">void   AvstpAverage::process_subplane (Slicer::TaskData &amp;td)
+{
+   assert (&amp;td != 0);
+
+   const TaskDataGlobal &amp;   tdg = *(td._glob_data_ptr);
+
+   // Sets our pointers to the slice top location
+   ::BYTE *       dst_ptr = tdg._dst_ptr + td._y_beg * tdg._stride_dst;
+   const ::BYTE * sr1_ptr = tdg._sr1_ptr + td._y_beg * tdg._stride_sr1;
+   const ::BYTE * sr2_ptr = tdg._sr2_ptr + td._y_beg * tdg._stride_sr2;
+
+   // Slice processing
+   for (int y = td._y_beg; y &lt; td._y_end; ++y)
+   {
+      for (int x = 0; x &lt; tdg._w; ++x)
+      {
+         dst_ptr [x] = ::BYTE ((sr1_ptr [x] + sr2_ptr [x] + 1) &gt;&gt; 1);
+      }
+
+      dst_ptr += tdg._stride_dst;
+      sr1_ptr += tdg._stride_sr1;
+      sr2_ptr += tdg._stride_sr2;
+   }
+}
+</pre>
+
+<p><code>td._slicer_ptr</code>, which is ignored here, can be used to access the dispatcher via the slicer object.
+Thus, additionnal tasks may be enqueued, they will be attributed to the same group as the current task (and waited by the same call).</p>
+
+<p>That’s about everything you need to know to build a robust and efficient Avisynth multi-threaded plug-in.</p>
+
+<h2><a id="complex"></a>Complex tasks</h2>
+
+<p>There are tasks that are complex and cannot be decomposed in multiple parallel sub-tasks from the beginning to the end.
+Some calculations may have dependencies on other calculations, showing a lot of vertices on the processing flowgraph.
+Here are a few general tips:</p>
+
+<ul><li>Use <code>avstp_wait_completion()</code> only for the final node, or for global synchronisation points.</li></ul>
+
+<ul><li>You can enqueue one or more task at any moment from another task.
+This is useful to manage a branching after a calculation.</li></ul>
+
+<ul><li>For partial synchronisations, associate an atomic counter with the synchronisation point.
+At the beginning, set the counter to the number of task to be synchronised.
+Decrement the counter at the end of all these sub-tasks.
+If the counter reaches 0, the synchronisation is done, you can continue with further calculations.
+If it is still positive, just leave the task immediately.
+For the atomic counter, you can use the <code>conc::AtomicInt</code> template class or just the <code>InterlockedIncrement</code>/<code>InterlockedDecrement</code> system functions.</li></ul>
+
+<ul><li>On branching, to save some calls to the library (and maybe system calls related to semaphores), enqueue N-1 task and continue with the Nth task, instead of enqueuing all the new tasks and leaving.</li></ul>
+
+<ul><li>If your tasks need temporary resources or buffers that cannot fit in the stack, you can use a <code>conc::ObjPool</code> and implement <code>conc::ObjFactoryInterface</code> to share them efficiently between threads.</li></ul>
+
+
+
+<h2><a id="api"></a>API reference</h2>
+
+<p>All the following functions are declared in <code>avstp.h</code>.
+They are all thread-safe, so they can be called concurrently from any thread.
+If the call fails, a null pointer is returned, or a negative error code if the return value is an <code>int</code>.</p>
+
+<h3>avstp_get_interface_version</h3>
+
+<pre class="proto">int avstp_get_interface_version ();</pre>
+
+<p>Returns the interface version.
+See the <code>avstp_INTERFACE_VERSION</code> value in the header.</p>
+
+<h3>avstp_create_dispatcher</h3>
+
+<pre class="proto">avstp_TaskDispatcher * avstp_create_dispatcher ();</pre>
+
+<p>Call this function once to create a dispatcher, before processing anything.
+The call must be paired with a call to <code>avstp_destroy_dispatcher()</code> to destroy the dispatcher.<p>
+
+<h3>avstp_destroy_dispatcher</h3>
+
+<pre class="proto">void avstp_destroy_dispatcher (avstp_TaskDispatcher *td_ptr);</pre>
+
+<p>When you’re done with multi-threading, call <code>avstp_destroy_dispatcher()</code> to release the dispatcher.
+Not doing this may result in resource leaks.
+Destroy the dispatcher only when all the associated tasks are known to be finished.
+<var>td_ptr</var> is the dispatcher to destroy.</p>
+
+<h3>avstp_get_nbr_threads</h3>
+
+<pre class="proto">int avstp_get_nbr_threads ();</pre>
+
+<p>Returns the current number of working threads, including the main thread.
+The value may vary during the filter construction stage, depending on an <code>avstp_set_threads()</code> script function call.</p>
+
+<h3>avstp_enqueue_task</h3>
+
+<pre class="proto">int avstp_enqueue_task (avstp_TaskDispatcher *td_ptr,
+                        avstp_TaskPtr task_ptr,
+                        void *user_data_ptr);</pre>
+
+<p>Schedules the asynchronious execution of a task.
+<var>td_ptr</var> is the dispatcher which the task will be attached to.
+<var>task_ptr</var> and <var>user_data_ptr</var> are respectively a pointer to the function to execute and a pointer to its private data, given as parameter.
+You can enqueue new tasks at any moment, even if the main threads has started waiting.</p>
+
+<h3>avstp_wait_completion</h3>
+
+<pre class="proto">int avstp_wait_completion (avstp_TaskDispatcher *td_ptr);</pre>
+
+<p>When called, the function will wait for the completion of all the tasks attached to the dispatcher.
+If you do not want to wait for some tasks, create a second dispatcher for them.
+The function will return immediately if no task have been previously scheduled.</p>
+
+
+
+<h2><a id="changelog"></a>Changelog</h2>
+
+	<p><b>v1.0.4.1, 2023.01.23 (pinterf)</b></p>
+	<ul>
+		<li>Fix rare hangup</li>
+		<li>Moved to github: https://github.com/pinterf/AVSTP</li>
+		<li>Compiled with MSVC 2022</li>
+	</ul>
+
+	<p><b>v1.0.4, 2020.10.07</b></p>
+	<ul>
+		<li>Compiled with MSVC 2019</li>
+		<li>C++11 or above is now required for compilation</li>
+		<li>Window XP the 32-bit version is not supported anymore</li>
+	</ul>
+
+	<p><b>v1.0.3, 2015.12.30</b></p>
+	<ul>
+		<li>Compiled with MSVC 2013</li>
+		<li>Upgraded internal files</li>
+	</ul>
+
+	<p><b>v1.0.2, 2013.11.04</b></p>
+	<ul>
+		<li>Added a 64-bit version.</li>
+	</ul>
+
+	<p><b>v1.0.1, 2012.05.27</b></p>
+	<ul>
+		<li>Removed any floating point code from the implementation, so avstp doesn’t get confused when the client code doesn’t flush the FP register state after MMX operations.
+It was occasionally causing deadlocks.</li>
+	</ul>
+
+	<p><b>v1.0.0, 2012.03.11</b></p>
+	<ul>
+		<li>Initial release</li>
+	</ul>
+
+
+<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>
+
+</div></body>
+</html>
+
+
