@@ -296,6 +296,7 @@ sub ProcessLigoGPS($$$;$)
     my $dirName = $$dirInfo{DirName} || 'LigoGPS';
     push @{$$et{PATH}}, $dirName unless $$dirInfo{DirID};
     # not fuzzed if header =~ /LIGOGPSINFO\0\0\0\0[\x01\x14]/ (\x01=BlueSkySeaDV688)
+    # (also see notes in github issue #470)
     $noFuzz = 1 if substr($$dataPt, $pos-8, 4) =~ /^\0\0\0[\x01\x14]/;
     $et->VerboseDir($dirName);
     for (; $pos + 0x84 <= length($$dataPt); $pos+=0x84) {
@@ -418,7 +419,7 @@ variety of dashcam makes and models.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

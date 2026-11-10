@@ -50,7 +50,7 @@ use Image::ExifTool::Exif;
 use Image::ExifTool::GPS;
 require Exporter;
 
-$VERSION = '3.74';
+$VERSION = '3.81';
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(EscapeXML UnescapeXML);
 
@@ -65,7 +65,7 @@ sub ProcessBlankInfo($$$;$);
 sub ValidateXMP($;$);
 sub ValidateProperty($$;$);
 sub UnescapeChar($$;$);
-sub AddFlattenedTags($;$$);
+sub AddFlattenedTags($;$$$);
 sub FormatXMPDate($);
 sub ConvertRational($);
 sub ConvertRationalList($);
@@ -862,35 +862,43 @@ my %sRangeMask = (
     },
     GAudio => {
         Name => 'GAudio',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GAudio' },
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GAudio' },
     },
     GImage => {
         Name => 'GImage',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GImage' },
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GImage' },
     },
     GPano => {
         Name => 'GPano',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GPano' },
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GPano' },
+    },
+    GContainer => {
+        Name => 'GContainer',
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GContainer' },
     },
     GSpherical => {
         Name => 'GSpherical',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GSpherical' },
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GSpherical' },
     },
     GDepth => {
         Name => 'GDepth',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GDepth' },
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GDepth' },
     },
     GFocus => {
         Name => 'GFocus',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GFocus' },
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GFocus' },
     },
     GCamera => {
         Name => 'GCamera',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GCamera' },
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GCamera' },
     },
     GCreations => {
         Name => 'GCreations',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GCreations' },
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::GCreations' },
+    },
+    Device => {
+        Name => 'Device',
+        SubDirectory => { TagTable => 'Image::ExifTool::Google::Device' },
     },
     dwc => {
         Name => 'dwc',
@@ -907,10 +915,6 @@ my %sRangeMask = (
     LImage => {
         Name => 'LImage',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::LImage' },
-    },
-    Device => {
-        Name => 'Device',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::Device' },
     },
     sdc => {
         Name => 'sdc',
@@ -947,10 +951,6 @@ my %sRangeMask = (
     seal => {
         Name => 'seal',
         SubDirectory => { TagTable => 'Image::ExifTool::XMP::seal' },
-    },
-    GContainer => {
-        Name => 'GContainer',
-        SubDirectory => { TagTable => 'Image::ExifTool::XMP::GContainer' },
     },
 );
 
@@ -1377,10 +1377,30 @@ my %sPantryItem = (
                     RadialDistortParam1  => { Writable => 'real' },
                     RadialDistortParam2  => { Writable => 'real' },
                     RadialDistortParam3  => { Writable => 'real' },
+                    VignetteModel => {
+                        Namespace       => 'crlcp',
+                        Struct => {
+                            NAMESPACE   => 'stCamera',
+                            STRUCT_NAME => 'VignetteModel',
+                            ImageXCenter         => { Writable => 'real' },
+                            ImageYCenter         => { Writable => 'real' },
+                            VignetteModelParam1    => { Writable => 'real' },
+                            VignetteModelPiecewiseParam => { List => 'Seq' },
+                        },
+                    },
                 },
             },
         },
     },
+    CameraProfilesPerspectiveModelVignetteModelVignetteModelPiecewiseParam => {
+        Name => 'CameraProfilesPerspectiveModelVignetteModelPiecewiseParam',
+        Flat => 1,
+    },
+    CameraProfilesPerspectiveModelVignetteModelVignetteModelParam1 => {
+        Name => 'CameraProfilesPerspectiveModelVignetteModelParam1',
+        Flat => 1,
+    },
+    LabelColor => { },
 );
 
 # Photoshop Camera Raw namespace properties (crs) - (ref 8,PH)
@@ -1865,6 +1885,11 @@ my %sPantryItem = (
             What             => { },
         },
     },
+    # more new stuff
+    PointColors => { List => 'Seq' },
+    ColorVariance             => { Writable => 'real', List => 'Seq' },
+    CropConstrainToUnitSquare => { Writable => 'integer' },
+    HDRMaxValue               => { Writable => 'real' },
 );
 
 # Tiff namespace properties (tiff)
@@ -2104,7 +2129,7 @@ my %sPantryItem = (
     LightSource => {
         Groups => { 2 => 'Camera' },
         SeparateTable => 'EXIF LightSource',
-        PrintConv =>  \%Image::ExifTool::Exif::lightSource,
+        PrintConv => \%Image::ExifTool::Exif::lightSource,
     },
     Flash => {
         Groups => { 2 => 'Camera' },
@@ -2417,13 +2442,16 @@ my %sPantryItem = (
         PrintConvInv => '$val=~s/\s*m$//; $val',
     },
     NativeDigest => { }, #PH
-    # the following written incorrectly by ACR 15.1
+    # --- the following written incorrectly by ACR 15.1
     # SubSecTime (should not be written according to Exif4XMP 2.32 specification)
     # SubSecTimeOriginal (should not be written according to Exif4XMP 2.32 specification)
     # SubSecTimeDigitized (should not be written according to Exif4XMP 2.32 specification)
     # SerialNumber (should be BodySerialNumber)
     # Lens (should be XMP-aux)
     # LensInfo (should be XMP-aux)
+    # --- these written incorrectly by Adobe too:
+    # LensMake (should be XMP-exifEX)
+    # SensitivityType (should be XMP-exifEX)
 );
 
 # Exif extended properties (exifEX, ref 12)
@@ -2513,7 +2541,8 @@ my %sPantryItem = (
     # new in Exif 2.32 (according to the spec, these should use a different namespace
     # URI, but the same namespace prefix... Exactly how is that supposed to work?!!
     # -- I'll just stick with the same URI)
-    CompositeImage => { Writable => 'integer',
+    CompositeImage => {
+        Writable => 'integer',
         PrintConv => {
             0 => 'Unknown',
             1 => 'Not a Composite Image',
@@ -2548,6 +2577,85 @@ my %sPantryItem = (
     RAWDevelopingSoftware   => { },
     ImageEditingSoftware    => { },
     MetadataEditingSoftware => { },
+    GPSAltitudeRef  => {
+        Groups => { 2 => 'Location' },
+        Writable => 'integer',
+        Notes => 'avoided to prioritize the original version of this tag in the exif namespace',
+        Avoid => 1,
+        PrintConv => {
+            OTHER => sub {
+                my ($val, $inv) = @_;
+                return undef unless $inv and $val =~ /^([-+0-9])/;
+                return($1 eq '-' ? 1 : 0);
+            },
+            0 => 'Above Sea Level',
+            1 => 'Below Sea Level',
+            2 => 'Positive Sea Level (sea-level ref)', # sea-level reference, Exif 3.0
+            3 => 'Negative Sea Level (sea-level ref)', # sea-level reference, Exif 3.0
+        },
+    },
+    # new in Exif 3.1
+    LightSource => {
+        Groups => { 2 => 'Camera' },
+        SeparateTable => 'EXIF LightSource',
+        Notes => 'avoided to prioritize the original version of this tag in the exif namespace',
+        Avoid => 1,
+        PrintConv => \%Image::ExifTool::Exif::lightSource,
+    },
+    LearningOptOutIn => {
+        Struct => {
+            STRUCT_NAME => 'LearningOptOutIn',
+            NAMESPACE => 'exifEX',
+            # this is a stupid way to do this...
+            # Do the CIPA idiots have nobody that understands XMP?
+            # This should be an ordered list of structures, with no "NumberOfSets".
+            # As it stands, converting this would be a pain in the ass requiring
+            # dedicated code, so I'm punting on this one and leaving it unconverted.
+            NumberOfSets => { Writable => 'integer' },
+            Values => { List => 'Seq', Writable => 'integer' },
+        },
+    },
+    DevelopmentType => {
+        Struct => {
+            STRUCT_NAME => 'DevelopmentType',
+            NAMESPACE => 'exifEX',
+            DevelopmentCharacteristic => {
+                Writable => 'integer',
+                PrintConv => {
+                    1 => 'Accurate Reproduction',
+                    2 => 'Small Differences',
+                    4 => 'Extreme Differences',
+                },
+            },
+            FactoryDefault => {
+                Writable => 'integer',
+                PrintConv => {
+                    1 => 'Factory Default Settings',
+                    2 => 'Not Default Settings',
+                    4 => 'Unknown Settings',
+                },
+            },
+        },
+    },
+    DevelopmentTypeDevelopmentCharacteristic => { Flat => 1, Name => 'DevelopmentTypeCharacteristic' },
+    DevelopmentTypeDescription => { },
+    DistortionCorrection => {
+        Writable => 'integer',
+        PrintConv => { 0 => 'No', 1 => 'Yes' },
+    },
+    ChromaticAberrationCorrection => {
+        Name => 'ChromaticAberrationCorrection',
+        Writable => 'integer',
+        PrintConv => { 0 => 'No', 1 => 'Yes' },
+    },
+    ShadingCorrection => {
+        Writable => 'integer',
+        PrintConv => { 0 => 'No', 1 => 'Yes' },
+    },
+    NoiseReduction => {
+        Writable => 'integer',
+        PrintConv => { 0 => 'No', 1 => 'Low', 2 => 'Normal', 3 => 'High' },
+    },
 );
 
 # Auxiliary namespace properties (aux) - not fully documented (ref PH)
@@ -2627,7 +2735,7 @@ my %sPantryItem = (
     EnhanceDenoiseAlreadyApplied    => { Writable => 'boolean' }, #forum14760
     EnhanceDenoiseVersion           => { }, #forum14760 integer?
     EnhanceDenoiseLumaAmount        => { }, #forum14760 integer?
-    # FujiRatingAlreadyApplied - boolean written by LR classic 13.2 (forum15815)
+    FujiRatingAlreadyApplied        => { Writable => 'boolean' }, #forum15815 (LR classic 13.2)
 );
 
 # IPTC Core namespace properties (Iptc4xmpCore) (ref 4)
@@ -2915,7 +3023,7 @@ sub UnescapeChar($$;$)
 sub FixUTF8($;$)
 {
     my ($strPt, $bad) = @_;
-    my $fixed;
+    my ($fixed, $out, $last) = (undef, '', 0);
     pos($$strPt) = 0; # start at beginning of string
     for (;;) {
         last unless $$strPt =~ /([\x80-\xff])/g;
@@ -2939,10 +3047,11 @@ sub FixUTF8($;$)
         }
         # replace bad character
         $bad = '?' unless defined $bad;
-        substr($$strPt, $pos-1, 1) = $bad;
-        pos($$strPt) = $pos-1 + length $bad;
+        $out .= substr($$strPt, $last, $pos - 1 - $last) . $bad;
+        $last = pos($$strPt) = $pos;
         $fixed = 1;
     }
+    $$strPt = $out . substr($$strPt, $last) if $fixed;
     return $fixed;
 }
 
@@ -3074,14 +3183,14 @@ sub RegisterNamespace($)
 #------------------------------------------------------------------------------
 # Generate flattened tags and add to table
 # Inputs: 0) tag table ref, 1) tag ID for Struct tag (if not defined, whole table is done),
-#         2) flag to not expand sub-structures
+#         2) flag to not expand sub-structures, 3) Hidden flag
 # Returns: number of tags added (not counting those just initialized)
 # Notes: Must have verified that $$tagTablePtr{$tagID}{Struct} exists before calling this routine
 # - makes sure that the tagInfo Struct is a HASH reference
-sub AddFlattenedTags($;$$)
+sub AddFlattenedTags($;$$$)
 {
     local $_;
-    my ($tagTablePtr, $tagID, $noSubStruct) = @_;
+    my ($tagTablePtr, $tagID, $noSubStruct, $hidden) = @_;
     my $count = 0;
     my @tagIDs;
 
@@ -3153,6 +3262,7 @@ sub AddFlattenedTags($;$$)
                 # generate new flattened tag information based on structure field
                 my $flatName = $flat . $flatField;
                 $flatInfo = { %$fieldInfo, Name => $flatName, Flat => 0 };
+                $$flatInfo{Hidden} = 0 unless $hidden;
                 $$flatInfo{FlatName} = $flatName if $$fieldInfo{FlatName};
                 # make a copy of the Groups hash if necessary
                 $$flatInfo{Groups} = { %{$$fieldInfo{Groups}} } if $$fieldInfo{Groups};
@@ -3350,13 +3460,14 @@ sub PrintLensID(@)
 #------------------------------------------------------------------------------
 # Convert XMP date/time to EXIF format
 # Inputs: 0) XMP date/time string, 1) set if we aren't sure this is a date
-# Returns: EXIF date/time
+# Returns: EXIF date/time, and flag in list context if this was a standard date/time value
 sub ConvertXMPDate($;$)
 {
     my ($val, $unsure) = @_;
     if ($val =~ /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}:\d{2})(:\d{2})?\s*(\S*)$/) {
         my $s = $5 || '';           # seconds may be missing
         $val = "$1:$2:$3 $4$s$6";   # convert back to EXIF time format
+        return($val, 1) if wantarray;
     } elsif (not $unsure and $val =~ /^(\d{4})(-\d{2}){0,2}/) {
         $val =~ tr/-/:/;
     }
@@ -3604,6 +3715,7 @@ NoLoop:
             if (not length $val and $$attrs{'rdf:parseType'} and $$attrs{'rdf:parseType'} eq 'Resource') {
                 $$tagInfo{Struct} = { STRUCT_NAME => 'XMP Unknown' } unless $$tagInfo{Struct};
             }
+            $$tagInfo{Hidden} = 2;  # (don't show in -list outputs)
             AddTagToTable($tagTablePtr, $tagID, $tagInfo);
         }
         last;
@@ -3630,7 +3742,7 @@ NoLoop:
         my $v = UnescapeXML(substr($val, 0, $p - length($1) - 12)) . $1;
         while ($val =~ /<!\[CDATA\[(.*?)\]\]>/sg) {
             my $p1 = pos $val;
-            $v .= UnescapeXML(substr($val, $p, $p1 - length($1) - 12)) . $1;
+            $v .= UnescapeXML(substr($val, $p, $p1 - $p - length($1) - 12)) . $1;
             $p = $p1;
         }
         $val = $v . UnescapeXML(substr($val, $p));
@@ -3647,7 +3759,12 @@ NoLoop:
         if (($new or $fmt eq 'rational') and ConvertRational($val)) {
             $rational = $rawVal;
         } else {
-            $val = ConvertXMPDate($val, $new) if $new or $fmt eq 'date';
+            my $stdDate;
+            ($val, $stdDate) = ConvertXMPDate($val, $new) if $new or $fmt eq 'date';
+            if ($stdDate and $added) {
+                $$tagInfo{Groups}{2} = 'Time';
+                $$tagInfo{PrintConv} = '$self->ConvertDateTime($val)';
+            }
         }
         if ($$et{XmpValidate} and $fmt and $fmt eq 'boolean' and $val!~/^True|False$/) {
             if ($val =~ /^true|false$/) {
@@ -3658,6 +3775,10 @@ NoLoop:
         }
         # protect against large binary data in unknown tags
         $$tagInfo{Binary} = 1 if $new and length($val) > 65536;
+    }
+    if ($$et{OPTIONS}{Verbose}) {
+        my $tagID = join('/',@$props);
+        $et->VerboseInfo($tagID, $tagInfo, Value => $rawVal || $val);
     }
     # store the value for this tag
     my $key = $et->FoundTag($tagInfo, $val) or return 0;
@@ -3677,21 +3798,17 @@ NoLoop:
         # set group1 dynamically according to the namespace
         $et->SetGroup($key, "$$tagTablePtr{GROUPS}{0}-$ns");
     }
-    if ($$et{OPTIONS}{Verbose}) {
-        if ($added) {
-            my $props;
-            if (@$added > 1) {
-                $$tagInfo{Flat} = 0;    # this is a flattened tag
-                my @props = map { $$_[0] } @$added;
-                $props = ' (' . join('/',@props) . ')';
-            } else {
-                $props = '';
-            }
-            my $g1 = $et->GetGroup($key, 1);
-            $et->VPrint(0, $$et{INDENT}, "[adding $g1:$tag]$props\n");
+    if ($added and $$et{OPTIONS}{Verbose}) {
+        my $props;
+        if (@$added > 1) {
+            $$tagInfo{Flat} = 0;    # this is a flattened tag
+            my @props = map { $$_[0] } @$added;
+            $props = ' (' . join('/',@props) . ')';
+        } else {
+            $props = '';
         }
-        my $tagID = join('/',@$props);
-        $et->VerboseInfo($tagID, $tagInfo, Value => $rawVal || $val);
+        my $g1 = $et->GetGroup($key, 1);
+        $et->VPrint(0, $$et{INDENT}, "[adding $g1:$tag]$props\n");
     }
     # allow read-only subdirectories (eg. embedded base64 XMP/IPTC in NKSC files)
     if ($$tagInfo{SubDirectory} and not $$et{IsWriting}) {
@@ -3704,6 +3821,7 @@ NoLoop:
             DirName  => $$subdir{DirName} || $$tagInfo{Name},
             DataPt   => $dataPt,
             DirLen   => length $$dataPt,
+            TagInfo  => $tagInfo,
             IgnoreProp => $$subdir{IgnoreProp}, # (allow XML to ignore specified properties)
             IsExtended => 1, # (hack to avoid Duplicate warning for embedded XMP)
             NoStruct => 1,   # (don't try to build structures since this isn't true XMP)
@@ -3737,6 +3855,7 @@ sub ParseXMPElement($$$;$$$$)
     my $isSVG = $$et{XMP_IS_SVG};
     my $saveNS;     # save xlatNS lookup if changed for the scope of this element
     my (%definedNS, %usedNS);  # namespaces defined and used in this scope
+    my $err;
 
     # get our parse procs
     my ($attrProc, $foundProc);
@@ -3766,11 +3885,16 @@ sub ParseXMPElement($$$;$$$$)
         last if pos($$dataPt) > $end - 4;
         # reset nodeID before processing each element
         my $nodeID = $$blankInfo{NodeID} = $oldNodeID;
-        # get next element
-        last if $$dataPt !~ m{<([?/]?)([-\w:.\x80-\xff]+|!--)([^>]*)>}sg or pos($$dataPt) > $end;
+        # find start of next element, skipping over "<![CDATA[xxx]]>" sections
+        last if $$dataPt !~ m{<([?/]?)([-\w:.\x80-\xff]+|!--)([^>]*)>|(<!\[CDATA\[)}sg or pos($$dataPt) > $end;
         # (the only reason we match '<[?/]' is to keep from scanning past the
         #  "<?xpacket end..." terminator or other closing token, so
         next if $1;
+        if ($4) { # skip CDATA
+            next if $$dataPt =~ /\]\]>/sg and pos($$dataPt) <= $end;
+            $err = "Missing CDATA terminator";
+            last Element;
+        }
         my ($prop, $attrs) = ($2, $3);
         # skip comments
         if ($prop eq '!--') {
@@ -3778,7 +3902,7 @@ sub ParseXMPElement($$$;$$$$)
             last;
         }
         my $valStart = pos($$dataPt);
-        my $valEnd;
+        my ($valEnd, $wasComment);
         # only look for closing token if this is not an empty element
         # (empty elements end with '/', eg. <a:b/>)
         if ($attrs !~ s/\/$//) {
@@ -3790,11 +3914,22 @@ sub ParseXMPElement($$$;$$$$)
 #                my $val2 = $1;
                 # find next matching closing token, or the next opening token
                 # of a nested same-named element
-                if ($$dataPt !~ m{<(/?)$prop([-\w:.\x80-\xff]*)(.*?(/?))>}sg or
+                if ($$dataPt !~ m{<(?:(/?)\Q$prop\E([-\w:.\x80-\xff]*)(.*?(/?))>|(!\[CDATA\[|!--))}sg or
                     pos($$dataPt) > $end)
                 {
-                    $et->Warn("XMP format error (no closing tag for $prop)");
+                    $err = "XMP format error (no closing tag for $prop)";
                     last Element;
+                }
+                if ($5) { # find end of CDATA or comment section
+                    if ($5 eq '![CDATA[') {
+                        next if $$dataPt =~ /\]\]>/sg and pos($$dataPt) <= $end;
+                        $err = 'Missing CDATA terminator';
+                        last Element;
+                    } else {
+                        $$dataPt =~ /-->/sg and pos($$dataPt) <= $end and $wasComment = 1, next;
+                        $err = 'Missing comment terminator';
+                        last Element;
+                    }
                 }
                 next if $2; # ignore opening properties with different names
                 if ($1) {
@@ -4124,6 +4259,8 @@ sub ParseXMPElement($$$;$$$$)
                     # remove comments and whitespace from rdf:Description only
                     if ($prop eq 'rdf:Description' and $val) {
                         $val =~ s/<!--.*?-->//g; $val =~ s/^\s+//; $val =~ s/\s+$//;
+                    } elsif ($wasComment and $val) {
+                        $val =~ s/<!--.*?-->//g;
                     }
                     # if element value is empty, take value from RDF 'value' or 'resource' attribute
                     # (preferentially) or 'about' attribute (if no 'value' or 'resource')
@@ -4177,6 +4314,8 @@ sub ParseXMPElement($$$;$$$$)
         pos($$dataPt) = $start;
         $$dataPt =~ /\G\s+/gc;  # skip white space after closing token
     }
+    # handle any error which aborted processing
+    $isWriting ? $et->Error($err) : $et->Warn($err) if $err;
 #
 # process resources referenced by blank nodeID's
 #
@@ -4249,7 +4388,7 @@ sub ProcessXMP($$;$)
         # check leading BOM (may indicate double-encoded UTF)
         pos($$dataPt) = $dirStart;
         if ($$dataPt =~ /\G((\0\0)?\xfe\xff|\xff\xfe(\0\0)?|\xef\xbb\xbf)\0*<\0*\?\0*x\0*p\0*a\0*c\0*k\0*e\0*t/g) {
-            $double = $1 
+            $double = $1;
         } else {
             # handle UTF-16/32 XML
             pos($$dataPt) = $dirStart;
@@ -4429,7 +4568,7 @@ sub ProcessXMP($$;$)
             $buf2 = pack('C*', unpack("$fmt*",$buff));
         }
         if (Image::ExifTool::GetWarning()) {
-            $et->Warn('Superfluous BOM at start of XMP');
+            $et->Warn('Superfluous BOM at start of XMP') unless $$dirInfo{RAF};
             $dataPt = \$buff;   # use XMP with the BOM removed
         } else {
             $et->Warn('XMP is double UTF-encoded');
@@ -4480,13 +4619,16 @@ sub ProcessXMP($$;$)
         $begin = join "\0", split //, $begin;
         # must reset pos because it was killed by previous unsuccessful //g match
         pos($$dataPt) = $dirStart;
+        my $badEnc;
         if ($$dataPt =~ /\G(\0)?\Q$begin\E\0./sg) {
             # validate byte ordering by checking for U+FEFF character
             if ($1) {
                 # should be big-endian since we had a leading \0
-                $fmt = 'n' if $$dataPt =~ /\G\xfe\xff/g;
+                $fmt = 'n';
+                $badEnc = 1 unless $$dataPt =~ /\G\xfe\xff/g;
             } else {
-                $fmt = 'v' if $$dataPt =~ /\G\0\xff\xfe/g;
+                $fmt = 'v';
+                $badEnc = 1 unless $$dataPt =~ /\G\0\xff\xfe/g;
             }
         } else {
             # check for UTF-32 encoding (with three \0's between characters)
@@ -4496,12 +4638,14 @@ sub ProcessXMP($$;$)
                 $fmt = 0;   # set format to zero as indication we didn't find encoded XMP
             } elsif ($1) {
                 # should be big-endian
-                $fmt = 'N' if $$dataPt =~ /\G\0\0\xfe\xff/g;
+                $fmt = 'N';
+                $badEnc = 1 unless $$dataPt =~ /\G\0\0\xfe\xff/g;
             } else {
-                $fmt = 'V' if $$dataPt =~ /\G\0\0\0\xff\xfe\0\0/g;
+                $fmt = 'V';
+                $badEnc = 1 unless $$dataPt =~ /\G\0\0\0\xff\xfe\0\0/g;
             }
         }
-        defined $fmt or $et->Warn('XMP character encoding error');
+        $badEnc and $et->Warn('Invalid XMP encoding marker');
     }
     # warn if standard XMP is missing xpacket wrapper
     if ($$et{XMP_NO_XPACKET} and $$et{OPTIONS}{Validate} and
@@ -4617,7 +4761,7 @@ information.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

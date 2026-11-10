@@ -116,7 +116,6 @@ sub ConvertPLIST($$);
         # - changed in 12.19 to MediaGroupUUID, NealKrawetz private communication
         # - changed back to ContentIdentifier since Apple writes this to Keys content.identifier (forum14874)
         Writable => 'string',
-        
     },
     # 0x0012 - (QRMOutputType, ref 2)
     # 0x0013 - (SphereExternalForceOffset, ref 2)
@@ -400,7 +399,7 @@ Apple maker notes in EXIF information.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

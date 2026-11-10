@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.02';
+$VERSION = '1.03';
 
 my %flifMap = (
     EXIF         => 'FLIF',
@@ -36,7 +36,7 @@ my %flifMap = (
 # FLIF tags
 %Image::ExifTool::FLIF::Main = (
     GROUPS => { 0 => 'File', 1 => 'File', 2 => 'Image' },
-    VARS => { HEX_ID => 0 },
+    VARS => { ID_FMT => 'dec' },
     NOTES => q{
         Information extracted from Free Lossless Image Format files.  See
         L<http://flif.info/> for more information.
@@ -115,11 +115,13 @@ sub GetVarInt($;$)
 {
     my ($raf, $add) = @_;
     my ($val, $buff);
+    my $n = 0;
     for ($val=0; ; $val<<=7) {
         $raf->Read($buff, 1) or return undef;
         my $byte = ord($buff);
         $val |= ($byte & 0x7f);
         last unless $byte & 0x80;
+        ++$n > 9 and return undef;
     }
     return $val + ($add || 0);
 }
@@ -329,7 +331,7 @@ meta information in FLIF (Free Lossless Image Format) images.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

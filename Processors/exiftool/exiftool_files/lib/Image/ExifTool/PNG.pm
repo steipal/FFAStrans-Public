@@ -1023,6 +1023,8 @@ sub FoundPNG($$$$;$$$$)
                     }
                     DoneDir($et, $dirName, $outBuff, $$tagInfo{NonStandard});
                 } else {
+                    # embedded directories use offsets relative to their own PNG chunk (github453)
+                    local $$et{PROCESSED} = { };
                     $processed = $et->ProcessDirectory(\%subdirInfo, $subTable, $processProc);
                 }
                 $compressed = 1;    # pretend this is compressed since it is binary data
@@ -1704,7 +1706,7 @@ and JNG (JPEG Network Graphics) images.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

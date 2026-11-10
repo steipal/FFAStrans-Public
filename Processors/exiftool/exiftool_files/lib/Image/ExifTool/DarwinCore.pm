@@ -296,7 +296,7 @@ my %event = (
             taxonomicStatus             => { },
             verbatimTaxonRank           => { },
             vernacularName              => { Writable => 'lang-alt' },
-            superFamily                 => { },     # dwc.tdwg.org added 2023 
+            superFamily                 => { },     # dwc.tdwg.org added 2023
             subFamily                   => { },     # dwc.tdwg.org added 2023
             tribe                       => { },     # dwc.tdwg.org added 2023
             subTribe                    => { },     # dwc.tdwg.org added 2023
@@ -332,7 +332,7 @@ my %event = (
             georeferenceProtocol        => { },
             georeferenceRemarks         => { },
             georeferenceSources         => { },
-            georeferenceVerificationStatus => { },      # dwc.tdwg.org removed 2023    
+            georeferenceVerificationStatus => { },      # dwc.tdwg.org removed 2023
             higherGeography             => { },
             higherGeographyID           => { },
             island                      => { },
@@ -383,7 +383,7 @@ This file contains tag definitions for the Darwin Core XMP namespace.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

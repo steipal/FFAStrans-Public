@@ -37,7 +37,7 @@ use vars qw($VERSION %leicaLensTypes);
 use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::Exif;
 
-$VERSION = '2.25';
+$VERSION = '2.29';
 
 sub ProcessLeicaLEIC($$$);
 sub WhiteBalanceConv($;$$);
@@ -361,6 +361,7 @@ my %shootingMode = (
                 '16 0'  => '1-area', # (FZ8)
                 '16 16' => '1-area (high speed)', # (FZ8)
                 '16 32' => '1-area +', #forum16903 (G9M2)
+                '16 225'=> '225-area 2', #forum16903 (S5D)
                 '17 0'  => 'Full Area', #forum16903 (G9M2)
                 # '32 0' is Face Detect for FS7, and Face Detect or Focus Tracking
                 # for the DMC-FZ200 (ref 17), and Auto is DMC-L1 guess,
@@ -916,13 +917,21 @@ my %shootingMode = (
         Name => 'AFPointPosition',
         Writable => 'rational64u',
         Count => 2,
-        Notes => 'X Y coordinates of primary AF area center, in the range 0.0 to 1.0',
+        Notes => q{
+            X Y coordinates of primary AF area center, in the range 0.0 to 1.0, or
+            "n/a" or "none" for invalid values
+        },
         PrintConv => q{
             return 'none' if $val eq '16777216 16777216';
+            return 'n/a' if $val =~ /^4194303\.9/;
             my @a = split ' ', $val;
             sprintf("%.2g %.2g",@a);
         },
-        PrintConvInv => '$val eq "none" ? "16777216 16777216" : $val',
+        PrintConvInv => q{
+            return '16777216 16777216' if $val eq 'none';
+            return '4294967295/1024 4294967295/1024' if $val eq 'n/a';
+            return $val;
+        },
     },
     0x4e => { #PH
         Name => 'FaceDetInfo',
@@ -1374,10 +1383,10 @@ my %shootingMode = (
         Writable => 'int16u',
         Format => 'int16s',
     },
-    0xbe => { #forum11194
+    0xbe => { #forum11194/17508
         Name => 'LongExposureNRUsed',
         Writable => 'int16u',
-        PrintConv => { 0 => 'No', 1 => 'Yes' },
+        PrintConv => { 1 => 'No', 2 => 'Yes' },
     },
     0xbf => { #forum11194
         Name => 'PostFocusMerging',
@@ -1432,6 +1441,11 @@ my %shootingMode = (
             3 => 'High',
         },
     },
+    0xd4 => { #forum17795
+        Name => 'HybridLogGamma',
+        Writable => 'int16u',
+        PrintConv => { 0 => 'Off', 1 => 'On' },
+    },
     0xd6 => { #PH (DC-S1)
         Name => 'NoiseReductionStrength',
         Writable => 'rational64s',
@@ -1441,8 +1455,8 @@ my %shootingMode = (
         Writable => 'rational64u',
         Notes => 'relative to size of image.  "n/a" for manual focus',
         Count => 2,
-        PrintConv => '$val =~ /^4194303.999/ ? "n/a" : $val',
-        PrintConvInv => '$val eq "n/a" ? "4194303.999 4194303.999" : $val',
+        PrintConv => '$val =~ /^4194303\.9/ ? "n/a" : $val',
+        PrintConvInv => '$val eq "n/a" ? "4294967295/1024 4294967295/1024" : $val',
     },
     0xe4 => { #IB
         Name => 'LensTypeModel',
@@ -1484,6 +1498,22 @@ my %shootingMode = (
         Name => 'DynamicRangeBoost',
         Writable => 'int16u',
         PrintConv => { 0 => 'Off', 1 => 'On' },
+    },
+    0xf1 => { #github365
+        Name => 'LUT1Name',
+        Writable => 'string',
+    },
+    0xf3 => { #github365
+        Name => 'LUT1Opacity',
+        Writable => 'int8u',    # (percent)
+    },
+    0xf4 => { #github365
+        Name => 'LUT2Name',
+        Writable => 'string',
+    },
+    0xf5 => { #github365
+        Name => 'LUT2Opacity',
+        Writable => 'int8u',    # (percent)
     },
     0x0e00 => {
         Name => 'PrintIM',
@@ -2271,7 +2301,7 @@ my %shootingMode = (
         Format => 'int16u[4]',
         RawConv => '$$self{NumFacePositions} < 1 ? undef : $val',
         Notes => q{
-            4 numbers: X/Y coordinates of the face center and width/height of face. 
+            4 numbers: X/Y coordinates of the face center and width/height of face.
             Coordinates are relative to an image twice the size of the thumbnail, or 320
             pixels wide
         },
@@ -2553,7 +2583,7 @@ my %shootingMode = (
     NAMESPACE => 'xmpDSA',
     WRITABLE => 'string',
     AVOID => 1,
-    VARS => { NO_ID => 1 },
+    VARS => { ID_FMT => 'none' },
     NOTES => 'XMP Digital Shift Assistant tags written by some Leica cameras.',
     Version             => { }, # eg. "1.0.0"
     CorrectionAlreadyApplied => { Writable => 'boolean' },
@@ -2934,7 +2964,7 @@ Panasonic and Leica maker notes in EXIF information.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

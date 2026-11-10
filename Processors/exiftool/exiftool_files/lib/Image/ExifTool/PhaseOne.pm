@@ -15,7 +15,7 @@ use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::Exif;
 
-$VERSION = '1.11';
+$VERSION = '1.12';
 
 sub WritePhaseOne($$$);
 sub ProcessPhaseOne($$$);
@@ -193,6 +193,22 @@ my @formatName = ( undef, 'string', 'int16s', undef, 'int32s' );
         Flags => ['Unknown','Hidden'],
         PrintConv => \&Image::ExifTool::LimitLongValues,
     },
+    0x0262 => { Name => 'SequenceID', Format => 'string' },
+    0x0263 => {
+        Name => 'SequenceKind',
+        PrintConv => {
+            0 => 'Bracketing: Shutter Speed',
+            1 => 'Bracketing: Aperture',
+            2 => 'Bracketing: ISO',
+            3 => 'Hyperfocal',
+            4 => 'Time Lapse',
+            5 => 'HDR',
+            6 => 'Focus Stacking',
+        },
+        PrintConvInv => '$val',
+    },
+    0x0264 => 'SequenceFrameNumber',
+    0x0265 => 'SequenceFrameCount',
     # 0x0300 - int32u: 100,101,102
     0x0301 => { Name => 'FirmwareVersions', Format => 'string' },
     # 0x0304 - int32u: 8,3073,3076
@@ -726,7 +742,7 @@ One maker notes.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

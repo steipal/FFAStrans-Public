@@ -132,7 +132,7 @@ my %j2cMarker = (
     NOTES => q{
         The tags below are found in JPEG 2000 images and the C2PA CAI JUMBF metadata
         in various file types (see below).  Note that ExifTool currently writes only
-        EXIF, IPTC and XMP tags in Jpeg2000 images, and EXIF and XMP in JXL images. 
+        EXIF, IPTC and XMP tags in Jpeg2000 images, and EXIF and XMP in JXL images.
         ExifTool will read/write Brotli-compressed EXIF and XMP in JXL images, but
         the API L<Compress|../ExifTool.html#Compress> option must be set to create new EXIF and XMP in compressed
         format.
@@ -144,7 +144,7 @@ my %j2cMarker = (
         PDF, SVG and GIF files, and ID3v2 metadata.  The suggested ExifTool
         command-line arguments for reading C2PA metadata are C<-jumbf:all -G3 -b -j
         -u -struct>.  This metadata may be deleted from writable JPEG, PNG, WebP,
-        TIFF-based, and QuickTime-based files by deleting the JUMBF group with
+        GIF, TIFF-based, and QuickTime-based files by deleting the JUMBF group with
         C<-jumbf:all=>.  The C2PA JUMBF metadata may be extracted as a block via the
         JUMBF tag.  See L<https://c2pa.org/specifications/> for the C2PA
         specification.
@@ -1671,7 +1671,7 @@ files.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

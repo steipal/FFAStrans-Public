@@ -17,7 +17,7 @@ use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::QuickTime;
 
-$VERSION = '1.13';
+$VERSION = '1.15';
 
 sub ProcessGoPro($$$);
 sub ProcessString($$$);
@@ -251,7 +251,8 @@ my %noYes = ( N => 'No', Y => 'Yes' );
         Notes => 'gyroscope readings in rad/s',
         Binary => 1,
     },
-    HCLT => 'HorizonControl', #3
+    LOGS => 'HealthLogs',
+    HCTL => 'HorizonControl', #3
     HDRV => { Name => 'HDRVideo', PrintConv => \%noYes }, #3/PH (NC)
   # HFLG (APP6) - seen: 0
     HSGT => 'HindsightSettings', #3
@@ -409,6 +410,7 @@ my %noYes = ( N => 'No', Y => 'Yes' );
     },
   # TOCK => { Name => 'OutTime', Unknown => 1, ValueConv => '$val/1000' }, #1 (gpmd)
     TSMP => { Name => 'TotalSamples', Unknown => 1 }, #2 (gpmd)
+    TIMO => 'TimeOffset',
     TYPE => { Name => 'StructureType', Unknown => 1 }, #2 (gpmd,GPMF - eg 'LLLllfFff', fmt c)
     TZON => { # (GPMF) - seen: 60 (fmt s)
         Name => 'TimeZone',
@@ -469,7 +471,8 @@ my %noYes = ( N => 'No', Y => 'Yes' );
     AALP => { Name => 'AudioLevel', Notes => 'dBFS' },
     GPSA => 'GPSAltitudeSystem', # (eg. 'MSLV')
     GRAV => { Name => 'GravityVector', Binary => 1 },
-    HUES => 'PrediminantHue',
+    # DISP - Disparity track
+    HUES => 'PredominantHue',
     IORI => { Name => 'ImageOrientation', Binary => 1, Notes => 'quaternions 0-1' },
     # LRVO - ? Part of LRV Frame Skip
     # LRVS - ? Part of LRV Frame Skip
@@ -485,7 +488,7 @@ my %noYes = ( N => 'No', Y => 'Yes' );
 %Image::ExifTool::GoPro::GPS5 = (
     PROCESS_PROC => \&ProcessString,
     GROUPS => { 1 => 'GoPro', 2 => 'Location' },
-    VARS => { HEX_ID => 0, ID_LABEL => 'Index' },
+    VARS => { ID_FMT => 'dec', ID_LABEL => 'Index' },
     0 => { # (unit='deg')
         Name => 'GPSLatitude',
         PrintConv => 'Image::ExifTool::GPS::ToDMS($self, $val, 1, "N")',
@@ -514,7 +517,7 @@ my %noYes = ( N => 'No', Y => 'Yes' );
 %Image::ExifTool::GoPro::GPS9 = (
     PROCESS_PROC => \&ProcessString,
     GROUPS => { 1 => 'GoPro', 2 => 'Location' },
-    VARS => { HEX_ID => 0, ID_LABEL => 'Index' },
+    VARS => { ID_FMT => 'dec', ID_LABEL => 'Index' },
     0 => { # (unit='deg')
         Name => 'GPSLatitude',
         PrintConv => 'Image::ExifTool::GPS::ToDMS($self, $val, 1, "N")',
@@ -563,7 +566,7 @@ my %noYes = ( N => 'No', Y => 'Yes' );
 %Image::ExifTool::GoPro::GPRI = (
     PROCESS_PROC => \&ProcessString,
     GROUPS => { 1 => 'GoPro', 2 => 'Location' },
-    VARS => { HEX_ID => 0, ID_LABEL => 'Index' },
+    VARS => { ID_FMT => 'dec', ID_LABEL => 'Index' },
     0 => { # (unit='s')
         Name => 'GPSDateTimeRaw',
         Groups => { 2 => 'Time' },
@@ -595,7 +598,7 @@ my %noYes = ( N => 'No', Y => 'Yes' );
 %Image::ExifTool::GoPro::GLPI = (
     PROCESS_PROC => \&ProcessString,
     GROUPS => { 1 => 'GoPro', 2 => 'Location' },
-    VARS => { HEX_ID => 0, ID_LABEL => 'Index' },
+    VARS => { ID_FMT => 'dec', ID_LABEL => 'Index' },
     0 => { # (unit='s')
         Name => 'GPSDateTime',
         Groups => { 2 => 'Time' },
@@ -626,7 +629,7 @@ my %noYes = ( N => 'No', Y => 'Yes' );
 %Image::ExifTool::GoPro::KBAT = (
     PROCESS_PROC => \&ProcessString,
     GROUPS => { 1 => 'GoPro', 2 => 'Camera' },
-    VARS => { HEX_ID => 0, ID_LABEL => 'Index' },
+    VARS => { ID_FMT => 'dec', ID_LABEL => 'Index' },
     NOTES => 'Battery status information found in GoPro Karma videos.',
      0 => { Name => 'BatteryCurrent',  PrintConv => '"$val A"' },
      1 => { Name => 'BatteryCapacity', PrintConv => '"$val Ah"' },
@@ -750,14 +753,26 @@ sub ProcessString($$$)
     my @list = ref $$dataPt eq 'ARRAY' ? @{$$dataPt} : ( $$dataPt );
     my ($string, $val);
     $et->VerboseDir('GoPro structure');
+    my $docNum = $$et{DOC_NUM};
+    my $subDoc = 0;
     foreach $string (@list) {
         my @val = split ' ', $string;
         my $i = 0;
         foreach $val (@val) {
             $et->HandleTag($tagTablePtr, $i, $val);
-            $$tagTablePtr{++$i} or $i = 0;
+            next if $$tagTablePtr{++$i};
+            # increment subdoc for records stored as string of values (eg. GPS5)
+            $i = 0;
+            ++$subDoc;
+            $$et{DOC_NUM} = "$docNum-$subDoc";
+        }
+        if ($i) {
+            # increment subdoc for records stored as array of strings (eg. GPS9)
+            ++$subDoc;
+            $$et{DOC_NUM} = "$docNum-$subDoc";
         }
     }
+    $$et{DOC_NUM} = $docNum;
     return 1;
 }
 
@@ -815,6 +830,10 @@ sub ProcessGoPro($$$)
 
     for (; $pos+8<=$dirEnd; $pos+=($size+3)&0xfffffffc) {
         my ($tag,$fmt,$len,$count) = unpack("x${pos}a4CCn", $$dataPt);
+        if ($count > 100000000) {
+            $et->Warn('Invalid GoPro record count');
+            last;
+        }
         if ($tag =~ /[^-_a-zA-Z0-9 ]/) {
             $et->Warn('Unrecognized GoPro record') unless $tag eq "\0\0\0\0";
             last;
@@ -903,7 +922,7 @@ metadata from GoPro MP4 videos.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

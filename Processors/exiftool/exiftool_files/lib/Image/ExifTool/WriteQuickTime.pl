@@ -60,6 +60,22 @@ my %heicMap = (
     InteropIFD   => 'ExifIFD',
     MakerNotes   => 'ExifIFD',
 );
+my %mif3Map = (
+    # HEIC/HEIF/AVIF ('ftyp' major brand 'mif3') -> XMP/EXIF in top-level 'mini' box
+    Mini         => 'MOV',
+    XMP          => 'Mini',
+    EXIF         => 'Mini',
+    ICC_Profile  => 'Mini',
+    IFD0         => 'EXIF',
+    IFD1         => 'IFD0',
+    ExifIFD      => 'IFD0',
+    GPS          => 'IFD0',
+    SubIFD       => 'IFD0',
+    GlobParamIFD => 'IFD0',
+    PrintIM      => 'IFD0',
+    InteropIFD   => 'ExifIFD',
+    MakerNotes   => 'ExifIFD',
+);
 my %cr3Map = (
     # CR3 ('ftyp' compatible brand 'crx ') -> XMP at top level
     Movie     => 'MOV',
@@ -77,6 +93,7 @@ my %dirMap = (
     MP4  => \%mp4Map,
     CR3  => \%cr3Map,
     HEIC => \%heicMap,
+    MIF3 => \%mif3Map,
 );
 
 # convert ExifTool Format to QuickTime type
@@ -93,6 +110,11 @@ my $maxReadLen = 100000000; # maximum size of atom to read into memory (100 MB)
 # boxes that may exist in an "empty" Meta box:
 my %emptyMeta = (
     hdlr => 'Handler', 'keys' => 'Keys', lang => 'Language', ctry => 'Country', free => 'Free',
+);
+
+# starting word for Keys tags which use a full tag ID
+my %fullKeysID = (
+    com => 1,   xiaomi => 1,    samsung => 1,
 );
 
 # lookup for CTBO ID number based on uuid for Canon CR3 files
@@ -172,7 +194,7 @@ sub ConvInvISO6709($)
         # requires at least 3 digits after the decimal point
         # (and as of Apr 2021, Google Photos doesn't accept coordinats
         #  with more than 5 digits after the decimal place:
-        #  https://exiftool.org/forum/index.php?topic=11055.msg67171#msg67171 
+        #  https://exiftool.org/forum/index.php?topic=11055.msg67171#msg67171
         #  still a problem Apr 2024: https://exiftool.org/forum/index.php?msg=85761)
         my @fmt = ('%s%02d.%s%s','%s%03d.%s%s','%s%d.%s%s');
         my @limit = (90,180);
@@ -461,7 +483,10 @@ sub WriteKeys($$$)
         next unless $$nvHash{IsCreating} and $et->IsOverwriting($nvHash) and
             defined $et->GetNewValue($nvHash);
         # add new entry to 'keys' data
-        my $val = $id =~ /^com\./ ? $id : "com.apple.quicktime.$id";
+        my $val = $id;
+        unless ($val =~ /^(.*?)\./ and $fullKeysID{$1}) {
+            $val = "com.apple.quicktime.$val";
+        }
         $newData .= Set32u(8 + length($val)) . 'mdta' . $val;
         $et->VPrint(1, "$$et{INDENT}\[adding $keysGrp entry $newIndex '${id}']\n");
         $add{$newIndex++} = $tagInfo;
@@ -563,7 +588,7 @@ sub WriteItemInfo($$$)
                 next;
             }
         }
-        my ($hdr, $subTable, $proc);
+        my ($hdr, $subTable, $proc, %moreDirInfo, $newVal2);
         my $strt = 0;
         if ($name eq 'EXIF') {
             if (not length $buff) {
@@ -575,12 +600,28 @@ sub WriteItemInfo($$$)
             } elsif (length($buff) >= 4 and length($buff) >= 4 + unpack('N',$buff)) {
                 $hdr = substr($buff, 0, 4 + unpack('N',$buff));
                 $strt = length $hdr;
+                if (length($hdr) == 14 and substr($hdr, 4, 2) eq "\xff\xe1") {
+                    if ($$et{DEL_GROUP}{EXIF} or $$et{DEL_GROUP}{IFD0}) {
+                        # recreate EXIF in the usual format (no Xiaomi mess)
+                        ($hdr, $strt, $buff) = ("\0\0\0\x06Exif\0\0", 0, '');
+                    } else {
+                        $proc = \&Image::ExifTool::WriteJPEG;
+                        # (use EXIF table so the group names will be correct for deleting as a group)
+                        $moreDirInfo{XiaomiMess} = 1;
+                        $moreDirInfo{OutFile} = \$newVal2;
+                        $moreDirInfo{RAF} =  File::RandomAccess->new(\$buff);
+                        $newVal2 = '';
+                        $$et{EDIT_DIRS}{APP1} = 'JPEG';    # must parse into JPEG APP1
+                        $raf->Seek(4, 0); # (skip size)
+                        $hdr = '';
+                    }
+                }
             } else {
                 $et->Warn('Invalid Exif header');
                 next;
             }
-            $subTable = GetTagTable('Image::ExifTool::Exif::Main');
-            $proc = \&Image::ExifTool::WriteTIFF;
+            $subTable = GetTagTable('Image::ExifTool::Exif::Main') unless $subTable;
+            $proc = \&Image::ExifTool::WriteTIFF unless $proc;
         } else {
             $hdr = '';
             $subTable = GetTagTable('Image::ExifTool::XMP::Main');
@@ -590,9 +631,24 @@ sub WriteItemInfo($$$)
             DataLen  => length $buff,
             DirStart => $strt,
             DirLen   => length($buff) - $strt,
+            %moreDirInfo,
         );
         my $changed = $$et{CHANGED};
+        $$et{DemoteErrors} = 1;
         my $newVal = $et->WriteDirectory(\%dirInfo, $subTable, $proc);
+        if ($$et{DemoteErrors} > 1) {
+            # just copy existing subdirectory if a non-quicktime error occurred
+            undef $newVal;
+            $$et{CHANGED} = $changed; # nothing changed
+        }
+        undef $$et{DemoteErrors};
+        if ($moreDirInfo{OutFile} and defined $newVal) {
+            if ($newVal eq '1') {
+                $newVal = $newVal2; # return OutFile buffer (from WriteJPEG)
+            } elsif ($newVal eq '0' or $newVal eq '-1') {
+                undef $newVal;  # (shouldn't happen)
+            }
+        }
         if (defined $newVal and $changed ne $$et{CHANGED} and
             # nothing changed if deleting an empty directory
             ($dirInfo{DirLen} or length $newVal))
@@ -890,7 +946,7 @@ sub WriteQuickTime($$$)
     my ($et, $dirInfo, $tagTablePtr) = @_;
     $et or return 1;    # allow dummy access to autoload this package
     my ($mdat, @mdat, @mdatEdit, $edit, $track, $outBuff, $co, $term, $delCount);
-    my (%langTags, $canCreate, $delGrp, %boxPos, %didDir, $writeLast, $err, $atomCount);
+    my (%langTags, $canCreate, $delGrp, %boxPos, %didDir, %writeLast, $err, $atomCount);
     my ($tag, $lastTag, $lastPos, $errStr, $trailer, $buf2, $keysGrp, $keysPath, $itemIndex);
     my $outfile = $$dirInfo{OutFile} || return 0;
     my $raf = $$dirInfo{RAF};       # (will be null for lower-level atoms)
@@ -1096,13 +1152,17 @@ sub WriteQuickTime($$$)
         }
         if ($got != $size) {
             # ignore up to 256 bytes of garbage at end of file
-            if ($got <= 256 and $size >= 1024 and $tag ne 'mdat') {
+            my $type;
+            if ($got <= 256 and $size >= 1024 and $tag ne 'mdat' or
+                $got < 3000 and pack('N',$size) =~ /^<b[r>]/ and $type = 'extraneous HTML')
+            {
                 my $bytes = $got + length $hdr;
+                $type or $type = 'garbage';
                 if ($$et{OPTIONS}{IgnoreMinorErrors}) {
-                    $et->Warn("Deleted garbage at end of file ($bytes bytes)");
+                    $et->Warn("Deleted $type at end of file ($bytes bytes)");
                     $buff = $hdr = '';
                 } else {
-                    $et->Error("Possible garbage at end of file ($bytes bytes)", 1);
+                    $et->Error("Possible $type at end of file ($bytes bytes)", 1);
                     return $rtnVal;
                 }
             } else {
@@ -1374,6 +1434,7 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
                                             }
                                             $ctry = unpack('n', pack('a2',uc($2))) if $2 and $2 ne 'ZZ';
                                         }
+                                        $lang = $undLang if not $lang and $$et{OPTIONS}{QuickTimeUndLang};
                                         $newData = substr($buff, 0, $pos) unless defined $newData;
                                         $newData .= pack('Na4Nnn',16+length($newVal),'data',$flags,$ctry,$lang).$newVal;
                                         my $grp = $et->GetGroup($ti, 1);
@@ -1447,7 +1508,8 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
                                     $et->VerboseValue("- $grp:$$langInfo{Name}", $val);
                                     $et->VerboseValue("+ $grp:$$langInfo{Name}", $prVal);
                                     $newData = substr($buff, 0, $pos-16) unless defined $newData;
-                                    my $wLang = $lang eq $undLang ? 0 : $lang;
+                                    my $wLang = $lang;
+                                    $wLang = 0 if $wLang eq $undLang and not $$et{OPTIONS}{QuickTimeUndLang};
                                     $newData .= pack('Na4Nnn', length($newVal)+16, $type, $flags, $ctry, $wLang);
                                     $newData .= $newVal;
                                     ++$$et{CHANGED};
@@ -1535,7 +1597,8 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
                                 unless ($$tagInfo{NoDecode}) {
                                     $newData = $et->Encode($newData, $lang < 0x400 ? $charsetQuickTime : 'UTF8');
                                 }
-                                my $wLang = $lang eq $undLang ? 0 : $lang;
+                                my $wLang = $lang;
+                                $wLang = 0 if $wLang eq $undLang and not $$et{OPTIONS}{QuickTimeUndLang};
                                 if ($iText < 6) {
                                     $newData = pack('nn', length($newData), $wLang) . $newData;
                                 } elsif ($iText == 6) {
@@ -1578,7 +1641,8 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
                     push @{$$dirInfo{ChunkOffset}}, @chunkOffset;
                 }
                 if ($$tagInfo{WriteLast}) {
-                    $writeLast = ($writeLast || '') . Set32u($len) . $tag . $newData;
+                    my $ord = $$tagInfo{WriteLast};
+                    $writeLast{$ord} = ($writeLast{$ord} || '') . Set32u($len) . $tag . $newData;
                 } else {
                     $boxPos{$tag} = [ length($$outfile), length($newData) + 8 ];
                     # write the updated directory with its atom header
@@ -1636,7 +1700,8 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
             }
         }
         if ($tagInfo and $$tagInfo{WriteLast}) {
-            $writeLast = ($writeLast || '') . $hdr . $buff;
+            my $ord = $$tagInfo{WriteLast};
+            $writeLast{$ord} = ($writeLast{$ord} || '') . $hdr . $buff;
         } else {
             # save position of this box in the output buffer
 #TODO do this:
@@ -1731,7 +1796,14 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
         # (note that $tag may be a binary Keys index here)
         foreach $tag (@addTags) {
             my $tagInfo = $$dirs{$tag} || $$newTags{$tag};
-            next unless ref $tagInfo eq 'HASH'; # (shouldn't happen, but somehow there is forum17260)
+            unless (ref $tagInfo eq 'HASH') { # (shouldn't happen, but somehow there is forum17260)
+                # (also can happen if Meta exists but Keys does not since 'keys' is an array ref.
+                #  SonyPMW-EX1R.mp4 has a Movie-Meta atom with XML and no Keys that triggers this
+                #  issue.  Note that in this case the Meta HandlerType is 'meta' instead of 'mdta',
+                #  which isn't a problem for ExifTool, but may be for other software?)
+                next unless ref $tagInfo eq 'ARRAY';
+                $tagInfo = $et->GetTagInfo($tagTablePtr, $tag) or next;
+            }
             next if defined $$tagInfo{CanCreate} and not $$tagInfo{CanCreate};
             next if defined $$tagInfo{MediaType} and $$et{MediaType} ne $$tagInfo{MediaType};
             my $subdir = $$tagInfo{SubDirectory};
@@ -1758,6 +1830,7 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
                     }
                     $ctry = unpack('n', pack('a2',uc($2))) if $2 and $2 ne 'ZZ';
                 }
+                $lang = $undLang if not $lang and $$et{OPTIONS}{QuickTimeUndLang};
                 if ($$dirInfo{HasData}) {
                     # add 'data' header
                     $newVal = pack('Na4Nnn',16+length($newVal),'data',$flags,$ctry,$lang).$newVal;
@@ -1771,18 +1844,19 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
                         # (with extra junk before language code if IText > 6)
                         my $n = $$tagInfo{IText} - 6;
                         $newVal .= ' ' x $n if length($newVal) < $n;
-                        $newVal = "\0\0\0\0" . substr($newVal,0,$n) . pack('n',0,$lang) . substr($newVal,$n) . "\0";
+                        $newVal = "\0\0\0\0" . substr($newVal,0,$n) . pack('n',$lang) . substr($newVal,$n) . "\0";
                     } else {
                         # add IText header
                         $newVal = pack('nn',length($newVal),$lang) . $newVal;
                     }
-                } elsif ($ctry or $lang) {
+                } elsif ($ctry or ($lang and $lang ne $undLang)) {
                     my $grp = $et->GetGroup($tagInfo,1);
                     $et->Warn("Can't use language code for $grp:$$tagInfo{Name}");
                     next;
                 }
                 if ($$tagInfo{WriteLast}) {
-                    $writeLast = ($writeLast || '') .  Set32u(8+length($newVal)) . $tag . $newVal;
+                    my $ord = $$tagInfo{WriteLast};
+                    $writeLast{$ord} = ($writeLast{$ord} || '') .  Set32u(8+length($newVal)) . $tag . $newVal;
                 } else {
                     $boxPos{$tag} = [ length($$outfile), 8 + length($newVal) ];
                     Write($outfile, Set32u(8+length($newVal)), $tag, $newVal) or $rtnVal=$rtnErr, $err=1;
@@ -1838,7 +1912,8 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
                 }
                 my $newHdr = Set32u(8+length($newData)+length($prefix)) . $tag . $prefix;
                 if ($$tagInfo{WriteLast}) {
-                    $writeLast = ($writeLast || '') . $newHdr . $newData;
+                    my $ord = $$tagInfo{WriteLast};
+                    $writeLast{$ord} = ($writeLast{$ord} || '') . $newHdr . $newData;
                 } else {
                     if ($tag eq 'uuid') {
                         # add offset for new uuid (needed for CR3 CTBO offsets)
@@ -1885,7 +1960,7 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
 
     # return now if writing subdirectory
     if ($dataPt) {
-        $et->Error("Internal error: WriteLast not on top-level atom!\n") if $writeLast;
+        $et->Error("Internal error: WriteLast not on top-level atom!\n") if %writeLast;
         return $err ? undef : $$outfile;
     }
 
@@ -1897,7 +1972,7 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
             $et->Error('Media data referenced but not found');
             return $rtnVal;
         }
-        $et->Warn('No media data', 1);
+        $et->Warn('No media data', 1) unless $$et{FileType} eq 'MIF3';
     }
 
     # edit mdat blocks as required
@@ -2135,7 +2210,9 @@ ItemID2:    foreach $id (reverse sort { $a <=> $b } keys %$items) {
     }
 
     # write the stuff that must come last
-    Write($outfile, $writeLast) or $rtnVal = 0 if $writeLast;
+    foreach (sort keys %writeLast) {
+        Write($outfile, $writeLast{$_}) or $rtnVal = 0;
+    }
 
     # copy trailers if necessary
     while ($rtnVal and $trailer) {
@@ -2197,10 +2274,20 @@ sub WriteMOV($$)
         $raf->Read($buff, $size-8) == $size-8 and
         $buff !~ /^(....)+(qt  )/s)
     {
+        # (these FileType's may differ when reading, but we need only
+        #  differentiate the different structural types here for purposes
+        #  of deciding where the metadata is written)
         if ($buff =~ /^crx /) {
             $ftype = 'CR3',
         } elsif ($buff =~ /^(heic|mif1|msf1|heix|hevc|hevx|avif)/) {
             $ftype = 'HEIC';
+        } elsif ($buff =~ /^(mif3|msf3)/) {
+            if ($1 eq 'msf3') {
+                # need documentation for this format
+                $et->Error("Can't currently write msf3 files");
+                return 1;
+            }
+            $ftype = 'MIF3';
         } else {
             $ftype = 'MP4';
         }
@@ -2208,8 +2295,8 @@ sub WriteMOV($$)
         $ftype = 'MOV';
     }
     $et->SetFileType($ftype); # need to set "FileType" tag for a Condition
-    if ($ftype eq 'HEIC') {
-        # EXIF is preferred in HEIC files
+    if ($ftype eq 'HEIC' or $ftype eq 'MIF3') {
+        # EXIF is preferred in HEIC files (also prefer in MIF3 for now)
         $et->InitWriteDirs($dirMap{$ftype}, 'EXIF', 'QuickTime');
     } else {
         $et->InitWriteDirs($dirMap{$ftype}, 'XMP', 'QuickTime');
@@ -2247,7 +2334,7 @@ QuickTime-based file formats like MOV and MP4.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

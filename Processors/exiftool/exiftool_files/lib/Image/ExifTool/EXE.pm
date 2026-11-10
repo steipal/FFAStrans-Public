@@ -22,7 +22,7 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.23';
+$VERSION = '1.26';
 
 sub ProcessPEResources($$);
 sub ProcessPEVersion($$);
@@ -450,7 +450,7 @@ my %int32uTime = (
 # (see http://msdn.microsoft.com/en-us/library/aa381049.aspx)
 %Image::ExifTool::EXE::PEString = (
     GROUPS => { 2 => 'Other' },
-    VARS => { NO_ID => 1 },
+    VARS => { ID_FMT => 'none' },
     NOTES => q{
         Resource strings found in Windows PE files.  The B<TagID>'s are not shown
         because they are the same as the B<Tag Name>.  ExifTool will extract any
@@ -942,7 +942,7 @@ sub ReadUnicodeStr($$$;$)
     }
     $pos += 2 if $pos & 0x03;
     my $to = $et ? $et->Options('Charset') : 'UTF8';
-    return (Image::ExifTool::Decode(undef,$str,'UCS2','II',$to), $pos);
+    return (Image::ExifTool::Decode(undef,$str,'UTF16','II',$to), $pos);
 }
 
 #------------------------------------------------------------------------------
@@ -962,6 +962,7 @@ sub ProcessPEVersion($$)
         $pos = ($pos + 3) & 0xfffffffc;  # align on a 4-byte boundary
         last if $pos + 6 > $end;
         $len = Get16u($dataPt, $pos);
+        return 0 if $pos + $len > $end;
         $valLen = Get16u($dataPt, $pos + 2);
         $type = Get16u($dataPt, $pos + 4);
         return 0 unless $len or $valLen;  # prevent possible infinite loop
@@ -985,9 +986,11 @@ sub ProcessPEVersion($$)
             my $tagTablePtr = GetTagTable('Image::ExifTool::EXE::PEString');
             for ($index = 0; $pt + 6 < $pos; ++$index) {
                 $len = Get16u($dataPt, $pt);
+                $len or $et->Warn('Invalid PEString entry'), last;
                 $valLen = Get16u($dataPt, $pt + 2);
                 # $type = Get16u($dataPt, $pt + 4);
                 my $entryEnd = $pt + $len;
+                return 0 if $entryEnd > $end;
                 # get tag ID (converted to UTF8)
                 ($string, $pt) = ReadUnicodeStr($dataPt, $pt + 6, $entryEnd);
                 unless ($index) {
@@ -1110,7 +1113,7 @@ sub ProcessPEResources($$)
 #------------------------------------------------------------------------------
 # Process Windows PE file data dictionary
 # Inputs: 0) ExifTool object ref, 1) dirInfo ref
-# Returns: true on success or if the PE resources didn't exist, or false on error 
+# Returns: true on success or if the PE resources didn't exist, or false on error
 #          processing the PE resources
 sub ProcessPEDict($$)
 {
@@ -1352,7 +1355,7 @@ sub ProcessEXE($$)
                         } else { # misc debug info
                             next unless $n > 12;
                             my $exe = substr($buf2,12);
-                            $exe = $et->Decode($exe, 'UCS2') if Get32u(\$buf2,8);
+                            $exe = $et->Decode($exe, 'UTF16') if Get32u(\$buf2,8);
                             $exe =~ s/\0.*//; # truncate at null
                             $tagTablePtr = GetTagTable('Image::ExifTool::EXE::Misc');
                             $et->HandleTag($tagTablePtr, 12, $exe, DataPt => \$buf2, DataPos => $of);
@@ -1550,7 +1553,7 @@ library files.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

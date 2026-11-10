@@ -21,7 +21,7 @@ $VERSION = '1.04';
 
 my $MAX_PACKETS = 2;    # maximum packets to scan from each stream at start of file
 
-# Information types recognizedi in Ogg files
+# Information types recognized in Ogg files
 %Image::ExifTool::Ogg::Main = (
     NOTES => q{
         ExifTool extracts the following types of information from Ogg files.  See
@@ -215,7 +215,7 @@ information from Ogg bitstream container files.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

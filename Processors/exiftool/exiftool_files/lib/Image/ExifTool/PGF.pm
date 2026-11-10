@@ -15,7 +15,7 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.02';
+$VERSION = '1.03';
 
 # PGF header information
 %Image::ExifTool::PGF::Main = (
@@ -94,7 +94,11 @@ sub ProcessPGF($$)
 
     # extract information from the embedded metadata image (PNG format)
     if ($len > 0 and $len < 0x1000000 and $raf->Read($buff, $len) == $len) {
+        my $depth = $$et{PGFReEntryDepth} || 0;
+        $depth > 10 and $et->Warn('PGF nesting too deep'), return 1;
+        $$et{PGFReEntryDepth} = $depth + 1;
         $et->ExtractInfo(\$buff, { ReEntry => 1 });
+        $$et{PGFReEntryDepth} = $depth;
     }
     return 1;
 }
@@ -119,7 +123,7 @@ information from Progressive Graphics File (PGF) images.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

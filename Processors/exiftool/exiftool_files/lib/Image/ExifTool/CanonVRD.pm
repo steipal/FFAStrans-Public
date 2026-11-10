@@ -1004,7 +1004,7 @@ my $blankFooter = "CANON OPTIONAL DATA\0" . ("\0" x 42) . "\xff\xd9";
     WRITABLE => 1,
     PERMANENT => 1, # (can't add/delete these individually)
     GROUPS => { 1 => 'CanonDR4', 2 => 'Image' },
-    VARS => { HEX_ID => 1, SORT_PROC => \&SortDR4 },
+    VARS => { ID_FMT => 'hex', SORT_PROC => \&SortDR4 },
     NOTES => q{
         Tags written by Canon DPP version 4 in CanonVRD trailers and DR4 files. Each
         tag has three associated flag words which are stored with the directory
@@ -1716,8 +1716,7 @@ sub WrapDR4($)
 {
     my $val = shift;
     my $n = length $val;
-    my $oldOrder = GetByteOrder();
-    SetByteOrder('MM');
+    my $oldOrder = SetByteOrder('MM');
     $val = $blankHeader . "\xff\xff\0\xf7" . Set32u($n+8) . Set32u($n) .
                 $val . "\0\0\0\0" . $blankFooter;
     # update the new VRD length in the header/footer
@@ -2288,7 +2287,7 @@ files, and as a trailer in JPEG, CRW, CR2 and TIFF images.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

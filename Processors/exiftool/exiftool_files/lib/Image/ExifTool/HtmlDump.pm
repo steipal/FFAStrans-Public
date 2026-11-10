@@ -13,7 +13,7 @@ use vars qw($VERSION);
 use Image::ExifTool;    # only for FinishTiffDump()
 use Image::ExifTool::HTML qw(EscapeHTML);
 
-$VERSION = '1.42';
+$VERSION = '1.43';
 
 sub DumpTable($$$;$$$$$$);
 sub Open($$$;@);
@@ -311,7 +311,11 @@ sub Print($$;$$$$$)
     my $block = $$self{Block};
     $dataPos = 0 unless $dataPos;
     $outfile = \*STDOUT unless ref $outfile;
-    $title = 'HtmlDump' unless $title;
+    if ($title) {
+        $title = EscapeHTML($title);
+    } else {
+        $title = 'HtmlDump';
+    }
     $level or $level = 0;
     my $tell = $raf->Tell();
     $raf->Seek(0,2) or $$self{ERROR} = 'Seek error', return -1;
@@ -920,7 +924,7 @@ page.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

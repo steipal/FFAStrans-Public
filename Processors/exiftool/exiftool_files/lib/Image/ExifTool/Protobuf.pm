@@ -5,9 +5,12 @@
 #
 # Revisions:    2024-12-04 - P. Harvey Created
 #
-# Notes:        Tag definitions for Protobuf tags support additional 'signed',
-#               'unsigned' and 'int64s' formats for varInt (type 0) values,
-#               and 'rational' for byte (type 2) values
+# Notes:        Tag definitions for Protobuf tags support 'signed', 'unsigned',
+#               and 'int64s' formats for VARINT (type 0) values, 'int64u',
+#               'int64s', 'rational64u', 'rational64s' and 'double' for I64
+#               (type 1), 'undef', 'string' and 'rational' for LEN (type 2),
+#               and 'int32u', 'int32s', 'rational32u', 'rational32s',
+#               'fixed32u', 'fixed32s' and 'float' for I32 (type 5) values.
 #
 # References:   1) https://protobuf.dev/programming-guides/encoding/
 #------------------------------------------------------------------------------
@@ -18,9 +21,18 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.03';
+$VERSION = '1.08';
 
 sub ProcessProtobuf($$$;$);
+
+# largest unsigned integer on this system (2^32 or 2^64 - 1)
+my $intMax = ~0;
+
+# smallest unsigned integer that we interpret as int64s (0xffffffff00000000)
+my $int64sMin = 18446744069414584320;
+
+# formats that are protobuf only
+my %protoOnly = ( 'signed' => 1, 'unsigned' => 1 );
 
 #------------------------------------------------------------------------------
 # Read bytes from dirInfo object
@@ -40,17 +52,25 @@ sub GetBytes($$)
 # Read variable-length integer
 # Inputs: 0) dirInfo ref
 # Returns: integer value
+# - sets $$dirInfo{Bit0} according to bit 0 of returned value
+#   (necessary for cases where a signed integer exceeds $intMax)
 sub VarInt($)
 {
     my $dirInfo = shift;
-    my $val = 0;
-    my $shift = 0;
+    my $buff = GetBytes($dirInfo, 1);
+    return undef unless defined $buff;
+    my $val = ord($buff) & 0x7f;
+    $$dirInfo{Bit0} = $val & 0x01;
+    my $mult = 128;
+    my $i = 0;
     for (;;) {
-        my $buff = GetBytes($dirInfo, 1);
-        defined $buff or return undef;
-        $val += (ord($buff) & 0x7f) << $shift;
         last unless ord($buff) & 0x80;
-        $shift += 7;
+        $buff = GetBytes($dirInfo, 1);
+        return undef unless defined $buff;
+        $val += (ord($buff) & 0x7f) * $mult;
+        last unless ord($buff) & 0x80;
+        return undef if ++$i > 32;    # set a reasonable limit
+        $mult *= 128;   # (Note: don't use integer bit shift to avoid integer overflow)
     }
     return $val;
 }
@@ -58,8 +78,9 @@ sub VarInt($)
 #------------------------------------------------------------------------------
 # Read protobuf record
 # Inputs: 0) dirInfo ref
-# Returns: 0) record payload (plus tag id and format type in list context)
-# Notes: Updates dirInfo Pos to start of next record
+# Returns: 0) record payload (plus tag id and format type in list context) or undef on error
+# Notes: Updates $$dirInfo{Pos} to start of next record, and sets $$dirInfo{Bit0}
+#        according to the least significant bit of type 0 (varInt) records
 sub ReadRecord($)
 {
     my $dirInfo = shift;
@@ -122,12 +143,14 @@ sub ProcessProtobuf($$$;$)
 
     $$dirInfo{Pos} = $$dirInfo{DirStart} || 0; # initialize buffer Pos
     $et->VerboseDir('Protobuf', undef, $dirLen);
-
     unless ($prefix) {
         $prefix = '';
         $$et{ProtoPrefix}{$dirName} = '' unless defined $$et{ProtoPrefix}{$dirName};
         SetByteOrder('II');
     }
+    # prefix for unknown tags
+    my $unkPre = $$tagTbl{TAG_PREFIX} ? $$tagTbl{TAG_PREFIX} . '_' : 'Protobuf ';
+
     # loop through protobuf records
     for (;;) {
         my $pos = $$dirInfo{Pos};
@@ -160,32 +183,47 @@ sub ProcessProtobuf($$$;$)
         }
         # format binary payload into a useful value
         my $val;
-        if ($$tagInfo{Format}) {
+        my $format = $$tagInfo{Format};
+        if ($format) {
             if ($type == 0) {
                 $val = $buff;
-                if ($$tagInfo{Format} eq 'signed') {
-                    $val = ($val & 1) ? -($val >> 1)-1 : ($val >> 1);
-                } elsif ($$tagInfo{Format} eq 'int64s' and $val > 0xffffffff) {
+                if ($format eq 'signed') {
+                    if ($val > $intMax) {
+                        # use double math (15 decimal digits precision)
+                        $val = $$dirInfo{Bit0} ? -int($val / 2) - 1 : $val / 2;
+                    } else {
+                        # use integer math
+                        $val = ($val & 1) ? -($val >> 1)-1 : ($val >> 1);
+                    }
+                } elsif ($format eq 'int64s' and $val >= $int64sMin) {
                     # hack for DJI drones which store 64-bit signed integers improperly
                     # (just toss upper 32 bits which should be all 1's anyway)
-                    $val = ($val & 0xffffffff) - 4294967296;
+                    # Note: do the two subtractions because $int64sMin + 4294967296
+                    # is too large for a 64-bit integer
+                    $val = $val - $int64sMin - 4294967296;
                 }
-            } elsif ($type == 2 and $$tagInfo{Format} eq 'rational') {
+            } elsif ($type == 2 and $format eq 'rational') {
                 my $dir = { DataPt => \$buff, Pos => 0 };
                 my $num = VarInt($dir);
                 my $den = VarInt($dir);
                 $val = (defined $num and $den) ? $num/$den : 'err';
             } else {
-                $val = ReadValue(\$buff, 0, $$tagInfo{Format}, undef, length($buff));
+                $format = 'undef' if $protoOnly{$format}; # (just in case)
+                $val = ReadValue(\$buff, 0, $format, undef, length($buff));
             }
         } elsif ($type == 0) { # varInt
             $val = $buff;
             my $hex = sprintf('%x', $val);
-            if (length($hex) == 16 and $hex =~ /^ffffffff/) {
-                my $s64 = hex(substr($hex, 8)) - 4294967296;
+            if ($val >= $int64sMin) {
+                my $s64 = $val - $int64sMin - 4294967296;
                 $val .= " (0x$hex, int64s $s64)";
             } else {
-                my $signed = ($val & 1) ? -($val >> 1)-1 : ($val >> 1);
+                my $signed;
+                if ($val > $intMax) {
+                    $signed = $$dirInfo{Bit0} ? -int($val / 2) - 1 : $val / 2;
+                } else {
+                    $signed = ($val & 1) ? -($val >> 1)-1 : ($val >> 1);
+                }
                 $val .= " (0x$hex, signed $signed)";
             }
         } elsif ($type == 1) { # 64-bit number
@@ -195,7 +233,7 @@ sub ProcessProtobuf($$$;$)
                 # (fall through to process known SubDirectory)
             } elsif ($$tagInfo{IsProtobuf}) {
                 # process Unknown protobuf directories
-                $et->VPrint(1, "$$et{INDENT}Protobuf $tag (" . length($buff) . " bytes) -->\n");
+                $et->VPrint(1, "$$et{INDENT}${unkPre}$tag (" . length($buff) . " bytes) -->\n");
                 my $addr = $dataPos + $$dirInfo{Pos} - length($buff);
                 $et->VerboseDump(\$buff, Addr => $addr, Prefix => $$et{INDENT});
                 my %subdir = ( DataPt => \$buff, DataPos => $addr, DirName => $dirName );
@@ -212,7 +250,7 @@ sub ProcessProtobuf($$$;$)
                     my $denom = VarInt(\%dir);
                     $rat = " (rational $num/$denom)" if $denom and $dir{Pos} == length($buff);
                 }
-                if ($buff !~ /[^\x20-\x7e]/) {
+                if ($buff !~ /[^\r\n\t\x20-\x7e]/) {
                     $val = $buff;   # assume this is an ASCII string
                 } elsif (length($buff) % 4) {
                     $val = '0x' . unpack('H*', $buff);
@@ -238,13 +276,15 @@ sub ProcessProtobuf($$$;$)
             Start  => $start,
             Size   => $$dirInfo{Pos} - $start,
             Extra  => ", type=$type",
-            Format => $$tagInfo{Format},
+            Format => $format,
         );
     }
     # warn if we didn't finish exactly at the end of the buffer
     $et->Warn('Truncated protobuf data') unless $prefix or $$dirInfo{Pos} == $dirEnd;
     return 1;
 }
+
+1; # end
 
 __END__
 
@@ -263,7 +303,7 @@ information in protocol buffer (protobuf) format.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

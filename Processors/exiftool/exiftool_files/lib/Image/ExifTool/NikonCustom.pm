@@ -13,16 +13,14 @@
 package Image::ExifTool::NikonCustom;
 
 use strict;
-use vars qw($VERSION @ISA @EXPORT_OK %buttonsZ9);
+use vars qw($VERSION @ISA @EXPORT_OK %buttonsZ8 %buttonsZ9);
 
-$VERSION = '1.26';
+$VERSION = '1.30';
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(%buttonsZ9);
+@EXPORT_OK = qw(%buttonsZ8 %buttonsZ9);
 
-%buttonsZ9= (
-    SeparateTable => 'ButtonsZ9',
-    PrintConv => {
+my %buttonsCommonZ8Z9 = (  #button roles shared by the Z8 & Z9.  Assigments began to diverge with Z8 fw 2.00 and became significant with z8 fw 3.0
         0 => 'None',
         1 => 'Preview',
         3 => 'FV Lock',
@@ -112,9 +110,39 @@ $VERSION = '1.26';
         113 => 'Power Zoom +',
         114 => 'Power Zoom -',
         115 => 'Delete',
-        116 => 'Pixel Shift Shooting', #Z8 (Z9 fw 5.1 maps as 'Save and Load Power Zoom Position')
+);
+%buttonsZ8 = (
+    SeparateTable => 'ButtonsZ8',
+    PrintConv => {
+        %buttonsCommonZ8Z9,
+        116 => 'Pixel Shift Shooting',
         117 => 'Cycle AF-area Mode',
-        118 => 'Raw Processing (Current)',  #118-131 are Playback Retouch options
+        119 => 'Focus Limiter',
+        120 => 'Jump to Source Image',
+        121 => 'Raw Processing (Current)',
+        122 => 'Raw Processing (Multiple)',
+        123 => 'Trim',
+        124 => 'Resize (Current)',
+        125 => 'Resize (Multiple)',
+        126 => 'D-Lighting',
+        127 => 'Straighten',
+        128 => 'Distortion Control',
+        129 => 'Perspective Control',
+        130 => 'Monochrome',
+        131 => 'Overlay (Add)',
+        132 => 'Lighten',
+        133 => 'Darken',
+        134 => 'Motion Blend',
+        135 => 'Cycle Monitor Mode',
+    },
+);
+%buttonsZ9= (
+    SeparateTable => 'ButtonsZ9',
+    PrintConv => {
+        %buttonsCommonZ8Z9,
+        116 => 'Save and Load Power Zoom Position',
+        117 => 'Cycle AF-area Mode',
+        118 => 'Raw Processing (Current)',  #118-131 and 135 are Playback Retouch options
         119 => 'Raw Processing (Multiple)',
         120 => 'Trim',
         121 => 'Resize (Current)',
@@ -128,6 +156,9 @@ $VERSION = '1.26';
         129 => 'Lighten',
         130 => 'Darken',
         131 => 'Motion Blend',
+        133 => 'Focus Limiter',
+        134 => 'Cycle Subject Detection Options',
+        135 => 'Jump To Source Image',
     },
 );
 my %buttonsZ6III= (
@@ -9809,7 +9840,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     },
 );
 
-# Z6III custom settings (ref 1)   #base at offset27 + 1255 (firmware 1.0.0)
+# Z6III custom settings (ref 1)   #base at offset27 + 1255 (firmware 1.0.0)  #base at offset27 + 1167 (firmware 2.0.0)
 %Image::ExifTool::NikonCustom::SettingsZ6III = (
     PROCESS_PROC => \&Image::ExifTool::ProcessBinaryData,
     WRITE_PROC => \&Image::ExifTool::WriteBinaryData,
@@ -9823,8 +9854,8 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
         Name => 'AF-CPrioritySelection',
         PrintConv => {
             0 => 'Release',
-            1 => 'Release + Focus',
-            3 => 'Focus',
+            1 => 'Focus',
+            3 => 'Release + Focus',
         },
     },
     5 => { Name => 'AF-SPrioritySelection', PrintConv => {0 => 'Release',1 => 'Focus'}},  #CSa2
@@ -9852,11 +9883,10 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     17 => { Name => 'LimitAF-AreaModeSelPinpoint',  PrintConv => \%limitNolimit, Unknown => 1 }, # CSa8
     19 => { Name => 'LimitAF-AreaModeSelWideAF_S',  PrintConv => \%limitNolimit, Unknown => 1 }, # CSa8
     20 => { Name => 'LimitAF-AreaModeSelWideAF_L',  PrintConv => \%limitNolimit, Unknown => 1 }, # CSa8
-    21 => { Name => 'LimitAFAreaModeSelAuto',       PrintConv => \%limitNolimit, Unknown => 1 }, # CSa8     
+    21 => { Name => 'LimitAFAreaModeSelAuto',       PrintConv => \%limitNolimit, Unknown => 1 }, # CSa8
     22 => { Name => 'FocusPointWrap',               PrintConv => { 0 => 'No Wrap', 1 => 'Wrap' }, Unknown => 1 }, # CSa10
     23 => { Name => 'ManualFocusPointIllumination', PrintConv => {0 => 'On During Focus Point Selection Only', 1 => 'On', }, Unknown => 1 },  # CSa10a
     24 => { Name => 'DynamicAreaAFAssist',     PrintConv => { 0 => 'Focus Point Only',1 => 'Focus and Surrounding Points',}, Unknown => 1 },  # CSa10b
-    
     26 => { Name => 'AF-AssistIlluminator',    PrintConv => \%offOn }, # CSa11
     27 => { Name => 'ManualFocusRingInAFMode', PrintConv => \%offOn }, # CSa14
     29 => { Name => 'ExposureControlStepSize', PrintConv => \%thirdHalfFull },     # CSb2
@@ -9871,8 +9901,8 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     33 => { # CSb5
         Name => 'CenterWeightedAreaSize',
         PrintConv => {
-            0 => 'Standard',
-            1 => 'Small',
+            0 => 'Small',
+            1 => 'Standard',
             4 => 'Average',
         },
     },
@@ -9933,6 +9963,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
             1 => '1 s',
             2 => '2 s',
             3 => '3 s',
+            4 => 'Min',
         },
     },
     55 => { Name => 'PlaybackMonitorOffTime',    %powerOffDelayTimesZ9 }, # CSc3-a
@@ -9971,7 +10002,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
         },
     },
     85 => { Name => 'ContinuousModeDisplay',  PrintConv => \%offOn }, # CSd14
-    87 => { # CSe1-a            Previous cameras reported this with HighSpeedSync indicator appended as '(Auto FP)'.  
+    87 => { # CSe1-a            Previous cameras reported this with HighSpeedSync indicator appended as '(Auto FP)'.
         Name => 'FlashSyncSpeed',
         ValueConv => '($val-144)/8',
         PrintConv => {
@@ -10040,7 +10071,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     189 => { # CSf6-a Previous cameras reported this tag as part of CmdDialsReverseRotation.  Blend with CSf5-b separate settings together to match extant tag name and values
         Name => 'CmdDialsReverseRotExposureComp',
         RawConv => '$$self{CmdDialsReverseRotExposureComp} = $val',
-        Hidden => 1,
+        #Hidden => 1,
     },
     190 => [{ # CSf6-b  (continued from above)
         Name => 'CmdDialsReverseRotation',
@@ -10110,6 +10141,26 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     463 => { Name => 'ControlRingResponse',            PrintConv => { 0 => 'High', 1 => 'Low' } }, # CSf11
     559 => { Name => 'FocusPeakingDisplay', PrintConv => \%offOn, Unknown => 1}, # CSa12a
 );
+
+# Z6III custom settings (ref 1)   #base at offset27 + 1167 (firmware 2.0.0)
+%Image::ExifTool::NikonCustom::SettingsZ6IIIv2 = (
+    PROCESS_PROC => \&Image::ExifTool::ProcessBinaryData,
+    WRITE_PROC => \&Image::ExifTool::WriteBinaryData,
+    CHECK_PROC => \&Image::ExifTool::CheckBinaryData,
+    WRITABLE => 1,
+    FIRST_ENTRY => 0,
+    GROUPS => { 0 => 'MakerNotes', 2 => 'Camera' },
+    NOTES => 'Custom settings for the Z6III.',
+    3 => { # CSa1
+        Name => 'AF-CPrioritySelection',
+        PrintConv => {
+            0 => 'Release',
+            1 => 'Focus',
+            3 => 'Release + Focus',
+        },
+    },
+);
+
 
 # Z8 custom settings (ref 1)   #base at offset26 + 1195 (firmware 1.0.0)
 %Image::ExifTool::NikonCustom::SettingsZ8 = (
@@ -10243,6 +10294,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
             1 => '1 s',
             2 => '2 s',
             3 => '3 s',
+            4 => 'Min',
         },
     },
     51 => { Name => 'PlaybackMonitorOffTime',    %powerOffDelayTimesZ9 }, # CSc3-a
@@ -10351,7 +10403,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     185 => { # CSf5-a Previous cameras reported this tag as part of CmdDialsReverseRotation.  Blend with CSf5-b separate settings together to match extant tag name and values
         Name => 'CmdDialsReverseRotExposureComp',
         RawConv => '$$self{CmdDialsReverseRotExposureComp} = $val',
-        Hidden => 1,
+        #Hidden => 1,
     },
     186 => [{ # CSf5-a  (continued from above)
         Name => 'CmdDialsReverseRotation',
@@ -10404,6 +10456,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     263 => { Name => 'AutoFocusModeRestrictions', PrintConv => \%focusModeRestrictionsZ9, Unknown => 1},  # CSa9
     267 => { Name => 'CHModeShootingSpeed',       ValueConv => '$val + 1', ValueConvInv => '$val - 1', PrintConv => '"$val fps"', PrintConvInv => '$val=~s/\s*fps//i; $val' }, # CSd1a
     273 => { Name => 'FlashBurstPriority',        PrintConv => { 0 => 'Frame Rate',1 => 'Exposure'}, Unknown => 1 },  # CSe8
+    281 => { Name => 'Func3Button',                   %buttonsZ9}, # CSf2-c
     335 => { Name => 'LimitAF-AreaModeSelDynamic_S',   PrintConv => \%limitNolimit, Unknown => 1 }, # CSa8
     336 => { Name => 'LimitAF-AreaModeSelDynamic_M',   PrintConv => \%limitNolimit, Unknown => 1 }, # CSa8
     337 => { Name => 'LimitAF-AreaModeSelDynamic_L',   PrintConv => \%limitNolimit, Unknown => 1 }, # CSa8
@@ -10426,7 +10479,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     463 => { Name => 'SubCommandDialPlaybackMode',     PrintConv => \%dialsZ9,   Unknown => 1}, # CSf3-l
     469 => { Name => 'ControlRingResponse',            PrintConv => { 0 => 'High', 1 => 'Low' } }, # CSf10
 
-    515 => { Name => 'MovieAFAreaMode',       %buttonsZ9, Unknown => 1}, # CSg2-e
+    #515 => { Name => 'MovieAFAreaMode',       %buttonsZ9, Unknown => 1}, # CSg2-e  #28 this is incorrect - MovieAFAreaMode is set in the Photo Shooting Menu and the tag is set in Nikon.pm
     529 => { # CSg9-a
         Name => 'ZebraPatternToneRange',
         Unknown => 1,
@@ -10736,7 +10789,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     #119 Func2Button submenu: AreaMode              0-7 => S, Dyn-S, Dyn-M, Dyn-L, Wide-S, Wide-L, 3D, Auto; 11=>n/a  # CSf2-b
     #121 Func2Button submenu: AreaMode+AF-On        0-7 => S, Dyn-S, Dyn-M, Dyn-L, Wide-S, Wide-L, 3D, Auto; 11=>n/a  # CSf2-b
     #125 Func2Button submenu: SynchronizedRelease   1=>'Master', 2=>'Remote'  # CSf2-b
-    #127 Func2Button submenu: Zoom                  0=>'Zoom (Low)', 2=>'Zoom (1:1)', 2=>'Zoom (High)'  # CSf2-b
+    #127 Func2Button submenu: Zoom                  0=>'Zoom 5', 2=>'Zoom (1:1)', 2=>'Zoom 200%, 2=>'Zoom 400%'  # CSf2-b
     #129 Func2Button & Func2ButtonPlayback submenu: Rating                # CSf2-b & CSf3b   0=>'Candidate For Deletion'  6=>''None'
     131 => { Name => 'AFOnButton',                %buttonsZ9}, # CSf2-c
     143 => { Name => 'SubSelector',               %buttonsZ9, Unknown => 1}, # CSf2-g
@@ -10760,7 +10813,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     185 => { # CSf5-a Previous cameras reported this tag as part of CmdDialsReverseRotation.  Blend with CSf5-b separate settings together to match extant tag name and values
         Name => 'CmdDialsReverseRotExposureComp',
         RawConv => '$$self{CmdDialsReverseRotExposureComp} = $val',
-        Hidden => 1,
+        #Hidden => 1,
     },
     186 => [{ # CSf5-a  (continued from above)
         Name => 'CmdDialsReverseRotation',
@@ -11170,7 +11223,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     185 => { # CSf5-a Previous cameras reported this tag as part of CmdDialsReverseRotation.  Blend with CSf5-b separate settings together to match extant tag name and values
         Name => 'CmdDialsReverseRotExposureComp',
         RawConv => '$$self{CmdDialsReverseRotExposureComp} = $val',
-        Hidden => 1,
+        #Hidden => 1,
     },
     186 => [{ # CSf5-a  (continued from above)
         Name => 'CmdDialsReverseRotation',
@@ -11275,7 +11328,7 @@ my %noYes = ( 0 => 'No', 1 => 'Yes' );
     493 => { Name => 'ControlRingResponse',            PrintConv => { 0 => 'High', 1 => 'Low' } }, # CSf10
     505 => { Name => 'VerticalMovieFuncButton',        %buttonsZ9, Unknown => 1}, # CSg2-d
     529 => { Name => 'VerticalMovieAFOnButton',        %buttonsZ9, Unknown => 1}, # CSg2-l
-    539 => { Name => 'MovieAFAreaMode',       %buttonsZ9, Unknown => 1}, # CSg2-e
+    #539 => { Name => 'MovieAFAreaMode',       %buttonsZ9, Unknown => 1}, # CSg2-e     #28 this feels incorrect - MovieAFAreaMode is set in the Photo Shooting Menu and the tag should be in Nikon.pm
     #545 => { Name => 'MovieLimitAF-AreaModeSelWideAF_S',      PrintConv => \%limitNolimit, Unknown => 1 }, # CSg4-a
     #546 => { Name => 'MovieLimitAF-AreaModeSelWideAF_W',      PrintConv => \%limitNolimit, Unknown => 1 }, # CSg4-b
     #547 => { Name => 'MovieLimitAF-AreaModeSelSubjectTrack',  PrintConv => \%limitNolimit, Unknown => 1 }, # CSg4-c
@@ -11362,7 +11415,7 @@ this information.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

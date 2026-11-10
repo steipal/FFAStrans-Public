@@ -11,7 +11,7 @@ use strict;
 use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.39';
+$VERSION = '1.41';
 
 sub ProcessOcad($$$);
 sub ProcessJPEG_HDR($$$);
@@ -89,13 +89,16 @@ sub ProcessJPEG_HDR($$$);
         SubDirectory => { TagTable => 'Image::ExifTool::InfiRay::Version' },
       }, {
         Name => 'UniformResourceName',
-        Groups => { 1 => 'APP2' },
         Condition => '$$valPt =~ /^urn:/',
+        Groups => { 1 => 'APP2' },
         Notes => 'used in Apple HDR images',
       }, {
         Name => 'PreviewImage',
-        Condition => '$$valPt =~ /^(|QVGA\0|BGTH)\xff\xd8\xff\xdb/',
-        Notes => 'Samsung APP2 preview image', # (Samsung/GoPro="", BenQ="QVGA\0", Digilife="BGTH")
+        Condition => '$$valPt =~ /^(|QVGA\0|BGTH|XMTH.{5})\xff\xd8/s',
+        # (Samsung/GoPro="", BenQ="QVGA\0", Digilife="BGTH", Xiaomi="XMTH.{5})
+        # (Xiaomi preview is in APP2 of Xiaomi HEIC EXIF data)
+        Groups => { 1 => 'APP2', 2 => 'Preview' },
+        Notes => 'APP2 preview image',
     }],
     APP3 => [{
         Name => 'Meta',
@@ -211,6 +214,10 @@ sub ProcessJPEG_HDR($$$);
     APP7 => [{
         Name => 'Pentax',
         Condition => '$$valPt =~ /^PENTAX \0/',
+        SubDirectory => { TagTable => 'Image::ExifTool::Pentax::Main' },
+      }, {
+        Name => 'Ricoh',
+        Condition => '$$valPt =~ /^RICOH\0/',
         SubDirectory => { TagTable => 'Image::ExifTool::Pentax::Main' },
       }, {
         Name => 'Huawei',
@@ -565,7 +572,7 @@ sub ProcessJPEG_HDR($$$);
 # APP9 Media Jukebox segment (ref PH)
 %Image::ExifTool::JPEG::MediaJukebox = (
     GROUPS => { 0 => 'XML', 1 => 'MediaJukebox', 2 => 'Image' },
-    VARS => { NO_ID => 1 },
+    VARS => { ID_FMT => 'none' },
     NOTES => 'Tags found in the XML metadata of the APP9 "Media Jukebox" segment.',
     Date => {
         Groups => { 2 => 'Time' },
@@ -817,7 +824,7 @@ segments are included in the Image::ExifTool module itself.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

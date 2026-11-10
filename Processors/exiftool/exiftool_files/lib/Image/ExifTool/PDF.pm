@@ -21,7 +21,7 @@ use vars qw($VERSION $AUTOLOAD $lastFetched);
 use Image::ExifTool qw(:DataAccess :Utils);
 require Exporter;
 
-$VERSION = '1.61';
+$VERSION = '1.63';
 
 sub FetchObject($$$$);
 sub ExtractObject($$;$$);
@@ -2090,7 +2090,7 @@ sub ProcessDict($$$$;$$)
                 if (not $$tagInfo{Binary} and $val =~ /[\x18-\x1f\x80-\xff]/) {
                     # text string is already in Unicode if it starts with "\xfe\xff",
                     # otherwise we must first convert from PDFDocEncoding
-                    $val = $et->Decode($val, ($val=~s/^\xfe\xff// ? 'UCS2' : 'PDFDoc'), 'MM');
+                    $val = $et->Decode($val, ($val=~s/^\xfe\xff// ? 'UTF16' : 'PDFDoc'), 'MM');
                 }
                 if ($$tagInfo{List} and not $$et{OPTIONS}{NoPDFList}) {
                     # separate tokens in comma or whitespace delimited lists
@@ -2322,7 +2322,7 @@ XRef:
                 my $i;
                 for ($i=0; $i<$num; ++$i) {
                     $raf->Read($buff, 20) == 20 or return -6;
-                    $buff =~ /^\s*(\d{10}) (\d{5}) (f|n)/s or return -4;
+                    $buff =~ /^\s*(\d+)\s+(\d+)\s+(f|n)\s*$/s or return -4;
                     my $num = $start + $i;
                     $xrefSize = $num if $num > $xrefSize;
                     # locate object to generate entry from stream if necessary
@@ -2507,7 +2507,7 @@ and AESV3 (AES-256).
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

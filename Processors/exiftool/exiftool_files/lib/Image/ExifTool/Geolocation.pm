@@ -12,7 +12,7 @@
 # Notes:        Set $Image::ExifTool::Geolocation::geoDir to override the
 #               default directory containing the database file Geolocation.dat
 #               and the GeoLang directory with the alternate language files.
-#               If set, this directory is 
+#               If set, this directory is
 #
 #               AltNames.dat may be loaded from a different directory by
 #               specifying $Image::ExifTool::Geolocation::altDir.  This
@@ -71,7 +71,7 @@ package Image::ExifTool::Geolocation;
 use strict;
 use vars qw($VERSION $geoDir $altDir $dbInfo);
 
-$VERSION = '1.09';  # (this is the module version number, not the database version)
+$VERSION = '1.11';  # (this is the module version number, not the database version)
 
 my $debug; # set to output processing time for testing
 
@@ -85,10 +85,10 @@ my (@cityList, @countryList, @regionList, @subregionList, @timezoneList);
 my (%countryNum, %regionNum, %subregionNum, %timezoneNum); # reverse lookups
 my (@sortOrder, @altNames, %langLookup, $nCity, %featureCodes, %featureTypes);
 my ($lastArgs, %lastFound, @lastByPop, @lastByLat); # cached city matches
-my $dbVer = '1.03';
+my $dbVer = '1.03';         # database version number
 my $sortedBy = 'Latitude';
 my $pi = 3.1415926536;
-my $earthRadius = 6371;    # earth radius in km
+my $earthRadius = 6371;     # earth radius in km
 # hard-coded feature codes for v1.02 database
 my @featureCodes = qw(Other PPL PPLA PPLA2 PPLA3 PPLA4 PPLA5 PPLC
                       PPLCH PPLF PPLG PPLL PPLR PPLS STLMT PPLX);
@@ -132,7 +132,7 @@ sub ReadDatabase($)
     open DATFILE, "< $datfile" or warn("Error reading $datfile\n"), return 0;
     binmode DATFILE;
     my $line = <DATFILE>;
-    unless ($line =~ /^Geolocation(\d+\.\d+)\t(\d+)/) {
+    unless ($line and $line =~ /^Geolocation(\d+\.\d+)\t(\d+)/) {
         warn("Bad format Geolocation database\n");
         close(DATFILE);
         return 0;
@@ -152,12 +152,17 @@ sub ReadDatabase($)
     undef @altNames;    # reset altNames
 
     # read city database
+    my $err;
     undef @cityList;
-    my $i = 0;
     for (;;) {
         $line = <DATFILE>;
+        defined $line or $err = 1, last;
         last if length($line) == 6 and $line =~ /\0\0\0\0/;
-        $line .= <DATFILE> while length($line) < 14;
+        while (length($line) < 14) {
+            my $more = <DATFILE>;
+            defined $more or $err = 1, last;
+            $line .= $more;
+        }
         chomp $line;
         push @cityList, $line;
     }
@@ -165,6 +170,7 @@ sub ReadDatabase($)
     # read countries
     for (;;) {
         $line = <DATFILE>;
+        defined $line or $err = 1, last;
         last if length($line) == 6 and $line =~ /\0\0\0\0/;
         chomp $line;
         push @countryList, $line;
@@ -173,6 +179,7 @@ sub ReadDatabase($)
     # read regions
     for (;;) {
         $line = <DATFILE>;
+        defined $line or $err = 1, last;
         last if length($line) == 6 and $line =~ /\0\0\0\0/;
         chomp $line;
         push @regionList, $line;
@@ -181,6 +188,7 @@ sub ReadDatabase($)
     # read subregions
     for (;;) {
         $line = <DATFILE>;
+        defined $line or $err = 1, last;
         last if length($line) == 6 and $line =~ /\0\0\0\0/;
         chomp $line;
         push @subregionList, $line;
@@ -189,16 +197,18 @@ sub ReadDatabase($)
     # read time zones
     for (;;) {
         $line = <DATFILE>;
+        defined $line or $err = 1, last;
         last if length($line) == 6 and $line =~ /\0\0\0\0/;
         chomp $line;
         push @timezoneList, $line;
         $timezoneNum{lc $line} = $#timezoneList if $isUserDefined;
     }
     # read feature codes if available
-    if ($line eq "\0\0\0\0\x05\n") {
+    if (defined $line and $line eq "\0\0\0\0\x05\n") {
         undef @featureCodes;
         for (;;) {
             $line = <DATFILE>;
+            defined $line or $err = 1, last;
             last if length($line) == 6 and $line =~ /\0\0\0\0/;
             chomp $line;
             $featureTypes{$line} = $1 if $line =~ s/ (.*)//;
@@ -206,10 +216,15 @@ sub ReadDatabase($)
         }
     }
     close DATFILE;
-    # initialize featureCodes lookup
-    $i = 0;
-    %featureCodes = map { lc($_) => $i++ } @featureCodes;
-    return 1;
+    if ($err) {
+        warn("Error reading $datfile (truncated file?)");
+        return 0;
+    } else {
+        # initialize featureCodes lookup
+        my $i = 0;
+        %featureCodes = map { lc($_) => $i++ } @featureCodes;
+        return 1;
+    }
 }
 
 #------------------------------------------------------------------------------
@@ -401,11 +416,13 @@ sub GetEntry($;$$)
         my $xlat = $langLookup{$lang};
         # load language lookups if  not done already
         if (not defined $xlat) {
-            if (eval "require '$geoDir/GeoLang/$lang.pm'") {
+            unshift @INC, $geoDir;  # make sure $geoDir is first in path
+            if (eval "require 'GeoLang/$lang.pm'") {
                 my $trans = "Image::ExifTool::GeoLang::${lang}::Translate";
                 no strict 'refs';
                 $xlat = \%$trans if %$trans;
             }
+            shift @INC;
             # read user-defined language translations
             if (%Image::ExifTool::Geolocation::geoLang) {
                 my $userLang = $Image::ExifTool::Geolocation::geoLang{$lang};
@@ -457,9 +474,9 @@ sub GetAltNames($;$)
 #         1) options hash reference (or undef for no options)
 # Options: GeolocMinPop, GeolocMaxDist, GeolocMulti, GeolocFeature, GeolocAltNames,
 #          GeolocNearby
-# Returns: List of matching city information, empty if none found.
-#          Each element in the list is an array with 0=index of city in database,
-#          1=distance in km (or undef if no distance), 2=compass bearing (or undef)
+# Returns: 0) Reference to list of indices for matching cities, or undef for no matches
+#          1) Reference to list of distance/bearing pairs, or undef if no GPS
+#          In scalar context returns list of indices only
 sub Geolocate($;$)
 {
     my ($arg, $opts) = @_;
@@ -710,7 +727,7 @@ Entry:  for (; $i<@cityList; ++$i) {
         push @dist, [ $km, $be ];
         last if $num <= 1;
     }
-    return(\@rtnList, \@dist);
+    return wantarray ? (\@rtnList, \@dist) : \@rtnList;
 }
 
 1; #end
@@ -967,6 +984,9 @@ if no matches were found.
 1) Reference to list of distance/bearing pairs for each matching city, or
 undef if the search didn't provide GPS coordinates.
 
+In scalar context, only the reference to the list of database entry numbers
+is returned.
+
 =back
 
 =head1 ALTERNATE DATABASES
@@ -1015,7 +1035,7 @@ the input arguments of the AddEntry method.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.  The associated database files are

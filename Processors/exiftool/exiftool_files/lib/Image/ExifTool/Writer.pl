@@ -695,12 +695,11 @@ TAG: foreach $tagInfo (@matchingTags) {
             my $src = GetTagTable($$table{SRC_TABLE});
             $writeProc = $$src{WRITE_PROC} unless $writeProc;
         }
-        {
+        if ($writeProc) {
             # make sure module is loaded if the writeProc is a string
             unless (ref $writeProc) {
                 my $module = $writeProc;
-                $module =~ s/::\w+$//;
-                eval "require $module";
+                $module =~ s/::\w+$// and eval "require $module";
             }
             no strict 'refs';
             next unless $writeProc and &$writeProc();
@@ -1305,8 +1304,9 @@ sub SetNewValuesFromFile($$;@)
                     IgnoreTags ImageHashType KeepUTCTime Lang LargeFileSupport
                     LigoGPSScale ListItem ListSep MDItemTags MissingTagValue NoPDFList
                     NoWarning Password PrintConv QuickTimeUTC RequestTags SaveFormat
-                    SavePath ScanForXMP StructFormat SystemTags TimeZone Unknown UserParam
-                    Validate WindowsLongPath WindowsWideFile XAttrTags XMPAutoConv))
+                    SavePath ScanForXMP StructFormat SystemTags SystemTimeRes TimeZone
+                    Unknown UserParam Validate WindowsLongPath WindowsWideFile XAttrTags
+                    XMPAutoConv))
         {
             $srcExifTool->Options($_ => $$options{$_});
         }
@@ -1353,7 +1353,8 @@ sub SetNewValuesFromFile($$;@)
         # get all tags from source file (including MakerNotes block)
         $info = $srcExifTool->ImageInfo($srcFile);
     }
-    return $info if $$info{Error} and $$info{Error} eq 'Error opening file';
+    # (allow processing to continue if we have alternate files that may have been read OK)
+    return $info if $$info{Error} and $$info{Error} eq 'Error opening file' and not $$self{ALT_EXIFTOOL};
     delete $$srcExifTool{VALUE}{Error}; # delete so we can check this later
 
     # sort tags in file order with priority tags last
@@ -2831,8 +2832,9 @@ sub GetAllGroups($;$)
     my %allGroups;
     # add family 1 groups not in tables
     no warnings; # (avoid "possible attempt to put comments in qw()")
+    # start with family 1 groups that are missing from the tables
     $family == 1 and map { $allGroups{$_} = 1 } qw(Garmin AudioItemList AudioUserData
-        VideoItemList VideoUserData Track#Keys Track#ItemList Track#UserData);
+        VideoItemList VideoUserData Track#Keys Track#ItemList Track#UserData KFIX);
     use warnings;
     # loop through all tag tables and get all group names
     while (@tableNames) {
@@ -3203,7 +3205,7 @@ sub InsertTagValues($$;$$$$)
     my ($docNum, $tag);
 
     if ($docGrp) {
-        $docNum = $docGrp =~ /(\d+)$/ ? $1 : 0;
+        $docNum = $docGrp =~ /(\d+(-\d+)*)$/ ? $1 : 0;
     } else {
         undef $cache;   # no cache if no document groups
     }
@@ -3271,25 +3273,25 @@ sub InsertTagValues($$;$$$$)
                 # (similar to code in BuildCompositeTags(), but this is case-insensitive)
                 my $cacheTag = $$cache{$lcTag};
                 unless ($cacheTag) {
-                    $cacheTag = $$cache{$lcTag} = [ ];
+                    $cacheTag = $$cache{$lcTag} = { };
                     # find all matching keys, organize into groups, and store in cache
                     my $ex = $$self{TAG_EXTRA};
                     my @matches = grep /^$tag(\s|$)/i, @$foundTags;
                     @matches = $self->GroupMatches($group, \@matches) if defined $group;
                     foreach (@matches) {
                         my $doc = $$ex{$_}{G3} || 0;
-                        if (defined $$cacheTag[$doc]) {
-                            next unless $$cacheTag[$doc] =~ / \((\d+)\)$/;
+                        if (defined $$cacheTag{$doc}) {
+                            next unless $$cacheTag{$doc} =~ / \((\d+)\)$/;
                             my $cur = $1;
                             # keep the most recently extracted tag
                             next if / \((\d+)\)$/ and $1 < $cur;
                         }
-                        $$cacheTag[$doc] = $_;
+                        $$cacheTag{$doc} = $_;
                     }
                 }
-                my $doc = $lcTag =~ /\b(main|doc(\d+)):/ ? ($2 || 0) : $docNum;
-                if ($$cacheTag[$doc]) {
-                    $tag = $$cacheTag[$doc];
+                my $doc = $lcTag =~ /\b(main|doc(\d+(-\d+)*)):/ ? ($2 || 0) : $docNum;
+                if ($$cacheTag{$doc}) {
+                    $tag = $$cacheTag{$doc};
                     $val = $self->GetValue($tag, $type);
                 }
             } else {
@@ -3405,7 +3407,7 @@ sub InsertTagValues($$;$$$$)
             undef $advFmtSelf;
             $didExpr = 1;   # set flag indicating an expression was evaluated
         }
-        unless (defined $val) {
+        unless (defined $val or (ref $opt and $$self{OPTIONS}{UndefTags})) {
             $val = $$self{OPTIONS}{MissingTagValue};
             unless (defined $val) {
                 my $g3 = ($docGrp and $var !~ /\b(main|doc\d+):/i) ? $docGrp . ':' : '';
@@ -3792,7 +3794,7 @@ sub GetGeolocateTags($$;$)
         'xmp-exif'      => [ qw(GPSLatitude GPSLongitude) ],
         'itemlist'      => [ 'GPSCoordinates' ],
         'userdata'      => [ 'GPSCoordinates' ],
-        # more general groups not in this lookup: XMP and QuickTime 
+        # more general groups not in this lookup: XMP and QuickTime
     );
     my (@tags, $grp);
     # set specific City and GPS tags
@@ -3845,7 +3847,9 @@ sub GetNewValueHash($$;$$$$)
             # QuickTime and All are special cases because all group1 tags may be updated at once
             last if $$nvHash{WriteGroup} =~ /^(QuickTime|All)$/;
             # replace existing entry if WriteGroup is 'All' (avoids confusion of forum10349)
-            last if $$tagInfo{WriteGroup} and $$tagInfo{WriteGroup} eq 'All';
+            #last if $$tagInfo{WriteGroup} and $$tagInfo{WriteGroup} eq 'All'; # (didn't work for forum17770)
+            # forum17770 patch (also handles case where "EXIF" is specified as a write group)
+            last if $writeGroup eq 'All' or $$nvHash{WriteGroup} eq 'EXIF' and $writeGroup =~ /IFD/;
             $nvHash = $$nvHash{Next};
         }
     }
@@ -4583,7 +4587,15 @@ sub VerboseInfo($$$%)
 
     # generate hex number if tagID is numerical
     if (defined $tagID) {
-        $tagID =~ /^\d+$/ and $hexID = sprintf("0x%.4x", $tagID);
+        if ($tagID =~ /^\d+$/) {
+            if ($parms{Table} and $parms{Table}{VARS} and
+                $parms{Table}{ID_FMT} and $parms{Table}{VARS}{ID_FMT} eq 'dec')
+            {
+                $hexID = $tagID;
+            } else {
+                $hexID = sprintf("0x%.4x", $tagID);
+            }
+        }
     } else {
         $tagID = 'Unknown';
     }
@@ -4596,9 +4608,9 @@ sub VerboseInfo($$$%)
     } else {
         my $prefix;
         $prefix = $parms{Table}{TAG_PREFIX} if $parms{Table};
-        if ($prefix or $hexID) {
+        if ($prefix or defined $hexID) {
             $prefix = 'Unknown' unless $prefix;
-            $tag = $prefix . '_' . ($hexID ? $hexID : $tagID);
+            $tag = $prefix . '_' . (defined $hexID ? $hexID : $tagID);
         } else {
             $tag = $tagID;
         }
@@ -4637,7 +4649,7 @@ sub VerboseInfo($$$%)
         $parms{DataPt} or defined $size or $tagID =~ /\//))
     {
         $line = $indent . '- Tag ';
-        if ($hexID) {
+        if (defined $hexID) {
             $line .= $hexID;
         } else {
             $tagID =~ s/([\0-\x1f\x7f-\xff])/sprintf('\\x%.2x',ord $1)/ge;
@@ -4704,7 +4716,7 @@ sub DumpTrailer($$)
             last;
         }
         my $out = $$self{OPTIONS}{TextOut};
-        printf $out "$trailer trailer (%d bytes at offset 0x%.4x):\n", $size, $pos;
+        printf $out "$$self{INDENT}$trailer trailer (%d bytes at offset 0x%.4x):\n", $size, $pos;
         last unless $verbose > 2;
         my $num = $size;    # number of bytes to read
         # limit size if not very verbose
@@ -4723,10 +4735,10 @@ sub DumpTrailer($$)
             $buff .= $buf2;
             undef $buf2;
         }
-        HexDump(\$buff, undef, Addr => $pos, Out => $out);
+        HexDump(\$buff, undef, Addr => $pos, Out => $out, Prefix => $$self{INDENT});
         if (defined $buf2) {
-            print $out "    [snip ", $size - $num * 2, " bytes]\n";
-            HexDump(\$buf2, undef, Addr => $pos + $size - $num, Out => $out);
+            print $out "$$self{INDENT}    [snip ", $size - $num * 2, " bytes]\n";
+            HexDump(\$buf2, undef, Addr => $pos + $size - $num, Out => $out, Prefix => $$self{INDENT});
         }
         last;
     }
@@ -4918,6 +4930,18 @@ sub NewGUID()
 }
 
 #------------------------------------------------------------------------------
+# Generate a version 4 ("random"), variant 1 UUID (RFC 9562, Section 5.4) (github #421)
+# Inputs: <none>
+# Returns: UUID string
+sub NewUUID()
+{
+    my @rnd = map {int(rand(256))} 1 .. 16;
+    $rnd[6] = ($rnd[6] & 0x0f) | 0x40;
+    $rnd[8] = ($rnd[8] & 0x3f) | 0x80;
+    return uc scalar unpack('H32', join '', map {chr} @rnd);
+}
+
+#------------------------------------------------------------------------------
 # Make TIFF header for raw data
 # Inputs: 0) width, 1) height, 2) num colour components, 3) bits, 4) resolution
 #         5) color-map data for palette-color image (8 or 16 bit)
@@ -5053,6 +5077,7 @@ TryLib: for ($lib=$strptimeLib; ; $lib='') {
                 last;
             }
             if (not $lib) {
+                last unless $$self{OPTIONS}{StrictDate};
                 warn $wrn || "Install POSIX::strptime or Time::Piece for inverse date/time conversions\n";
                 return undef;
             } elsif ($lib eq 'POSIX::strptime') {
@@ -5336,8 +5361,7 @@ my %writeValueProc = (
         double => [ -3.14159, 'c00921f9f01b866e' ],
     );
     my $format;
-    my $oldOrder = GetByteOrder();
-    SetByteOrder('MM');
+    my $oldOrder = SetByteOrder('MM');
     foreach $format (keys %writeTest) {
         my ($val, $hex) = @{$writeTest{$format}};
         # add floating point entries if we can write them
@@ -5642,7 +5666,7 @@ sub WriteMultiXMP($$$$$)
 # Inputs: 0) ExifTool object reference, 1) dirInfo reference
 # Returns: 1 on success, 0 if this wasn't a valid JPEG file, or -1 if
 #          an output file was specified and a write error occurred
-sub WriteJPEG($$)
+sub WriteJPEG($$;)
 {
     my ($self, $dirInfo) = @_;
     my $outfile = $$dirInfo{OutFile};
@@ -5655,15 +5679,19 @@ sub WriteJPEG($$)
 
     # check to be sure this is a valid JPG or EXV file
     unless ($raf->Read($s,2) == 2 and $s eq "\xff\xd8") {
-        if (defined $s and length $s) {
-            return 0 unless $s eq "\xff\x01" and $raf->Read($s,5) == 5 and $s eq 'Exiv2';
+        if ($$dirInfo{XiaomiMess} and $s eq "\0\0" and $raf->Read($s,2) == 2 and $s eq "\0\x0a") {
+            Write($outfile,"\0\0") or $err = 1; # (starts with header length "\0\0\0\x0a")
         } else {
-            return 0 unless $$self{FILE_TYPE} eq 'EXV';
-            $s = 'Exiv2';
-            $creatingEXV = 1;
+            if (defined $s and length $s) {
+                return 0 unless $s eq "\xff\x01" and $raf->Read($s,5) == 5 and $s eq 'Exiv2';
+            } else {
+                return 0 unless $$self{FILE_TYPE} eq 'EXV';
+                $s = 'Exiv2';
+                $creatingEXV = 1;
+            }
+            Write($outfile,"\xff\x01") or $err = 1;
+            $isEXV = 1;
         }
-        Write($outfile,"\xff\x01") or $err = 1;
-        $isEXV = 1;
     }
 
     delete $$self{PREVIEW_INFO};   # reset preview information
@@ -5696,10 +5724,17 @@ sub WriteJPEG($$)
         my $dirName;
         # stop pre-scan at SOS (end of meta information) or EOI (end of image)
         if ($marker == 0xda or $marker == 0xd9) {
-            $dirName = $jpegMarker{$marker};
-            push(@dirOrder, $dirName);
-            $dirCount{$dirName} = 1;
-            last;
+            if ($$dirInfo{XiaomiMess}) {
+                $dirName = JpegMarkerName($marker);
+                $dirCount{$dirName} = ($dirCount{$dirName} || 0) + 1;
+                push @dirOrder, $dirName;
+                next;
+            } else {
+                $dirName = $jpegMarker{$marker};
+                push(@dirOrder, $dirName);
+                $dirCount{$dirName} = 1;
+                last;
+            }
         }
         # handle SOF markers: SOF0-SOF15, except DHT(0xc4), JPGA(0xc8) and DAC(0xcc)
         if (($marker & 0xf0) == 0xc0 and ($marker == 0xc0 or $marker & 0x03)) {
@@ -5764,7 +5799,7 @@ sub WriteJPEG($$)
         $dirCount{$dirName} = ($dirCount{$dirName} || 0) + 1;
         push @dirOrder, $dirName;
     }
-    unless ($marker and $marker == 0xda) {
+    unless ($marker and $marker == 0xda or $$dirInfo{XiaomiMess}) {
         $isEXV or $self->Error('Corrupted JPEG image'), return 1;
         $marker and $marker != 0xd9 and $self->Error('Corrupted EXV file'), return 1;
     }
@@ -5795,6 +5830,9 @@ sub WriteJPEG($$)
                 push @dirOrder, 'EOI';
                 $dirCount{EOI} = 1;
                 last;
+            } elsif ($$dirInfo{XiaomiMess}) {
+                $rtnVal = 1;
+                last Marker;   # (ends with APP segment)
             } else {
                 $self->Error('Format error');
                 return 1;
@@ -6250,11 +6288,12 @@ sub WriteJPEG($$)
             }
             last;   # all done parsing file
 
-        } elsif ($marker==0xd9 and $isEXV) {
+        } elsif ($marker==0xd9 and ($isEXV or $$dirInfo{XiaomiMess})) {
             # write EXV EOI (any trailer will be lost)
             Write($outfile, "\xff\xd9") or $err = 1;
             $rtnVal = 1;
-            last;
+            last unless $$dirInfo{XiaomiMess};
+            $segData = '';
 
         } elsif ($marker==0x00 or $marker==0x01 or ($marker>=0xd0 and $marker<=0xd7)) {
             $verbose and $marker and print $out "JPEG $markerName:\n";
@@ -7397,7 +7436,7 @@ used routines.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

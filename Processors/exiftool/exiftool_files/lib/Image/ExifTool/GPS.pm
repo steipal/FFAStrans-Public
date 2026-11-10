@@ -101,8 +101,9 @@ my %printConvLonRef = (
         Name => 'GPSAltitudeRef',
         Writable => 'int8u',
         Notes => q{
-            ExifTool will also accept number when writing this tag, with negative
-            numbers indicating below sea level
+            ExifTool will also accept number when writing this tag with the print
+            conversion enabled, with positive numbers indicating "Above Sea Level" and
+            negative numbers giving "Below Sea Level"
         },
         PrintConv => {
             OTHER => sub {
@@ -619,7 +620,7 @@ GPS (Global Positioning System) meta information in EXIF data.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

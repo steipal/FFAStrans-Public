@@ -15,7 +15,7 @@ use vars qw($VERSION);
 use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::GPS;
 
-$VERSION = '1.01';
+$VERSION = '1.04';
 
 sub Process_marl($$$);
 sub Process_mrld($$$);
@@ -136,7 +136,7 @@ my %channelStruct = (
 %Image::ExifTool::GM::marl = (
     PROCESS_PROC => \&Process_marl,
     GROUPS => { 2 => 'Other' },
-    VARS => { NO_ID => 1, NO_LOOKUP => 1 },
+    VARS => { ID_FMT => 'none', NO_LOOKUP => 1 },
     NOTES => q{
         Tags extracted from the 'ctbx' 'marl' (Marlin) box of timed PDR metadata
         from GM cars.  Use the -ee (L<API ExtractEmbedded|../ExifTool.html#ExtractEmbedded>) option to extract this
@@ -344,7 +344,7 @@ sub Process_mrld($$$)
 
     $et->VerboseDir('mrld', undef, $dirLen);
     require 'Image/ExifTool/XMPStruct.pl';
-    Image::ExifTool::XMP::AddFlattenedTags($tagTablePtr);
+    Image::ExifTool::XMP::AddFlattenedTags($tagTablePtr, undef, undef, 1);
     $csv = [ ] if $et->Options('PrintCSV');
 
     for ($pos=0; $pos+448<=$dirLen; $pos+=448) {
@@ -369,13 +369,13 @@ sub Process_mrld($$$)
         $_ & 0x8000000 and $_ -= 4294967296 foreach @a[6,7]; # convert signed ints
         map { $_ = GetDouble(\$_,0) } @a[8,9,10,11];         # convert doubles
         $a[5] = Get64u(\$a[5],0);                            # convert 64-bit int
-        my $chan = $a[0];
+        my $chan = $a[0] & 0x0fffffff;
         my $tag = sprintf('Channel%.2d', $chan);
         my $tagInfo = $$tagTablePtr{$tag};
         my $hash = { map { $channel[$_] => $a[$_] } 1..$#a };
         unless ($tagInfo) {
             $tagInfo = AddTagToTable($tagTablePtr, $tag, { Name => $tag, Struct => \%channelStruct });
-            Image::ExifTool::XMP::AddFlattenedTags($tagTablePtr, $tag);
+            Image::ExifTool::XMP::AddFlattenedTags($tagTablePtr, $tag, undef, 1);
         }
         # extract channel structure if specified
         if ($struct) {
@@ -396,8 +396,7 @@ sub Process_mrld($$$)
         $$tagInfo{Description} = $a[13] unless $$tagInfo{Description};
         unless ($$tagInfo{PrintConv}) {
             # add a default print conversion
-            $units =~ tr/"\\//d; # (just to be safe, probably never happen)
-            $$tagInfo{PrintConv} = $printConv{$units} || qq("\$val $units");
+            $$tagInfo{PrintConv} = $printConv{$units} || qq("\$val \Q$units\E");
         }
         # adjust multiplier/offset as necessary to scale to more appropriate units
         # (ie. to the units actually specified in this dictionary -- d'oh)
@@ -531,7 +530,7 @@ metadata from videos written by some GM models such as Corvette and Camero.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

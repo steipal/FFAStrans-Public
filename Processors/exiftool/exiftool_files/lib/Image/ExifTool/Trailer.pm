@@ -16,7 +16,7 @@ $VERSION = '1.01';
 
 %Image::ExifTool::Trailer::Vivo = (
     GROUPS => { 0 => 'Trailer', 1 => 'Vivo', 2 => 'Image' },
-    VARS => { NO_ID => 1 },
+    VARS => { ID_FMT => 'none' },
     NOTES => 'Information written in JPEG trailer by some Vivo phones.',
     # (don't know for sure what type of image this is, but it is in JPEG format)
     HDRImage => {
@@ -96,7 +96,7 @@ sub ProcessVivo($$)
         $len -= $start;
         $buff = substr($buff, $start);
     }
-    # set trailer position and length 
+    # set trailer position and length
     @$dirInfo{'DataPos','DirLen'} = ($pos, $len);
 
     # let ProcessTrailers copy or delete this trailer
@@ -304,7 +304,7 @@ metadata the trailer written by some Vivo, OnePlus and Google phones.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

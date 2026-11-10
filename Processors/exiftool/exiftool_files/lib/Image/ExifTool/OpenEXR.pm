@@ -53,7 +53,7 @@ my %formatType = (
         L<http://www.openexr.com/> for the official specification.
     },
     _ver => { Name => 'EXRVersion', Notes => 'low byte of Flags word' },
-    _flags => { Name => 'Flags', 
+    _flags => { Name => 'Flags',
         PrintConv => { BITMASK => {
             9 => 'Tiled',
             10 => 'Long names',
@@ -341,7 +341,7 @@ information from OpenEXR images.
 
 =head1 AUTHOR
 
-Copyright 2003-2025, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2026, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
