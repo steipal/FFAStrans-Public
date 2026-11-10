@@ -1,0 +1,4 @@
+Processors/db
+Processors/ffmpeg/x64/avcodec-*.dll
+Processors/exe_manager.exe
+FFAStrans_JobViewer.exe
